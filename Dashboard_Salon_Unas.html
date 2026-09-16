@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Mi Salón de Uñas</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -873,6 +878,26 @@
     </div>
 
     <script>
+        // ===== FIREBASE INITIALIZATION =====
+        const firebaseConfig = {
+            apiKey: "AIzaSyAKNgiMChRhKrzQYzzusQiSnDPXXrrVJE0",
+            authDomain: "salon-unas-dashboard.firebaseapp.com",
+            databaseURL: "https://salon-unas-dashboard-default-rtdb.firebaseio.com",
+            projectId: "salon-unas-dashboard",
+            storageBucket: "salon-unas-dashboard.firebasestorage.app",
+            messagingSenderId: "573281920239",
+            appId: "1:573281920239:web:92a5627adcfa08b508671a",
+            measurementId: "G-G4WGVE2LFM"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database(app);
+        
+        // Flag para evitar loops infinitos
+        let cargandoDelServidor = false;
+        
+        // ===== FIN FIREBASE INITIALIZATION =====
         let clientes = [];
         let transacciones = [];
         
@@ -899,84 +924,99 @@
         // VARIABLE PARA NAVEGACIÓN INTERNA DE FINANZAS
         let seccionFinanzasActual = 'dinero';  // 'dinero' o 'transacciones'
 
-        // Cargar datos al iniciar
+        // Cargar datos al iniciar - FIREBASE VERSION
         function loadData() {
-            const clientesData = localStorage.getItem('salon_clientes');
-            const transaccionesData = localStorage.getItem('salon_transacciones');
-            const ultimoGuardado = localStorage.getItem('ultimo_guardado');
-            const metasData = localStorage.getItem('salon_metas_mensuales');
-            const planData = localStorage.getItem('salon_plan_mensual');
+            cargandoDelServidor = true;
             
-            // NUEVAS CLAVES PARA DINERO REAL EN NEQUI (PASO 4 + 6)
-            const nequiGananciaData = localStorage.getItem('salon_nequi_ganancia');
-            const nequiFondoData = localStorage.getItem('salon_nequi_fondo_insumos');
-            const nequiFondoEfectivoData = localStorage.getItem('salon_nequi_fondo_efectivo');
-            const nequiFondoNequiData = localStorage.getItem('salon_nequi_fondo_nequi');
-
-            if (clientesData) clientes = JSON.parse(clientesData);
-            if (transaccionesData) transacciones = JSON.parse(transaccionesData);
-            if (metasData) metasMensuales = JSON.parse(metasData);
-            if (planData) planMensual = JSON.parse(planData);
+            // Cargar desde Firebase Realtime Database
+            const ref = database.ref('salon_data');
             
-            // Cargar dinero real en Nequi (con valor inicial 0 si no existen)
-            if (nequiGananciaData) nequiGananciaPersonal = parseFloat(nequiGananciaData) || 0;
-            if (nequiFondoData) nequiFondoInsumos = parseFloat(nequiFondoData) || 0;
-            if (nequiFondoEfectivoData) nequiFondoInsumos_Efectivo = parseFloat(nequiFondoEfectivoData) || 0;
-            if (nequiFondoNequiData) nequiFondoInsumos_Nequi = parseFloat(nequiFondoNequiData) || 0;
+            ref.once('value', (snapshot) => {
+                const data = snapshot.val();
+                
+                if (data) {
+                    if (data.clientes) clientes = data.clientes;
+                    if (data.transacciones) transacciones = data.transacciones;
+                    if (data.metasMensuales) metasMensuales = data.metasMensuales;
+                    if (data.planMensual) planMensual = data.planMensual;
+                }
+                
+                // Mostrar último guardado
+                const ultimoGuardado = document.getElementById('ultimoGuardado');
+                if (data && data.ultimoGuardado) {
+                    ultimoGuardado.textContent = '🕒 Último guardado: ' + data.ultimoGuardado;
+                } else {
+                    ultimoGuardado.textContent = '🕒 Nuevos datos';
+                }
 
-            // Mostrar último guardado
-            if (ultimoGuardado) {
-                document.getElementById('ultimoGuardado').textContent = '🕒 Último guardado: ' + ultimoGuardado;
-            }
+                // Establecer fechas por defecto
+                document.getElementById('fechaIngreso').valueAsDate = new Date();
+                document.getElementById('fechaGasto').valueAsDate = new Date();
+                document.getElementById('fechaTransfer').valueAsDate = new Date();
+                document.getElementById('fechaTarea').valueAsDate = new Date();
 
-            // Establecer fechas por defecto
-            document.getElementById('fechaIngreso').valueAsDate = new Date();
-            document.getElementById('fechaGasto').valueAsDate = new Date();
-            document.getElementById('fechaTransfer').valueAsDate = new Date();
-            document.getElementById('fechaTarea').valueAsDate = new Date();
+                // Inicializar mes actual de consulta
+                mesActualConsulta = getMesActual();
+                
+                // Inicializar mes para análisis financiero
+                const mesAnalisisInput = document.getElementById('mesAnalisis');
+                if (mesAnalisisInput) {
+                    mesAnalisisInput.value = getMesActual();
+                }
+                
+                // Crear metas del mes actual si no existen
+                crearMetasDefault(mesActualConsulta);
 
-            // Inicializar mes actual de consulta
-            mesActualConsulta = getMesActual();
+                // Configurar selector de mes SIEMPRE con mes actual
+                const mesSelector = document.getElementById('mesSelector');
+                if (mesSelector) {
+                    mesSelector.value = mesActualConsulta;
+                    mesSelector.addEventListener('change', function(e) {
+                        mesActualConsulta = e.target.value;
+                        crearMetasDefault(mesActualConsulta);
+                        renderCrecimiento();
+                    });
+                }
+
+                // Inicializar selects de filtros
+                const filtroEstadoSelect = document.getElementById('filtroEstadoSelect');
+                if (filtroEstadoSelect) {
+                    filtroEstadoSelect.value = filtroEstadoActual;
+                }
+                
+                const filtroPlataformaSelect = document.getElementById('filtroPlataformaSelect');
+                if (filtroPlataformaSelect) {
+                    filtroPlataformaSelect.value = filtroPlataformaActual;
+                }
+
+                // BENEFICIO DE CUMPLEAÑOS
+                resetearBeneficiosAnuales();
+                calcularElegibilidadBeneficio();
+
+                render();
+                cargandoDelServidor = false;
+                console.log('✅ Datos cargados desde Firebase');
+            });
             
-            // Inicializar mes para análisis financiero
-            const mesAnalisisInput = document.getElementById('mesAnalisis');
-            if (mesAnalisisInput) {
-                mesAnalisisInput.value = getMesActual();
-            }
-            
-            // Crear metas del mes actual si no existen
-            crearMetasDefault(mesActualConsulta);
-
-            // Configurar selector de mes SIEMPRE con mes actual
-            const mesSelector = document.getElementById('mesSelector');
-            if (mesSelector) {
-                mesSelector.value = mesActualConsulta; // Siempre mostrar mes actual
-                mesSelector.addEventListener('change', function(e) {
-                    mesActualConsulta = e.target.value;
-                    crearMetasDefault(mesActualConsulta);
-                    renderCrecimiento();
-                });
-            }
-
-            // Inicializar selects de filtros
-            const filtroEstadoSelect = document.getElementById('filtroEstadoSelect');
-            if (filtroEstadoSelect) {
-                filtroEstadoSelect.value = filtroEstadoActual;
-            }
-            
-            const filtroPlataformaSelect = document.getElementById('filtroPlataformaSelect');
-            if (filtroPlataformaSelect) {
-                filtroPlataformaSelect.value = filtroPlataformaActual;
-            }
-
-            // BENEFICIO DE CUMPLEAÑOS: Resetear anualmente y calcular elegibilidad
-            resetearBeneficiosAnuales();
-            calcularElegibilidadBeneficio();
-
-            render();
+            // LISTENERS EN TIEMPO REAL para sincronización
+            ref.on('value', (snapshot) => {
+                if (!cargandoDelServidor) {
+                    const data = snapshot.val();
+                    if (data) {
+                        if (data.clientes) clientes = data.clientes;
+                        if (data.transacciones) transacciones = data.transacciones;
+                        if (data.metasMensuales) metasMensuales = data.metasMensuales;
+                        if (data.planMensual) planMensual = data.planMensual;
+                        
+                        // Actualizar UI sin perder estado del usuario
+                        render();
+                        console.log('🔄 Datos sincronizados desde otro dispositivo');
+                    }
+                }
+            });
         }
 
-        // Guardar datos con feedback visual
+        // Guardar datos - FIREBASE VERSION
         let saveTimeout;
         function saveData() {
             const indicator = document.getElementById('saveIndicator');
@@ -987,31 +1027,47 @@
             saveText.textContent = 'Guardando...';
 
             try {
-                // GUARDAR CLAVES EXISTENTES
-                localStorage.setItem('salon_clientes', JSON.stringify(clientes));
-                localStorage.setItem('salon_transacciones', JSON.stringify(transacciones));
-                localStorage.setItem('salon_metas_mensuales', JSON.stringify(metasMensuales));
-                localStorage.setItem('salon_plan_mensual', JSON.stringify(planMensual));
-                localStorage.setItem('ultimo_guardado', new Date().toLocaleString('es-CO'));
+                cargandoDelServidor = true;
                 
-                // GUARDAR NUEVAS CLAVES PARA DINERO REAL EN NEQUI (PASO 4 + 6)
-                localStorage.setItem('salon_nequi_ganancia', nequiGananciaPersonal);
-                localStorage.setItem('salon_nequi_fondo_insumos', nequiFondoInsumos);
-                localStorage.setItem('salon_nequi_fondo_efectivo', nequiFondoInsumos_Efectivo);
-                localStorage.setItem('salon_nequi_fondo_nequi', nequiFondoInsumos_Nequi);
+                // Preparar datos para Firebase
+                const dataToSave = {
+                    clientes: clientes,
+                    transacciones: transacciones,
+                    metasMensuales: metasMensuales,
+                    planMensual: planMensual,
+                    ultimoGuardado: new Date().toLocaleString('es-CO'),
+                    timestamp: new Date().getTime()
+                };
+                
+                // GUARDAR EN FIREBASE
+                database.ref('salon_data').set(dataToSave, (error) => {
+                    cargandoDelServidor = false;
+                    
+                    if (error) {
+                        console.error('❌ Error al guardar en Firebase:', error);
+                        saveText.textContent = '✗ Error al guardar';
+                        indicator.classList.remove('saving');
+                        indicator.classList.add('saved');
+                    } else {
+                        console.log('✅ Datos guardados en Firebase correctamente');
+                        
+                        // Feedback visual
+                        clearTimeout(saveTimeout);
+                        saveTimeout = setTimeout(() => {
+                            indicator.classList.remove('saving');
+                            indicator.classList.add('saved');
+                            saveText.textContent = '✓ Guardado';
 
-                clearTimeout(saveTimeout);
-                saveTimeout = setTimeout(() => {
-                    indicator.classList.remove('saving');
-                    indicator.classList.add('saved');
-                    saveText.textContent = '✓ Guardado';
-
-                    setTimeout(() => {
-                        indicator.classList.remove('saved');
-                    }, 2000);
-                }, 300);
+                            setTimeout(() => {
+                                indicator.classList.remove('saved');
+                            }, 2000);
+                        }, 300);
+                    }
+                });
+                
             } catch (error) {
-                console.error('Error al guardar:', error);
+                cargandoDelServidor = false;
+                console.error('❌ Error al guardar:', error);
                 saveText.textContent = '✗ Error al guardar';
                 indicator.classList.remove('saving');
                 indicator.classList.add('saved');
