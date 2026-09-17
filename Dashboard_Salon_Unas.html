@@ -998,19 +998,37 @@
                 console.log('✅ Datos cargados desde Firebase');
             });
             
-            // LISTENERS EN TIEMPO REAL para sincronización
+            // LISTENERS EN TIEMPO REAL - OPTIMIZADO
+            // Solo sincroniza si hay cambios REALES de otro dispositivo
+            let ultimoChecksum = null;
+            
             ref.on('value', (snapshot) => {
                 if (!cargandoDelServidor) {
                     const data = snapshot.val();
+                    
                     if (data) {
-                        if (data.clientes) clientes = data.clientes;
-                        if (data.transacciones) transacciones = data.transacciones;
-                        if (data.metasMensuales) metasMensuales = data.metasMensuales;
-                        if (data.planMensual) planMensual = data.planMensual;
+                        // Crear checksum de los datos
+                        const checksum = JSON.stringify([
+                            data.clientes,
+                            data.transacciones,
+                            data.metasMensuales,
+                            data.planMensual
+                        ]);
                         
-                        // Actualizar UI sin perder estado del usuario
-                        render();
-                        console.log('🔄 Datos sincronizados desde otro dispositivo');
+                        // Solo actualizar si hay cambios REALES
+                        if (checksum !== ultimoChecksum) {
+                            ultimoChecksum = checksum;
+                            
+                            // Actualizar datos
+                            if (data.clientes) clientes = data.clientes;
+                            if (data.transacciones) transacciones = data.transacciones;
+                            if (data.metasMensuales) metasMensuales = data.metasMensuales;
+                            if (data.planMensual) planMensual = data.planMensual;
+                            
+                            // Actualizar UI
+                            render();
+                            console.log('🔄 Datos sincronizados desde otro dispositivo');
+                        }
                     }
                 }
             });
