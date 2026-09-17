@@ -926,13 +926,14 @@
         // VARIABLE PARA NAVEGACIÓN INTERNA DE FINANZAS
         let seccionFinanzasActual = 'dinero';  // 'dinero' o 'transacciones'
 
-        // Cargar datos al iniciar - FIREBASE VERSION
+        // Cargar datos al iniciar - FIREBASE VERSION MEJORADA
         function loadData() {
             cargandoDelServidor = true;
             
             // Cargar desde Firebase Realtime Database
             const ref = database.ref('salon_data');
             
+            // CARGAR DATOS INICIALES
             ref.once('value', (snapshot) => {
                 const data = snapshot.val();
                 
@@ -1000,36 +1001,45 @@
                 console.log('✅ Datos cargados desde Firebase');
             });
             
-            // LISTENERS EN TIEMPO REAL - OPTIMIZADO
-            // Solo sincroniza si hay cambios REALES de otro dispositivo
-            let ultimoChecksum = null;
-            
+            // LISTENER EN TIEMPO REAL - MEJORADO Y SIMPLIFICADO
             ref.on('value', (snapshot) => {
-                if (!cargandoDelServidor) {
-                    const data = snapshot.val();
+                // Evitar actualizar si estamos en el proceso de guardar
+                if (cargandoDelServidor) {
+                    return;
+                }
+                
+                const data = snapshot.val();
+                
+                if (data) {
+                    // Comparar timestamp para detectar cambios REALES desde otro dispositivo
+                    const timestampLocal = localStorage.getItem('firebaseLastSync') || '0';
+                    const timestampRemoto = data.timestamp || 0;
                     
-                    if (data) {
-                        // Crear checksum de los datos
-                        const checksum = JSON.stringify([
-                            data.clientes,
-                            data.transacciones,
-                            data.metasMensuales,
-                            data.planMensual
-                        ]);
+                    // Si el timestamp remoto es más reciente = hay cambios de otro dispositivo
+                    if (parseInt(timestampRemoto) > parseInt(timestampLocal)) {
+                        // Actualizar datos
+                        if (data.clientes) clientes = data.clientes;
+                        if (data.transacciones) transacciones = data.transacciones;
+                        if (data.metasMensuales) metasMensuales = data.metasMensuales;
+                        if (data.planMensual) planMensual = data.planMensual;
                         
-                        // Solo actualizar si hay cambios REALES
-                        if (checksum !== ultimoChecksum) {
-                            ultimoChecksum = checksum;
-                            
-                            // Actualizar datos
-                            if (data.clientes) clientes = data.clientes;
-                            if (data.transacciones) transacciones = data.transacciones;
-                            if (data.metasMensuales) metasMensuales = data.metasMensuales;
-                            if (data.planMensual) planMensual = data.planMensual;
-                            
-                            // Actualizar UI
-                            render();
-                            console.log('🔄 Datos sincronizados desde otro dispositivo');
+                        // Guardar timestamp local
+                        localStorage.setItem('firebaseLastSync', timestampRemoto);
+                        
+                        // Actualizar UI
+                        render();
+                        console.log('🔄 Datos sincronizados desde otro dispositivo - Timestamp: ' + timestampRemoto);
+                        
+                        // Mostrar notificación visual
+                        const ultimoGuardado = document.getElementById('ultimoGuardado');
+                        if (data.ultimoGuardado) {
+                            ultimoGuardado.textContent = '🔄 Sincronizando... ' + data.ultimoGuardado;
+                            setTimeout(() => {
+                                ultimoGuardado.textContent = '✓ Actualizado desde otro dispositivo';
+                                setTimeout(() => {
+                                    ultimoGuardado.textContent = '🕒 Último guardado: ' + data.ultimoGuardado;
+                                }, 2000);
+                            }, 500);
                         }
                     }
                 }
