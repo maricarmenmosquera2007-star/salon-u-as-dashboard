@@ -1046,7 +1046,7 @@
             });
         }
 
-        // Guardar datos - FIREBASE VERSION
+        // Guardar datos - FIREBASE VERSION MEJORADA
         let saveTimeout;
         function saveData() {
             const indicator = document.getElementById('saveIndicator');
@@ -1057,8 +1057,6 @@
             saveText.textContent = 'Guardando...';
 
             try {
-                cargandoDelServidor = true;
-                
                 // Preparar datos para Firebase
                 const dataToSave = {
                     clientes: clientes,
@@ -1066,38 +1064,38 @@
                     metasMensuales: metasMensuales,
                     planMensual: planMensual,
                     ultimoGuardado: new Date().toLocaleString('es-CO'),
-                    timestamp: new Date().getTime()
+                    timestamp: new Date().getTime() // CRUCIAL para sincronización
                 };
                 
-                // GUARDAR EN FIREBASE
-                database.ref('salon_data').set(dataToSave, (error) => {
-                    cargandoDelServidor = false;
+                // GUARDAR EN FIREBASE - VERSIÓN MEJORADA
+                database.ref('salon_data').set(dataToSave).then(() => {
+                    // Éxito al guardar
+                    console.log('✅ Datos guardados en Firebase - Timestamp: ' + dataToSave.timestamp);
                     
-                    if (error) {
-                        console.error('❌ Error al guardar en Firebase:', error);
-                        saveText.textContent = '✗ Error al guardar';
+                    // Guardar timestamp local para el listener
+                    localStorage.setItem('firebaseLastSync', dataToSave.timestamp);
+                    
+                    // Feedback visual
+                    clearTimeout(saveTimeout);
+                    saveTimeout = setTimeout(() => {
                         indicator.classList.remove('saving');
                         indicator.classList.add('saved');
-                    } else {
-                        console.log('✅ Datos guardados en Firebase correctamente');
-                        
-                        // Feedback visual
-                        clearTimeout(saveTimeout);
-                        saveTimeout = setTimeout(() => {
-                            indicator.classList.remove('saving');
-                            indicator.classList.add('saved');
-                            saveText.textContent = '✓ Guardado';
+                        saveText.textContent = '✓ Guardado';
 
-                            setTimeout(() => {
-                                indicator.classList.remove('saved');
-                            }, 2000);
-                        }, 300);
-                    }
+                        setTimeout(() => {
+                            indicator.classList.remove('saved');
+                        }, 2000);
+                    }, 300);
+                }).catch((error) => {
+                    // Error al guardar
+                    console.error('❌ Error al guardar en Firebase:', error);
+                    saveText.textContent = '✗ Error: ' + error.message;
+                    indicator.classList.remove('saving');
+                    indicator.classList.add('saved');
                 });
                 
             } catch (error) {
-                cargandoDelServidor = false;
-                console.error('❌ Error al guardar:', error);
+                console.error('❌ Error crítico al guardar:', error);
                 saveText.textContent = '✗ Error al guardar';
                 indicator.classList.remove('saving');
                 indicator.classList.add('saved');
