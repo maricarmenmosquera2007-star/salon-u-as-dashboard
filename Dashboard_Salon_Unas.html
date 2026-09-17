@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Mi Salón de Uñas</title>
     
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js"></script>
+    <!-- Firebase SDK - COMPAT VERSION (compatible con HTML puro) -->
+    <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-database-compat.js"></script>
     
     <style>
         * {
@@ -878,7 +878,7 @@
     </div>
 
     <script>
-        // ===== FIREBASE INITIALIZATION =====
+        // ===== FIREBASE INITIALIZATION - COMPAT VERSION =====
         const firebaseConfig = {
             apiKey: "AIzaSyAKNgiMChRhKrzQYzzusQiSnDPXXrrVJE0",
             authDomain: "salon-unas-dashboard.firebaseapp.com",
@@ -890,12 +890,14 @@
             measurementId: "G-G4WGVE2LFM"
         };
 
-        // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const database = firebase.database(app);
+        // Initialize Firebase (COMPAT)
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
         
         // Flag para evitar loops infinitos
         let cargandoDelServidor = false;
+        
+        console.log('✅ Firebase inicializado correctamente');
         
         // ===== FIN FIREBASE INITIALIZATION =====
         let clientes = [];
