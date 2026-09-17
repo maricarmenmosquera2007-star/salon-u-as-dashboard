@@ -926,7 +926,7 @@
         // VARIABLE PARA NAVEGACIÓN INTERNA DE FINANZAS
         let seccionFinanzasActual = 'dinero';  // 'dinero' o 'transacciones'
 
-        // Cargar datos al iniciar - FIREBASE VERSION CON DEBUGGING COMPLETO
+        // Cargar datos al iniciar - VERSIÓN CON PROMISES (ESPERA A FIREBASE)
         function loadData() {
             console.log('🟦 INICIANDO loadData()...');
             cargandoDelServidor = true;
@@ -934,141 +934,166 @@
             // Cargar desde Firebase Realtime Database
             const ref = database.ref('salon_data');
             
-            // CARGAR DATOS INICIALES
-            ref.once('value', (snapshot) => {
-                console.log('🟦 ref.once("value") ejecutado');
-                const data = snapshot.val();
-                
-                console.log('📦 Datos cargados desde Firebase:', data);
-                
-                if (data) {
-                    console.log('✅ Data existe. Cargando en arrays...');
-                    
-                    if (data.clientes) {
-                        clientes = data.clientes;
-                        console.log('  ✅ Clientes cargados:', clientes.length, 'elementos');
-                    } else {
-                        console.log('  ⚠️ NO hay clientes en Firebase');
-                    }
-                    
-                    if (data.transacciones) {
-                        transacciones = data.transacciones;
-                        console.log('  ✅ Transacciones cargadas:', transacciones.length, 'elementos');
-                    } else {
-                        console.log('  ⚠️ NO hay transacciones en Firebase');
-                    }
-                    
-                    if (data.metasMensuales) {
-                        metasMensuales = data.metasMensuales;
-                        console.log('  ✅ Metas cargadas:', Object.keys(metasMensuales).length, 'meses');
-                    }
-                    
-                    if (data.planMensual) {
-                        planMensual = data.planMensual;
-                        console.log('  ✅ Plan cargado:', planMensual.length, 'tareas');
-                    }
-                } else {
-                    console.log('⚠️ NO HAY DATOS EN FIREBASE - Usando arrays vacíos');
-                }
-                
-                // Mostrar último guardado
-                const ultimoGuardado = document.getElementById('ultimoGuardado');
-                if (data && data.ultimoGuardado) {
-                    ultimoGuardado.textContent = '🕒 Último guardado: ' + data.ultimoGuardado;
-                    console.log('📅 Último guardado:', data.ultimoGuardado);
-                } else {
-                    ultimoGuardado.textContent = '🕒 Nuevos datos';
-                }
-
-                // Establecer fechas por defecto
-                document.getElementById('fechaIngreso').valueAsDate = new Date();
-                document.getElementById('fechaGasto').valueAsDate = new Date();
-                document.getElementById('fechaTransfer').valueAsDate = new Date();
-                document.getElementById('fechaTarea').valueAsDate = new Date();
-
-                // Inicializar mes actual de consulta
-                mesActualConsulta = getMesActual();
-                
-                // Inicializar mes para análisis financiero
-                const mesAnalisisInput = document.getElementById('mesAnalisis');
-                if (mesAnalisisInput) {
-                    mesAnalisisInput.value = getMesActual();
-                }
-                
-                // Crear metas del mes actual si no existen
-                crearMetasDefault(mesActualConsulta);
-
-                // Configurar selector de mes SIEMPRE con mes actual
-                const mesSelector = document.getElementById('mesSelector');
-                if (mesSelector) {
-                    mesSelector.value = mesActualConsulta;
-                    mesSelector.addEventListener('change', function(e) {
-                        mesActualConsulta = e.target.value;
-                        crearMetasDefault(mesActualConsulta);
-                        renderCrecimiento();
-                    });
-                }
-
-                // Inicializar selects de filtros
-                const filtroEstadoSelect = document.getElementById('filtroEstadoSelect');
-                if (filtroEstadoSelect) {
-                    filtroEstadoSelect.value = filtroEstadoActual;
-                }
-                
-                const filtroPlataformaSelect = document.getElementById('filtroPlataformaSelect');
-                if (filtroPlataformaSelect) {
-                    filtroPlataformaSelect.value = filtroPlataformaActual;
-                }
-
-                // BENEFICIO DE CUMPLEAÑOS
-                resetearBeneficiosAnuales();
-                calcularElegibilidadBeneficio();
-
-                render();
-                cargandoDelServidor = false;
-                console.log('✅ loadData() completado');
-            });
-            
-            // LISTENER EN TIEMPO REAL - MEJORADO Y SIMPLIFICADO
-            ref.on('value', (snapshot) => {
-                if (cargandoDelServidor) {
-                    console.log('🔄 Listener disparado pero cargandoDelServidor=true, ignorando...');
-                    return;
-                }
-                
-                const data = snapshot.val();
-                
-                if (data) {
-                    const timestampLocal = localStorage.getItem('firebaseLastSync') || '0';
-                    const timestampRemoto = data.timestamp || 0;
-                    
-                    console.log('🔄 Listener activado. Timestamp local:', timestampLocal, 'Remoto:', timestampRemoto);
-                    
-                    if (parseInt(timestampRemoto) > parseInt(timestampLocal)) {
-                        console.log('🔄 Hay cambios nuevos - Sincronizando...');
+            // CARGAR DATOS INICIALES - ESPERANDO A FIREBASE
+            return new Promise((resolve) => {
+                ref.once('value')
+                    .then((snapshot) => {
+                        console.log('🟦 ref.once("value") completado');
+                        const data = snapshot.val();
                         
-                        if (data.clientes) clientes = data.clientes;
-                        if (data.transacciones) transacciones = data.transacciones;
-                        if (data.metasMensuales) metasMensuales = data.metasMensuales;
-                        if (data.planMensual) planMensual = data.planMensual;
+                        console.log('📦 Datos cargados desde Firebase:', data);
                         
-                        localStorage.setItem('firebaseLastSync', timestampRemoto);
+                        if (data) {
+                            console.log('✅ Data existe. Cargando en arrays...');
+                            
+                            if (data.clientes && data.clientes.length > 0) {
+                                clientes = data.clientes;
+                                console.log('  ✅ Clientes cargados:', clientes.length, 'elementos');
+                                console.log('  Clientes:', clientes);
+                            } else {
+                                console.log('  ⚠️ NO hay clientes en Firebase o está vacío');
+                                clientes = [];
+                            }
+                            
+                            if (data.transacciones && data.transacciones.length > 0) {
+                                transacciones = data.transacciones;
+                                console.log('  ✅ Transacciones cargadas:', transacciones.length, 'elementos');
+                            } else {
+                                console.log('  ⚠️ NO hay transacciones en Firebase');
+                                transacciones = [];
+                            }
+                            
+                            if (data.metasMensuales && Object.keys(data.metasMensuales).length > 0) {
+                                metasMensuales = data.metasMensuales;
+                                console.log('  ✅ Metas cargadas:', Object.keys(metasMensuales).length, 'meses');
+                            }
+                            
+                            if (data.planMensual && data.planMensual.length > 0) {
+                                planMensual = data.planMensual;
+                                console.log('  ✅ Plan cargado:', planMensual.length, 'tareas');
+                            } else {
+                                console.log('  ⚠️ NO hay tareas en Firebase');
+                                planMensual = [];
+                            }
+                        } else {
+                            console.log('⚠️ NO HAY DATOS EN FIREBASE - Inicializando arrays vacíos');
+                            clientes = [];
+                            transacciones = [];
+                            planMensual = [];
+                        }
                         
-                        render();
-                        console.log('🔄 Datos sincronizados desde otro dispositivo');
-                        
+                        // Mostrar último guardado
                         const ultimoGuardado = document.getElementById('ultimoGuardado');
-                        if (data.ultimoGuardado) {
-                            ultimoGuardado.textContent = '🔄 Sincronizando... ' + data.ultimoGuardado;
-                            setTimeout(() => {
-                                ultimoGuardado.textContent = '✓ Actualizado desde otro dispositivo';
+                        if (data && data.ultimoGuardado) {
+                            ultimoGuardado.textContent = '🕒 Último guardado: ' + data.ultimoGuardado;
+                            console.log('📅 Último guardado:', data.ultimoGuardado);
+                        } else {
+                            ultimoGuardado.textContent = '🕒 Nuevos datos';
+                        }
+
+                        // Establecer fechas por defecto
+                        document.getElementById('fechaIngreso').valueAsDate = new Date();
+                        document.getElementById('fechaGasto').valueAsDate = new Date();
+                        document.getElementById('fechaTransfer').valueAsDate = new Date();
+                        document.getElementById('fechaTarea').valueAsDate = new Date();
+
+                        // Inicializar mes actual de consulta
+                        mesActualConsulta = getMesActual();
+                        
+                        // Inicializar mes para análisis financiero
+                        const mesAnalisisInput = document.getElementById('mesAnalisis');
+                        if (mesAnalisisInput) {
+                            mesAnalisisInput.value = getMesActual();
+                        }
+                        
+                        // Crear metas del mes actual si no existen
+                        crearMetasDefault(mesActualConsulta);
+
+                        // Configurar selector de mes SIEMPRE con mes actual
+                        const mesSelector = document.getElementById('mesSelector');
+                        if (mesSelector) {
+                            mesSelector.value = mesActualConsulta;
+                            mesSelector.addEventListener('change', function(e) {
+                                mesActualConsulta = e.target.value;
+                                crearMetasDefault(mesActualConsulta);
+                                renderCrecimiento();
+                            });
+                        }
+
+                        // Inicializar selects de filtros
+                        const filtroEstadoSelect = document.getElementById('filtroEstadoSelect');
+                        if (filtroEstadoSelect) {
+                            filtroEstadoSelect.value = filtroEstadoActual;
+                        }
+                        
+                        const filtroPlataformaSelect = document.getElementById('filtroPlataformaSelect');
+                        if (filtroPlataformaSelect) {
+                            filtroPlataformaSelect.value = filtroPlataformaActual;
+                        }
+
+                        // BENEFICIO DE CUMPLEAÑOS
+                        resetearBeneficiosAnuales();
+                        calcularElegibilidadBeneficio();
+
+                        // ✅ AHORA renderizar con los datos COMPLETOS
+                        console.log('🎨 Llamando a render() CON DATOS CARGADOS...');
+                        render();
+                        cargandoDelServidor = false;
+                        console.log('✅ loadData() completado exitosamente');
+                        console.log('Final - Clientes en memoria:', clientes.length);
+                        
+                        resolve(); // Promise resuelta
+                    })
+                    .catch((error) => {
+                        console.error('❌ ERROR AL CARGAR DE FIREBASE:', error);
+                        cargandoDelServidor = false;
+                        resolve(); // Resolver igualmente para continuar
+                    });
+            })
+            .then(() => {
+                // DESPUÉS de que loadData() se complete, configurar listener
+                console.log('🔄 Configurando listener en tiempo real...');
+                
+                ref.on('value', (snapshot) => {
+                    if (cargandoDelServidor) {
+                        console.log('🔄 Listener disparado pero cargandoDelServidor=true, ignorando...');
+                        return;
+                    }
+                    
+                    const data = snapshot.val();
+                    
+                    if (data) {
+                        const timestampLocal = localStorage.getItem('firebaseLastSync') || '0';
+                        const timestampRemoto = data.timestamp || 0;
+                        
+                        console.log('🔄 Listener activado. Timestamp local:', timestampLocal, 'Remoto:', timestampRemoto);
+                        
+                        if (parseInt(timestampRemoto) > parseInt(timestampLocal)) {
+                            console.log('🔄 Hay cambios nuevos - Sincronizando desde otro dispositivo...');
+                            
+                            if (data.clientes) clientes = data.clientes;
+                            if (data.transacciones) transacciones = data.transacciones;
+                            if (data.metasMensuales) metasMensuales = data.metasMensuales;
+                            if (data.planMensual) planMensual = data.planMensual;
+                            
+                            localStorage.setItem('firebaseLastSync', timestampRemoto);
+                            
+                            render();
+                            console.log('🔄 Datos sincronizados desde otro dispositivo');
+                            
+                            const ultimoGuardado = document.getElementById('ultimoGuardado');
+                            if (data.ultimoGuardado) {
+                                ultimoGuardado.textContent = '🔄 Sincronizando... ' + data.ultimoGuardado;
                                 setTimeout(() => {
-                                    ultimoGuardado.textContent = '🕒 Último guardado: ' + data.ultimoGuardado;
-                                }, 2000);
-                            }, 500);
+                                    ultimoGuardado.textContent = '✓ Actualizado desde otro dispositivo';
+                                    setTimeout(() => {
+                                        ultimoGuardado.textContent = '🕒 Último guardado: ' + data.ultimoGuardado;
+                                    }, 2000);
+                                }, 500);
+                            }
                         }
                     }
-                }
+                });
             });
         }
 
