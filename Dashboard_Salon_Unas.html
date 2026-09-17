@@ -926,8 +926,9 @@
         // VARIABLE PARA NAVEGACIÓN INTERNA DE FINANZAS
         let seccionFinanzasActual = 'dinero';  // 'dinero' o 'transacciones'
 
-        // Cargar datos al iniciar - FIREBASE VERSION MEJORADA
+        // Cargar datos al iniciar - FIREBASE VERSION CON DEBUGGING COMPLETO
         function loadData() {
+            console.log('🟦 INICIANDO loadData()...');
             cargandoDelServidor = true;
             
             // Cargar desde Firebase Realtime Database
@@ -935,19 +936,46 @@
             
             // CARGAR DATOS INICIALES
             ref.once('value', (snapshot) => {
+                console.log('🟦 ref.once("value") ejecutado');
                 const data = snapshot.val();
                 
+                console.log('📦 Datos cargados desde Firebase:', data);
+                
                 if (data) {
-                    if (data.clientes) clientes = data.clientes;
-                    if (data.transacciones) transacciones = data.transacciones;
-                    if (data.metasMensuales) metasMensuales = data.metasMensuales;
-                    if (data.planMensual) planMensual = data.planMensual;
+                    console.log('✅ Data existe. Cargando en arrays...');
+                    
+                    if (data.clientes) {
+                        clientes = data.clientes;
+                        console.log('  ✅ Clientes cargados:', clientes.length, 'elementos');
+                    } else {
+                        console.log('  ⚠️ NO hay clientes en Firebase');
+                    }
+                    
+                    if (data.transacciones) {
+                        transacciones = data.transacciones;
+                        console.log('  ✅ Transacciones cargadas:', transacciones.length, 'elementos');
+                    } else {
+                        console.log('  ⚠️ NO hay transacciones en Firebase');
+                    }
+                    
+                    if (data.metasMensuales) {
+                        metasMensuales = data.metasMensuales;
+                        console.log('  ✅ Metas cargadas:', Object.keys(metasMensuales).length, 'meses');
+                    }
+                    
+                    if (data.planMensual) {
+                        planMensual = data.planMensual;
+                        console.log('  ✅ Plan cargado:', planMensual.length, 'tareas');
+                    }
+                } else {
+                    console.log('⚠️ NO HAY DATOS EN FIREBASE - Usando arrays vacíos');
                 }
                 
                 // Mostrar último guardado
                 const ultimoGuardado = document.getElementById('ultimoGuardado');
                 if (data && data.ultimoGuardado) {
                     ultimoGuardado.textContent = '🕒 Último guardado: ' + data.ultimoGuardado;
+                    console.log('📅 Último guardado:', data.ultimoGuardado);
                 } else {
                     ultimoGuardado.textContent = '🕒 Nuevos datos';
                 }
@@ -998,39 +1026,37 @@
 
                 render();
                 cargandoDelServidor = false;
-                console.log('✅ Datos cargados desde Firebase');
+                console.log('✅ loadData() completado');
             });
             
             // LISTENER EN TIEMPO REAL - MEJORADO Y SIMPLIFICADO
             ref.on('value', (snapshot) => {
-                // Evitar actualizar si estamos en el proceso de guardar
                 if (cargandoDelServidor) {
+                    console.log('🔄 Listener disparado pero cargandoDelServidor=true, ignorando...');
                     return;
                 }
                 
                 const data = snapshot.val();
                 
                 if (data) {
-                    // Comparar timestamp para detectar cambios REALES desde otro dispositivo
                     const timestampLocal = localStorage.getItem('firebaseLastSync') || '0';
                     const timestampRemoto = data.timestamp || 0;
                     
-                    // Si el timestamp remoto es más reciente = hay cambios de otro dispositivo
+                    console.log('🔄 Listener activado. Timestamp local:', timestampLocal, 'Remoto:', timestampRemoto);
+                    
                     if (parseInt(timestampRemoto) > parseInt(timestampLocal)) {
-                        // Actualizar datos
+                        console.log('🔄 Hay cambios nuevos - Sincronizando...');
+                        
                         if (data.clientes) clientes = data.clientes;
                         if (data.transacciones) transacciones = data.transacciones;
                         if (data.metasMensuales) metasMensuales = data.metasMensuales;
                         if (data.planMensual) planMensual = data.planMensual;
                         
-                        // Guardar timestamp local
                         localStorage.setItem('firebaseLastSync', timestampRemoto);
                         
-                        // Actualizar UI
                         render();
-                        console.log('🔄 Datos sincronizados desde otro dispositivo - Timestamp: ' + timestampRemoto);
+                        console.log('🔄 Datos sincronizados desde otro dispositivo');
                         
-                        // Mostrar notificación visual
                         const ultimoGuardado = document.getElementById('ultimoGuardado');
                         if (data.ultimoGuardado) {
                             ultimoGuardado.textContent = '🔄 Sincronizando... ' + data.ultimoGuardado;
@@ -1046,7 +1072,7 @@
             });
         }
 
-        // Guardar datos - FIREBASE VERSION MEJORADA
+        // Guardar datos - FIREBASE VERSION CON DEBUGGING
         let saveTimeout;
         function saveData() {
             const indicator = document.getElementById('saveIndicator');
@@ -1057,6 +1083,13 @@
             saveText.textContent = 'Guardando...';
 
             try {
+                // DEBUGGING: Mostrar qué vamos a guardar
+                console.log('📝 GUARDANDO DATOS:');
+                console.log('  Clientes:', clientes.length, 'elementos');
+                console.log('  Transacciones:', transacciones.length, 'elementos');
+                console.log('  Metas:', Object.keys(metasMensuales).length, 'meses');
+                console.log('  Plan:', planMensual.length, 'tareas');
+                
                 // Preparar datos para Firebase
                 const dataToSave = {
                     clientes: clientes,
@@ -1064,15 +1097,19 @@
                     metasMensuales: metasMensuales,
                     planMensual: planMensual,
                     ultimoGuardado: new Date().toLocaleString('es-CO'),
-                    timestamp: new Date().getTime() // CRUCIAL para sincronización
+                    timestamp: new Date().getTime()
                 };
                 
-                // GUARDAR EN FIREBASE - VERSIÓN MEJORADA
+                console.log('🔵 dataToSave completo:', dataToSave);
+                
+                // GUARDAR EN FIREBASE
                 database.ref('salon_data').set(dataToSave).then(() => {
                     // Éxito al guardar
-                    console.log('✅ Datos guardados en Firebase - Timestamp: ' + dataToSave.timestamp);
+                    console.log('✅ DATOS GUARDADOS EN FIREBASE');
+                    console.log('  Timestamp:', dataToSave.timestamp);
+                    console.log('  Hora:', dataToSave.ultimoGuardado);
                     
-                    // Guardar timestamp local para el listener
+                    // Guardar timestamp local
                     localStorage.setItem('firebaseLastSync', dataToSave.timestamp);
                     
                     // Feedback visual
@@ -1088,14 +1125,16 @@
                     }, 300);
                 }).catch((error) => {
                     // Error al guardar
-                    console.error('❌ Error al guardar en Firebase:', error);
+                    console.error('❌ ERROR AL GUARDAR EN FIREBASE:', error);
+                    console.error('  Código:', error.code);
+                    console.error('  Mensaje:', error.message);
                     saveText.textContent = '✗ Error: ' + error.message;
                     indicator.classList.remove('saving');
                     indicator.classList.add('saved');
                 });
                 
             } catch (error) {
-                console.error('❌ Error crítico al guardar:', error);
+                console.error('❌ ERROR CRÍTICO AL GUARDAR:', error);
                 saveText.textContent = '✗ Error al guardar';
                 indicator.classList.remove('saving');
                 indicator.classList.add('saved');
