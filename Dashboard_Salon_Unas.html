@@ -627,66 +627,6 @@
 
             <!-- NUEVA: Calendario de Contenido -->
             <div id="seccionCalendarioContenido" style="display: none;">
-                <!-- Formulario para agregar contenido ARRIBA -->
-                <div class="card" style="padding: 14px; background: linear-gradient(135deg, #fdf5f9 0%, #fff9fc 100%); border: 2px solid #d4547e; margin-bottom: 14px;">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-                        <span style="font-size: 20px;">✨</span>
-                        <h3 style="margin: 0; font-size: 14px; font-weight: bold; color: #d4547e;">Planifica tu Contenido</h3>
-                    </div>
-
-                    <!-- Grid compacto -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-                        <div style="display: flex; flex-direction: column; gap: 4px;">
-                            <label style="font-size: 11px; font-weight: bold; color: #d4547e;">📅 Fecha</label>
-                            <input type="date" id="fechaContenidoNuevo" style="padding: 8px; border: 1px solid #e0b0c0; border-radius: 4px; font-size: 12px;">
-                        </div>
-                        <div style="display: flex; flex-direction: column; gap: 4px;">
-                            <label style="font-size: 11px; font-weight: bold; color: #d4547e;">🎬 Tipo</label>
-                            <select id="tipoContenidoNuevo" style="padding: 8px; border: 1px solid #e0b0c0; border-radius: 4px; font-size: 12px;">
-                                <option value="">Selecciona tipo</option>
-                                <option value="Publicación">📸 Publicación</option>
-                                <option value="Historia">📖 Historia</option>
-                                <option value="Reel">🎬 Reel</option>
-                                <option value="TikTok">🎵 TikTok</option>
-                                <option value="Video">🎥 Video</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px;">
-                        <label style="font-size: 11px; font-weight: bold; color: #d4547e;">✍️ ¿Qué va a contener?</label>
-                        <textarea id="copyContenidoNuevo" placeholder="Escribe la frase, caption y CTA..." style="padding: 8px; border: 1px solid #e0b0c0; border-radius: 4px; font-size: 12px; resize: vertical; min-height: 70px; font-family: Arial;"></textarea>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 10px;">
-                        <div style="display: flex; flex-direction: column; gap: 4px;">
-                            <label style="font-size: 11px; font-weight: bold; color: #d4547e;">📱 Plataformas</label>
-                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                                <label style="display: flex; align-items: center; gap: 4px; font-size: 11px;">
-                                    <input type="checkbox" id="platConIG"> 📷 IG
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 4px; font-size: 11px;">
-                                    <input type="checkbox" id="platConTK"> 🎵 TK
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 4px; font-size: 11px;">
-                                    <input type="checkbox" id="platConFB"> 👥 FB
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 4px; font-size: 11px;">
-                                    <input type="checkbox" id="platConWA"> 💬 WA
-                                </label>
-                            </div>
-                        </div>
-                        <div style="display: flex; flex-direction: column; gap: 4px;">
-                            <label style="font-size: 11px; font-weight: bold; color: #d4547e;">#️⃣ Hashtags</label>
-                            <input type="text" id="hashtagsContenidoNuevo" placeholder="#uñas #nails" style="padding: 8px; border: 1px solid #e0b0c0; border-radius: 4px; font-size: 12px;">
-                        </div>
-                    </div>
-
-                    <button onclick="agregarContenidoNuevo()" style="width: 100%; padding: 10px; background: linear-gradient(135deg, #ff6b9d 0%, #d4547e 100%); color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                        ✨ Agregar a Calendario
-                    </button>
-                </div>
-
                 <!-- CALENDARIO HERMOSO DEL MES -->
                 <div class="card" style="padding: 14px; background: linear-gradient(135deg, #fff9fc 0%, #f5e6f0 100%); border: 2px solid #d4547e;">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
@@ -698,7 +638,7 @@
                     </div>
 
                     <!-- Calendario Grid Hermoso -->
-                    <div id="calendarioDiasPerfecto" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-bottom: 20px;">
+                    <div id="calendarioDiasPerfecto" style="display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: minmax(100px, auto); gap: 10px; margin-bottom: 20px; overflow: visible;">
                         <!-- Se genera con JavaScript -->
                     </div>
 
@@ -1180,7 +1120,7 @@
             document.getElementById('fechaGasto').valueAsDate = new Date();
             document.getElementById('fechaTransfer').valueAsDate = new Date();
             document.getElementById('fechaTarea').valueAsDate = new Date();
-            document.getElementById('fechaContenidoNuevo').valueAsDate = new Date();
+            // fechaContenidoNuevo eliminada - el Calendario ya no tiene formulario
 
             // Inicializar mes actual de consulta
             mesActualConsulta = getMesActual();
@@ -1242,17 +1182,30 @@
                 if (dataFirebase) {
                     console.log('🔄 Datos encontrados en Firebase');
                     
-                    // Si Firebase tiene datos más recientes, usar esos
+                    // CAMBIO CRÍTICO: localStorage es la fuente principal
+                    // SOLO actualizar si localStorage está VACÍO
+                    const clientesLocal = localStorage.getItem('salon_clientes');
+                    
+                    // Si localStorage tiene datos, respetarlos (nunca sobrescribir)
+                    if (!clientesLocal && dataFirebase.clientes) {
+                        console.log('📥 Restaurando clientes desde Firebase (localStorage vacío)');
+                        clientes = dataFirebase.clientes;
+                    } else if (clientesLocal) {
+                        console.log('✅ Usando clientes de localStorage (respetando cambios locales)');
+                        // NO sobrescribir clientes locales
+                    }
+                    
+                    // Para otros datos, usar timestamp para determinar cuál es más reciente
                     const timestampLocal = parseInt(localStorage.getItem('firebaseTimestamp') || '0');
                     const timestampFirebase = dataFirebase.timestamp || 0;
                     
                     if (timestampFirebase > timestampLocal) {
-                        console.log('🔄 Actualizando desde Firebase (datos más recientes)');
+                        console.log('🔄 Actualizando otros datos desde Firebase (más recientes)');
                         
-                        if (dataFirebase.clientes) clientes = dataFirebase.clientes;
+                        // Actualizar SOLO datos que NO sean clientes eliminados
                         if (dataFirebase.transacciones) transacciones = dataFirebase.transacciones;
                         if (dataFirebase.metasMensuales) metasMensuales = dataFirebase.metasMensuales;
-                        if (dataFirebase.metasContenido) metasContenido = dataFirebase.metasContenido; // NUEVA
+                        if (dataFirebase.metasContenido) metasContenido = dataFirebase.metasContenido;
                         if (dataFirebase.planMensual) planMensual = dataFirebase.planMensual;
                         
                         // Guardar en localStorage
@@ -3687,78 +3640,9 @@
         }
 
         // NUEVA FUNCIÓN: Agregar contenido desde calendario
-        function agregarContenidoNuevo() {
-            const fecha = document.getElementById('fechaContenidoNuevo').value;
-            const tipo = document.getElementById('tipoContenidoNuevo').value;
-            const copy = document.getElementById('copyContenidoNuevo').value.trim();
-            
-            // Recopilar plataformas
-            const plataformas = [];
-            if (document.getElementById('platConIG').checked) plataformas.push('Instagram');
-            if (document.getElementById('platConTK').checked) plataformas.push('TikTok');
-            if (document.getElementById('platConFB').checked) plataformas.push('Facebook');
-            if (document.getElementById('platConWA').checked) plataformas.push('WhatsApp');
-            
-            const hashtags = document.getElementById('hashtagsContenidoNuevo').value.trim();
-
-            // Validar
-            if (!fecha || !tipo || !copy || plataformas.length === 0) {
-                alert('Por favor completa: Fecha, Tipo, Descripción y al menos una Plataforma');
-                return;
-            }
-
-            // Crear tarea de contenido (apunta al mismo planMensual)
-            const tarea = {
-                id: Date.now(),
-                tipoActividad: tipo,
-                nombreCustom: '',
-                fecha: fecha,
-                categoria: 'Contenido/Redes',  // SIEMPRE contenido
-                plataforma: plataformas[0],  // Principal
-                plataformasMultiples: plataformas,  // Todas
-                estado: 'Pendiente',
-                notas: '',
-                copy: copy,
-                hashtags: hashtags,
-                esContenido: true,  // SIEMPRE true
-                
-                // Campos de resultados
-                alcance: 0,
-                interacciones: 0,
-                mensajes: 0,
-                citasGeneradas: 0,
-                ingresoGenerado: 0,
-                
-                fechaCreacion: new Date().toLocaleDateString('es-CO')
-            };
-
-            // Agregar a planMensual (MISMO ARRAY que Plan Mensual)
-            planMensual.push(tarea);
-
-            // Limpiar formulario
-            document.getElementById('fechaContenidoNuevo').valueAsDate = new Date();
-            document.getElementById('tipoContenidoNuevo').value = '';
-            document.getElementById('copyContenidoNuevo').value = '';
-            document.getElementById('platConIG').checked = false;
-            document.getElementById('platConTK').checked = false;
-            document.getElementById('platConFB').checked = false;
-            document.getElementById('platConWA').checked = false;
-            document.getElementById('hashtagsContenidoNuevo').value = '';
-
-            // Guardar y regenerar calendario
-            saveData();
-            generarCalendarioPerfecto();
-            renderPlanMensual(); // ACTUALIZAR: Actualizar Plan Mensual también
-            
-            // Feedback
-            const btn = event.target;
-            btn.textContent = '✓ ¡Agregado!';
-            btn.style.background = '#4caf50';
-            setTimeout(() => {
-                btn.textContent = '✨ Agregar a Calendario';
-                btn.style.background = 'linear-gradient(135deg, #ff6b9d 0%, #d4547e 100%)';
-            }, 1500);
-        }
+        // FUNCIÓN ELIMINADA: agregarContenidoNuevo
+        // Ya no es necesaria - el Calendario es SOLO una vista del Plan Mensual
+        // Las tareas se crean desde el Plan Mensual, no desde el Calendario
 
         // ===== FUNCIONES PARA MÓDULO 2: PLAN MENSUAL =====
 
@@ -3782,10 +3666,21 @@
             container.innerHTML = '';
 
             const [año, mes] = mesActualConsulta.split('-');
-            const primerDia = new Date(año, mes - 1, 1);
-            const ultimoDia = new Date(año, mes, 0);
+            const year = parseInt(año);  // CONVERTIR A NÚMERO
+            const month = parseInt(mes); // CONVERTIR A NÚMERO
+            const primerDia = new Date(year, month - 1, 1);
+            const ultimoDia = new Date(year, month, 0);
             const diasEnMes = ultimoDia.getDate();
             const diaInicio = primerDia.getDay();
+            
+            // DEBUG
+            console.log('📅 CALENDARIO DEBUG:');
+            console.log('mesActualConsulta:', mesActualConsulta);
+            console.log('year:', year, 'month:', month);
+            console.log('primerDia:', primerDia);
+            console.log('ultimoDia:', ultimoDia);
+            console.log('diasEnMes:', diasEnMes);
+            console.log('diaInicio:', diaInicio);
 
             // Encabezados de días
             const diasSemana = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
@@ -3811,7 +3706,7 @@
 
             // Generar días del mes
             for (let dia = 1; dia <= diasEnMes; dia++) {
-                const fechaStr = `${año}-${mes.padStart(2, '0')}-${dia.toString().padStart(2, '0')}`;
+                const fechaStr = `${year}-${month.toString().padStart(2, '0')}-${dia.toString().padStart(2, '0')}`;
                 // ARREGLADO: Mostrar TODAS las tareas del día (sin filtro de categoría)
                 const tareasDelDia = planMensual.filter(t => t.fecha === fechaStr);
                 const completadas = tareasDelDia.filter(t => t.estado === 'Completada').length;
@@ -3892,7 +3787,9 @@
                                     t.tipoActividad === 'Reel' ? '🎬' :
                                     t.tipoActividad === 'TikTok' ? '🎵' : '🎥';
                         const checkmark = t.estado === 'Completada' ? '✓ ' : '';
-                        texto += `${emoji} ${checkmark}${t.copy.substring(0, 25)}...\n`;
+                        // ARREGLO: Usar copy si existe, sino tipoActividad
+                        const copyText = (t.copy || t.tipoActividad || 'Tarea').substring(0, 25);
+                        texto += `${emoji} ${checkmark}${copyText}...\n`;
                     });
 
                     if (tareasDelDia.length > 2) {
