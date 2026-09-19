@@ -452,10 +452,11 @@
             <!-- MÓDULO 1: METAS DEL MES -->
             <div id="seccionMetas" style="display: block;">
                 <!-- Selector de Mes -->
-                <div class="card" style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                <div class="card" style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
                     <label for="mesSelector" style="font-weight: 600; color: #d4547e; white-space: nowrap;">📅 Mes:</label>
                     <input type="month" id="mesSelector" style="padding: 8px; border: 1px solid #f0e0e8; border-radius: 6px; font-size: 14px;">
                     <span id="mesInfo" style="font-size: 13px; color: #999;"></span>
+                    <button onclick="cargarTareasContenidoSeptiembre()" class="btn" style="margin-left: auto; background: #f4a6c1; font-size: 11px; padding: 6px 12px;">📥 Cargar Plan Sept</button>
                 </div>
 
                 <!-- Metas del Mes -->
@@ -632,7 +633,7 @@
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
                         <span style="font-size: 24px;">📆</span>
                         <div>
-                            <h3 style="margin: 0; font-size: 16px; font-weight: bold; color: #d4547e;">Calendario de Septiembre</h3>
+                            <h3 id="tituloCalendario" style="margin: 0; font-size: 16px; font-weight: bold; color: #d4547e;">Calendario de Septiembre</h3>
                             <p style="margin: 0; font-size: 11px; color: #999;">Planifica tu contenido día a día</p>
                         </div>
                     </div>
@@ -1139,11 +1140,27 @@
             const mesSelector = document.getElementById('mesSelector');
             if (mesSelector) {
                 mesSelector.value = mesActualConsulta;
+                // Mostrar mes en español
+                const mesInfo = document.getElementById('mesInfo');
+                if (mesInfo) {
+                    mesInfo.textContent = `(${getMesEnEspanol(mesActualConsulta)})`;
+                }
+                
                 mesSelector.addEventListener('change', function(e) {
                     mesActualConsulta = e.target.value;
+                    
+                    // Crear metas si no existen
                     crearMetasDefault(mesActualConsulta);
-                    crearMetasContenidoDefault(mesActualConsulta); // NUEVA
-                    renderCrecimiento();
+                    crearMetasContenidoDefault(mesActualConsulta);
+                    
+                    // Actualizar texto del mes en español
+                    if (mesInfo) {
+                        mesInfo.textContent = `(${getMesEnEspanol(mesActualConsulta)})`;
+                    }
+                    
+                    // Actualizar todas las secciones
+                    renderCrecimiento();      // Metas + Plan Mensual
+                    generarCalendarioPerfecto(); // Calendario
                 });
             }
 
@@ -1310,7 +1327,313 @@
             return new Date().toISOString().slice(0, 7);
         }
 
-        // Crear metas por defecto si no existen
+        // NUEVA FUNCIÓN: Convertir "2026-09" a "septiembre de 2026" en español
+        function getMesEnEspanol(mesFecha) {
+            const meses = [
+                'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+                'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+            ];
+            const [año, mes] = mesFecha.split('-');
+            const nombreMes = meses[parseInt(mes) - 1];
+            return `${nombreMes} de ${año}`;
+        }
+
+        // NUEVA FUNCIÓN: Cargar tareas de contenido de septiembre
+        function cargarTareasContenidoSeptiembre() {
+            const tareasNuevas = [
+                {
+                    id: Date.now() + 1,
+                    tipoActividad: 'Publicación',
+                    nombreCustom: '',
+                    fecha: '2026-09-17',
+                    categoria: 'Contenido/Redes',
+                    plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram', 'Facebook', 'WhatsApp'],
+                    estado: 'Pendiente',
+                    copy: 'Un pequeño detalle puede cambiarlo todo. ✨💅\n\nDelicada, femenina y hecha para destacar.\nTu momento de consentirte también merece un espacio. 🤍\nManicure, diseños y mucho cuidado en cada detalle.\n📲 Agenda tu cita por WhatsApp.',
+                    hashtags: '#uñas #nails #manicure #diseño',
+                    esContenido: true,
+                    alcance: 0,
+                    interacciones: 0,
+                    mensajes: 0,
+                    citasGeneradas: 0,
+                    ingresoGenerado: 0,
+                    notas: 'Foto del mejor trabajo disponible. Publicar en Instagram, compartir en Facebook, estado en WhatsApp.',
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: Date.now() + 2,
+                    tipoActividad: 'Historia',
+                    nombreCustom: '',
+                    fecha: '2026-09-18',
+                    categoria: 'Contenido/Redes',
+                    plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram'],
+                    estado: 'Pendiente',
+                    copy: '¿Qué estilo elegirías para tu próxima manicure? 💅\n\nEncuesta: Natural / Elegante\n\n¿Cuál elegirías? Dos diseños A/B',
+                    hashtags: '#interacción #encuesta',
+                    esContenido: true,
+                    alcance: 0,
+                    interacciones: 0,
+                    mensajes: 0,
+                    citasGeneradas: 0,
+                    ingresoGenerado: 0,
+                    notas: 'Historias: Historia 1 + Encuesta + Dos diseños',
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: Date.now() + 3,
+                    tipoActividad: 'Publicación',
+                    nombreCustom: '',
+                    fecha: '2026-09-19',
+                    categoria: 'Contenido/Redes',
+                    plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram', 'Facebook', 'WhatsApp'],
+                    estado: 'Pendiente',
+                    copy: 'Menos es más cuando cada detalle cuenta. 🤍\n\nUn estilo delicado, limpio y perfecto para cualquier ocasión. ✨\n¿Lo usarías?',
+                    hashtags: '#natural #limpio #diseño',
+                    esContenido: true,
+                    alcance: 0,
+                    interacciones: 0,
+                    mensajes: 0,
+                    citasGeneradas: 0,
+                    ingresoGenerado: 0,
+                    notas: 'Post natural. Objetivo: inspiración + comentarios',
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: Date.now() + 4,
+                    tipoActividad: 'Reel',
+                    nombreCustom: '',
+                    fecha: '2026-09-20',
+                    categoria: 'Contenido/Redes',
+                    plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram', 'TikTok', 'Facebook', 'WhatsApp'],
+                    estado: 'Pendiente',
+                    copy: 'Antes ✨ Después\n\n¿Te harías este cambio? 💅\n\nUn cambio que se nota. ✨\nAgenda tu cita por WhatsApp.',
+                    hashtags: '#antesdespués #transformación #antes',
+                    esContenido: true,
+                    alcance: 0,
+                    interacciones: 0,
+                    mensajes: 0,
+                    citasGeneradas: 0,
+                    ingresoGenerado: 0,
+                    notas: 'Video 3-7 segundos: antes + transición + resultado. Usar en Instagram Reel, TikTok, compartir en Facebook',
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: Date.now() + 5,
+                    tipoActividad: 'Publicación',
+                    nombreCustom: '',
+                    fecha: '2026-09-21',
+                    categoria: 'Contenido/Redes',
+                    plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram', 'Facebook', 'WhatsApp'],
+                    estado: 'Pendiente',
+                    copy: 'Tus uñas también pueden ser parte de tu personalidad. 💅✨\n\n¿Te atreverías con este diseño?',
+                    hashtags: '#diseño #personalidad #atrevete',
+                    esContenido: true,
+                    alcance: 0,
+                    interacciones: 0,
+                    mensajes: 0,
+                    citasGeneradas: 0,
+                    ingresoGenerado: 0,
+                    notas: 'Post mostrando variedad de diseños',
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: Date.now() + 6,
+                    tipoActividad: 'Historia',
+                    nombreCustom: '',
+                    fecha: '2026-09-22',
+                    categoria: 'Contenido/Redes',
+                    plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram', 'WhatsApp'],
+                    estado: 'Pendiente',
+                    copy: '¿Ya tienes cita para consentirte esta semana? 💅\n\nTengo algunos espacios disponibles. 📅\n\nEscríbeme por WhatsApp y te cuento los horarios. 🤍\n\n---WhatsApp---\nAgenda abierta 💅📅\nSi quieres reservar tu espacio, escríbeme.',
+                    hashtags: '#agenda #reserva #cita',
+                    esContenido: true,
+                    alcance: 0,
+                    interacciones: 0,
+                    mensajes: 0,
+                    citasGeneradas: 0,
+                    ingresoGenerado: 0,
+                    notas: 'Solo historias + WhatsApp. NO post. Objetivo: generar mensajes',
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: Date.now() + 7,
+                    tipoActividad: 'Publicación',
+                    nombreCustom: '',
+                    fecha: '2026-09-23',
+                    categoria: 'Contenido/Redes',
+                    plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram', 'WhatsApp'],
+                    estado: 'Pendiente',
+                    copy: 'Los detalles hablan por sí solos. ✨\n\nCuidamos cada detalle para que el resultado se vea bonito y puedas disfrutar tu momento. 🤍',
+                    hashtags: '#detalles #calidad #cuidado',
+                    esContenido: true,
+                    alcance: 0,
+                    interacciones: 0,
+                    mensajes: 0,
+                    citasGeneradas: 0,
+                    ingresoGenerado: 0,
+                    notas: 'Foto muy cercana de las uñas. Objetivo: transmitir calidad',
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: Date.now() + 8,
+                    tipoActividad: 'Historia',
+                    nombreCustom: '',
+                    fecha: '2026-09-24',
+                    categoria: 'Contenido/Redes',
+                    plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram', 'WhatsApp'],
+                    estado: 'Pendiente',
+                    copy: 'Yo: este mes no voy a gastar.\n\nTambién yo cuando veo un diseño de uñas bonito: 👀💅✨\n\nEncuesta: ¿Te ha pasado? SÍ 😂 / DEMASIADO',
+                    hashtags: '#humor #relatable #gastos',
+                    esContenido: true,
+                    alcance: 0,
+                    interacciones: 0,
+                    mensajes: 0,
+                    citasGeneradas: 0,
+                    ingresoGenerado: 0,
+                    notas: 'Historias + encuesta. Objetivo: interacción',
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: Date.now() + 9,
+                    tipoActividad: 'Reel',
+                    nombreCustom: '',
+                    fecha: '2026-09-25',
+                    categoria: 'Contenido/Redes',
+                    plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram', 'TikTok', 'Facebook', 'WhatsApp'],
+                    estado: 'Pendiente',
+                    copy: 'Aquí cada detalle está pensado para ti. 🤍\n\nPorque hacerte las uñas también puede ser un momento para desconectarte, relajarte y consentirte. ✨💅',
+                    hashtags: '#experiencia #bienestar #lujo',
+                    esContenido: true,
+                    alcance: 0,
+                    interacciones: 0,
+                    mensajes: 0,
+                    citasGeneradas: 0,
+                    ingresoGenerado: 0,
+                    notas: 'Clips cortos: espacio + carrito + preparación + productos + atención. Objetivo: diferenciación',
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: Date.now() + 10,
+                    tipoActividad: 'Historia',
+                    nombreCustom: '',
+                    fecha: '2026-09-26',
+                    categoria: 'Contenido/Redes',
+                    plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram'],
+                    estado: 'Pendiente',
+                    copy: 'Encuesta 1: ¿Uñas cortas o largas? Cortas / Largas\n\nEncuesta 2: ¿Colores claros o fuertes? Claros / Fuertes\n\nPregunta: ¿Qué diseño te gustaría ver próximamente?',
+                    hashtags: '#encuesta #feedback #diseño',
+                    esContenido: true,
+                    alcance: 0,
+                    interacciones: 0,
+                    mensajes: 0,
+                    citasGeneradas: 0,
+                    ingresoGenerado: 0,
+                    notas: 'Historias con encuestas. Objetivo: interacción + información para futuros contenidos',
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: Date.now() + 11,
+                    tipoActividad: 'Publicación',
+                    nombreCustom: '',
+                    fecha: '2026-09-27',
+                    categoria: 'Contenido/Redes',
+                    plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram', 'Facebook', 'WhatsApp'],
+                    estado: 'Pendiente',
+                    copy: 'Elegancia en cada detalle. ✨\n\nUn diseño delicado para quienes creen que la elegancia también está en los pequeños detalles. 🤍\n\n¿Te gustaría llevar este diseño? 💅',
+                    hashtags: '#elegancia #delicado #clásico',
+                    esContenido: true,
+                    alcance: 0,
+                    interacciones: 0,
+                    mensajes: 0,
+                    citasGeneradas: 0,
+                    ingresoGenerado: 0,
+                    notas: 'Post elegante. Objetivo: inspiración + intención de reserva',
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: Date.now() + 12,
+                    tipoActividad: 'Reel',
+                    nombreCustom: '',
+                    fecha: '2026-09-28',
+                    categoria: 'Contenido/Redes',
+                    plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram', 'TikTok', 'Facebook', 'WhatsApp'],
+                    estado: 'Pendiente',
+                    copy: 'POV: Dijiste "solo voy a mirar diseños de uñas"…\n\n30 minutos después:\n\n¿Cuál de estos 7 me hago? 😂💅\n\nSeamos honestas… ¿a quién más le pasa? 😂\n\nEtiqueta a esa amiga.',
+                    hashtags: '#pov #humor #relatable',
+                    esContenido: true,
+                    alcance: 0,
+                    interacciones: 0,
+                    mensajes: 0,
+                    citasGeneradas: 0,
+                    ingresoGenerado: 0,
+                    notas: 'POV video con varios diseños. Objetivo: alcance + compartidos',
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: Date.now() + 13,
+                    tipoActividad: 'Publicación',
+                    nombreCustom: '',
+                    fecha: '2026-09-29',
+                    categoria: 'Contenido/Redes',
+                    plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram', 'Facebook', 'WhatsApp'],
+                    estado: 'Pendiente',
+                    copy: 'Los pequeños detalles también cuentan. 🤍✨\n\nQueremos que tu visita sea una experiencia especial desde que llegas hasta que te vas. 💅\n\nPor eso preparamos un pequeño detalle para nuestras clientas. 🎁',
+                    hashtags: '#bienvenida #detalle #especial',
+                    esContenido: true,
+                    alcance: 0,
+                    interacciones: 0,
+                    mensajes: 0,
+                    citasGeneradas: 0,
+                    ingresoGenerado: 0,
+                    notas: 'Foto del kit de bienvenida: llaverito + dulce + presentación. Objetivo: diferenciación + expectativa',
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: Date.now() + 14,
+                    tipoActividad: 'Publicación',
+                    nombreCustom: '',
+                    fecha: '2026-09-30',
+                    categoria: 'Contenido/Redes',
+                    plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram', 'TikTok', 'Facebook', 'WhatsApp'],
+                    estado: 'Pendiente',
+                    copy: 'Septiembre fue solo el comienzo. ✨💅\n\nGracias por acompañarme en este comienzo. 🤍\n\nSeguimos creciendo, creando nuevos diseños y preparando cada detalle para recibirte.\n\n¿Lista para tu próxima manicure? 💅\n\n📲 Agenda tu cita por WhatsApp.',
+                    hashtags: '#cierre #gracias #crecimiento',
+                    esContenido: true,
+                    alcance: 0,
+                    interacciones: 0,
+                    mensajes: 0,
+                    citasGeneradas: 0,
+                    ingresoGenerado: 0,
+                    notas: 'Collage/video con varios trabajos. Objetivo: cerrar el mes buscando reservas',
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                }
+            ];
+
+            // Agregar al planMensual
+            planMensual.push(...tareasNuevas);
+            
+            // Guardar
+            saveData();
+            
+            console.log('✅ 14 tareas de septiembre agregadas al Plan Mensual');
+            
+            // Actualizar visualización
+            renderCrecimiento();
+        }
         function crearMetasDefault(mes) {
             if (!metasMensuales[mes]) {
                 metasMensuales[mes] = {
@@ -3672,6 +3995,13 @@
             const ultimoDia = new Date(year, month, 0);
             const diasEnMes = ultimoDia.getDate();
             const diaInicio = primerDia.getDay();
+            
+            // Actualizar título del calendario
+            const tituloCalendario = document.getElementById('tituloCalendario');
+            if (tituloCalendario) {
+                const mesNombre = getMesEnEspanol(mesActualConsulta);
+                tituloCalendario.textContent = `Calendario de ${mesNombre.charAt(0).toUpperCase() + mesNombre.slice(1)}`;
+            }
             
             // DEBUG
             console.log('📅 CALENDARIO DEBUG:');
