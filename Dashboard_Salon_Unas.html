@@ -446,6 +446,7 @@
             <div class="card" style="display: flex; gap: 10px; margin-bottom: 20px; padding: 12px;">
                 <button id="btnSeccionMetas" class="btn" style="flex: 1; background: #d4547e; font-weight: bold;" onclick="cambiarSeccionCrecimiento('metas')">📊 Metas del Mes</button>
                 <button id="btnSeccionPlan" class="btn" style="flex: 1; background: #f4a6c1;" onclick="cambiarSeccionCrecimiento('plan')">📅 Plan Mensual</button>
+                <button id="btnSeccionCalendario" class="btn" style="flex: 1; background: #e8b4d4;" onclick="cambiarSeccionCrecimiento('calendario')">📆 Calendario Contenido</button>
             </div>
 
             <!-- MÓDULO 1: METAS DEL MES -->
@@ -511,21 +512,53 @@
                             <select id="categoriaTarea" style="padding: 8px; border: 1px solid #e0b0c0; border-radius: 4px; font-size: 12px;">
                                 <option value="">Selecciona categoría</option>
                                 <option value="Marketing">📊 Marketing</option>
-                                <option value="Contenido">📝 Contenido</option>
+                                <option value="Contenido/Redes">🎨 Contenido/Redes Sociales</option>
                                 <option value="Clientes">👥 Clientes</option>
                                 <option value="Operativo">⚙️ Operativo</option>
                             </select>
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 4px;">
-                            <label style="font-size: 11px; font-weight: bold; color: #d4547e;">📱 Plataforma</label>
+                            <label style="font-size: 11px; font-weight: bold; color: #d4547e;">📱 Plataforma Principal</label>
                             <select id="plataformaTarea" style="padding: 8px; border: 1px solid #e0b0c0; border-radius: 4px; font-size: 12px;">
                                 <option value="">Selecciona plataforma</option>
                                 <option value="Instagram">📷 Instagram</option>
+                                <option value="Facebook">👥 Facebook</option>
                                 <option value="TikTok">🎵 TikTok</option>
                                 <option value="WhatsApp">💬 WhatsApp</option>
                                 <option value="Blog">📝 Blog</option>
                                 <option value="Otra">🔧 Otra</option>
                             </select>
+                        </div>
+                    </div>
+
+                    <!-- NUEVA Fila 2b: Copy + Hashtags -->
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 11px; font-weight: bold; color: #d4547e;">✍️ Copy / Caption</label>
+                            <textarea id="copyTarea" placeholder="Frase, caption y llamado a la acción..." style="padding: 8px; border: 1px solid #e0b0c0; border-radius: 4px; font-size: 12px; resize: vertical; min-height: 60px; font-family: Arial;"></textarea>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 11px; font-weight: bold; color: #d4547e;">#️⃣ Hashtags</label>
+                            <input type="text" id="hashtagsTarea" placeholder="#ejemplo #uñas" style="padding: 8px; border: 1px solid #e0b0c0; border-radius: 4px; font-size: 12px;">
+                        </div>
+                    </div>
+
+                    <!-- NUEVA Fila 2c: Plataformas múltiples (checkboxes) -->
+                    <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px;">
+                        <label style="font-size: 11px; font-weight: bold; color: #d4547e;">📢 Plataformas adicionales</label>
+                        <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+                            <label style="display: flex; align-items: center; gap: 4px; font-size: 11px;">
+                                <input type="checkbox" id="platInstagram" value="Instagram"> 📷 Instagram
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 4px; font-size: 11px;">
+                                <input type="checkbox" id="platFacebook" value="Facebook"> 👥 Facebook
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 4px; font-size: 11px;">
+                                <input type="checkbox" id="platTikTok" value="TikTok"> 🎵 TikTok
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 4px; font-size: 11px;">
+                                <input type="checkbox" id="platWhatsApp" value="WhatsApp"> 💬 WhatsApp
+                            </label>
                         </div>
                     </div>
 
@@ -591,9 +624,191 @@
                     </div>
                 </div>
             </div>
+
+            <!-- NUEVA: Calendario de Contenido -->
+            <div id="seccionCalendarioContenido" style="display: none;">
+                <!-- Formulario para agregar contenido ARRIBA -->
+                <div class="card" style="padding: 14px; background: linear-gradient(135deg, #fdf5f9 0%, #fff9fc 100%); border: 2px solid #d4547e; margin-bottom: 14px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                        <span style="font-size: 20px;">✨</span>
+                        <h3 style="margin: 0; font-size: 14px; font-weight: bold; color: #d4547e;">Planifica tu Contenido</h3>
+                    </div>
+
+                    <!-- Grid compacto -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 11px; font-weight: bold; color: #d4547e;">📅 Fecha</label>
+                            <input type="date" id="fechaContenidoNuevo" style="padding: 8px; border: 1px solid #e0b0c0; border-radius: 4px; font-size: 12px;">
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 11px; font-weight: bold; color: #d4547e;">🎬 Tipo</label>
+                            <select id="tipoContenidoNuevo" style="padding: 8px; border: 1px solid #e0b0c0; border-radius: 4px; font-size: 12px;">
+                                <option value="">Selecciona tipo</option>
+                                <option value="Publicación">📸 Publicación</option>
+                                <option value="Historia">📖 Historia</option>
+                                <option value="Reel">🎬 Reel</option>
+                                <option value="TikTok">🎵 TikTok</option>
+                                <option value="Video">🎥 Video</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px;">
+                        <label style="font-size: 11px; font-weight: bold; color: #d4547e;">✍️ ¿Qué va a contener?</label>
+                        <textarea id="copyContenidoNuevo" placeholder="Escribe la frase, caption y CTA..." style="padding: 8px; border: 1px solid #e0b0c0; border-radius: 4px; font-size: 12px; resize: vertical; min-height: 70px; font-family: Arial;"></textarea>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 11px; font-weight: bold; color: #d4547e;">📱 Plataformas</label>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                <label style="display: flex; align-items: center; gap: 4px; font-size: 11px;">
+                                    <input type="checkbox" id="platConIG"> 📷 IG
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 4px; font-size: 11px;">
+                                    <input type="checkbox" id="platConTK"> 🎵 TK
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 4px; font-size: 11px;">
+                                    <input type="checkbox" id="platConFB"> 👥 FB
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 4px; font-size: 11px;">
+                                    <input type="checkbox" id="platConWA"> 💬 WA
+                                </label>
+                            </div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 11px; font-weight: bold; color: #d4547e;">#️⃣ Hashtags</label>
+                            <input type="text" id="hashtagsContenidoNuevo" placeholder="#uñas #nails" style="padding: 8px; border: 1px solid #e0b0c0; border-radius: 4px; font-size: 12px;">
+                        </div>
+                    </div>
+
+                    <button onclick="agregarContenidoNuevo()" style="width: 100%; padding: 10px; background: linear-gradient(135deg, #ff6b9d 0%, #d4547e 100%); color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        ✨ Agregar a Calendario
+                    </button>
+                </div>
+
+                <!-- CALENDARIO HERMOSO DEL MES -->
+                <div class="card" style="padding: 14px; background: linear-gradient(135deg, #fff9fc 0%, #f5e6f0 100%); border: 2px solid #d4547e;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                        <span style="font-size: 24px;">📆</span>
+                        <div>
+                            <h3 style="margin: 0; font-size: 16px; font-weight: bold; color: #d4547e;">Calendario de Septiembre</h3>
+                            <p style="margin: 0; font-size: 11px; color: #999;">Planifica tu contenido día a día</p>
+                        </div>
+                    </div>
+
+                    <!-- Calendario Grid Hermoso -->
+                    <div id="calendarioDiasPerfecto" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-bottom: 20px;">
+                        <!-- Se genera con JavaScript -->
+                    </div>
+
+                    <!-- Leyenda -->
+                    <div style="padding: 12px; background: white; border-radius: 6px; border-left: 4px solid #7b68ee;">
+                        <div style="font-size: 10px; color: #999; font-weight: bold; margin-bottom: 6px;">LEYENDA:</div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 12px; font-size: 11px;">
+                            <span style="display: flex; align-items: center; gap: 4px;">
+                                <div style="width: 12px; height: 12px; background: white; border: 2px solid #999; border-radius: 3px;"></div> Sin contenido
+                            </span>
+                            <span style="display: flex; align-items: center; gap: 4px;">
+                                <div style="width: 12px; height: 12px; background: #ffebee; border: 2px solid #ff6b9d; border-radius: 3px;"></div> Pendiente
+                            </span>
+                            <span style="display: flex; align-items: center; gap: 4px;">
+                                <div style="width: 12px; height: 12px; background: #e8f5e9; border: 2px solid #4caf50; border-radius: 3px;"></div> Completado
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
-        <!-- FINANZAS TAB -->
+        <!-- MODAL: Detalles de Actividad del Calendario -->
+        <div id="modalDetalleActividad" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
+            <div style="background: white; border-radius: 12px; padding: 20px; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+                
+                <!-- Header del Modal -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 2px solid #d4547e; padding-bottom: 12px;">
+                    <h3 style="margin: 0; color: #d4547e; font-size: 16px;">📋 Detalles de Actividad</h3>
+                    <button onclick="cerrarModalActividad()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #999;">✕</button>
+                </div>
+
+                <!-- Si hay múltiples actividades en el día -->
+                <div id="selectoresActividades" style="margin-bottom: 12px; display: none;">
+                    <label style="font-size: 11px; font-weight: bold; color: #d4547e; display: block; margin-bottom: 6px;">Varias actividades este día. Selecciona una:</label>
+                    <div id="listaActividadesDelDia" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
+                    <hr style="margin: 12px 0; border: none; border-top: 1px solid #e0e0e0;">
+                </div>
+
+                <!-- Contenido del Modal -->
+                <div id="contenidoModalActividad">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <div>
+                            <label style="font-size: 10px; font-weight: bold; color: #999; display: block; margin-bottom: 4px;">📅 Fecha</label>
+                            <div id="modalFecha" style="font-size: 13px; color: #333; background: #f5f5f5; padding: 8px; border-radius: 4px; font-weight: 500;"></div>
+                        </div>
+                        <div>
+                            <label style="font-size: 10px; font-weight: bold; color: #999; display: block; margin-bottom: 4px;">🎬 Tipo</label>
+                            <div id="modalTipo" style="font-size: 13px; color: #333; background: #f5f5f5; padding: 8px; border-radius: 4px; font-weight: 500;"></div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <div>
+                            <label style="font-size: 10px; font-weight: bold; color: #999; display: block; margin-bottom: 4px;">📊 Categoría</label>
+                            <div id="modalCategoria" style="font-size: 13px; color: #333; background: #f5f5f5; padding: 8px; border-radius: 4px;"></div>
+                        </div>
+                        <div>
+                            <label style="font-size: 10px; font-weight: bold; color: #999; display: block; margin-bottom: 4px;">📱 Plataforma Principal</label>
+                            <div id="modalPlataforma" style="font-size: 13px; color: #333; background: #f5f5f5; padding: 8px; border-radius: 4px;"></div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 12px;">
+                        <label style="font-size: 10px; font-weight: bold; color: #999; display: block; margin-bottom: 4px;">📢 Plataformas Adicionales</label>
+                        <div id="modalPlataformasMultiples" style="font-size: 13px; color: #333; background: #f5f5f5; padding: 8px; border-radius: 4px;"></div>
+                    </div>
+
+                    <div style="margin-bottom: 12px;">
+                        <label style="font-size: 10px; font-weight: bold; color: #999; display: block; margin-bottom: 4px;">✍️ Copy / Caption</label>
+                        <div id="modalCopy" style="font-size: 13px; color: #333; background: #f5f5f5; padding: 8px; border-radius: 4px; line-height: 1.4; border-left: 4px solid #d4547e; min-height: 60px;"></div>
+                    </div>
+
+                    <div style="margin-bottom: 12px;">
+                        <label style="font-size: 10px; font-weight: bold; color: #999; display: block; margin-bottom: 4px;">#️⃣ Hashtags</label>
+                        <div id="modalHashtags" style="font-size: 13px; color: #7b68ee; background: #f0e6ff; padding: 8px; border-radius: 4px; font-weight: 500;"></div>
+                    </div>
+
+                    <div style="margin-bottom: 12px;">
+                        <label style="font-size: 10px; font-weight: bold; color: #999; display: block; margin-bottom: 4px;">💭 Notas</label>
+                        <div id="modalNotas" style="font-size: 13px; color: #333; background: #f5f5f5; padding: 8px; border-radius: 4px; font-style: italic; min-height: 40px;"></div>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <label style="font-size: 10px; font-weight: bold; color: #999; display: block; margin-bottom: 4px;">✓ Estado</label>
+                        <div style="display: inline-block; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold;" id="modalEstado"></div>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div style="display: flex; gap: 10px; border-top: 1px solid #e0e0e0; padding-top: 12px;">
+                    <button onclick="editarActividadDesdeModal()" style="flex: 1; padding: 10px; background: #f4a6c1; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">
+                        ✏️ Editar
+                    </button>
+                    <button onclick="eliminarActividadDesdeModal()" style="flex: 1; padding: 10px; background: #e0e0e0; color: #333; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">
+                        🗑️ Eliminar
+                    </button>
+                    <button onclick="cerrarModalActividad()" style="flex: 1; padding: 10px; background: #d4547e; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">
+                        ✕ Cerrar
+                    </button>
+                </div>
+
+                <!-- Indicador de Sincronización -->
+                <div style="margin-top: 12px; padding: 8px; background: #e8f5e9; border-radius: 4px; border-left: 4px solid #4caf50; font-size: 11px; color: #2e7d32;">
+                    ✓ Sincronizado con Plan Mensual
+                </div>
+            </div>
+        </div>
+
         <div id="finanzas" class="tab-content">
             <!-- NAVEGACIÓN INTERNA DE FINANZAS -->
             <div class="card" style="display: flex; gap: 10px; margin-bottom: 20px; padding: 12px;">
@@ -913,6 +1128,7 @@
         
         // VARIABLES PARA MÓDULO METAS
         let metasMensuales = {};
+        let metasContenido = {}; // NUEVA: Metas de contenido (publicaciones, historias, reels, etc)
         let mesActualConsulta = new Date().toISOString().slice(0, 7); // Mes actual YYYY-MM
 
         // VARIABLES PARA MÓDULO 2: PLAN MENSUAL
@@ -953,12 +1169,18 @@
                 planMensual = JSON.parse(planData);
                 console.log('✅ Plan desde localStorage:', planMensual.length);
             }
+            const metasContenidoData = localStorage.getItem('salon_metas_contenido');
+            if (metasContenidoData) {
+                metasContenido = JSON.parse(metasContenidoData);
+                console.log('✅ Metas de contenido desde localStorage');
+            }
 
             // Establecer fechas por defecto
             document.getElementById('fechaIngreso').valueAsDate = new Date();
             document.getElementById('fechaGasto').valueAsDate = new Date();
             document.getElementById('fechaTransfer').valueAsDate = new Date();
             document.getElementById('fechaTarea').valueAsDate = new Date();
+            document.getElementById('fechaContenidoNuevo').valueAsDate = new Date();
 
             // Inicializar mes actual de consulta
             mesActualConsulta = getMesActual();
@@ -971,6 +1193,7 @@
             
             // Crear metas del mes actual si no existen
             crearMetasDefault(mesActualConsulta);
+            crearMetasContenidoDefault(mesActualConsulta); // NUEVA: Crear metas de contenido
 
             // Configurar selector de mes
             const mesSelector = document.getElementById('mesSelector');
@@ -979,6 +1202,7 @@
                 mesSelector.addEventListener('change', function(e) {
                     mesActualConsulta = e.target.value;
                     crearMetasDefault(mesActualConsulta);
+                    crearMetasContenidoDefault(mesActualConsulta); // NUEVA
                     renderCrecimiento();
                 });
             }
@@ -1028,6 +1252,7 @@
                         if (dataFirebase.clientes) clientes = dataFirebase.clientes;
                         if (dataFirebase.transacciones) transacciones = dataFirebase.transacciones;
                         if (dataFirebase.metasMensuales) metasMensuales = dataFirebase.metasMensuales;
+                        if (dataFirebase.metasContenido) metasContenido = dataFirebase.metasContenido; // NUEVA
                         if (dataFirebase.planMensual) planMensual = dataFirebase.planMensual;
                         
                         // Guardar en localStorage
@@ -1052,6 +1277,7 @@
             localStorage.setItem('salon_clientes', JSON.stringify(clientes));
             localStorage.setItem('salon_transacciones', JSON.stringify(transacciones));
             localStorage.setItem('salon_metas_mensuales', JSON.stringify(metasMensuales));
+            localStorage.setItem('salon_metas_contenido', JSON.stringify(metasContenido)); // NUEVA
             localStorage.setItem('salon_plan_mensual', JSON.stringify(planMensual));
             localStorage.setItem('ultimo_guardado', new Date().toLocaleString('es-CO'));
         }
@@ -1063,6 +1289,7 @@
                 clientes: clientes,
                 transacciones: transacciones,
                 metasMensuales: metasMensuales,
+                metasContenido: metasContenido, // NUEVA
                 planMensual: planMensual,
                 ultimoGuardado: new Date().toLocaleString('es-CO'),
                 timestamp: timestamp
@@ -1142,6 +1369,26 @@
                     meta_instagram_historias: 0,
                     meta_tiktok: 0,
                     meta_whatsapp_estados: 0
+                };
+                saveData();
+            }
+        }
+
+        // NUEVA FUNCIÓN: Crear metas de contenido por defecto
+        function crearMetasContenidoDefault(mes) {
+            if (!metasContenido[mes]) {
+                metasContenido[mes] = {
+                    meta_publicaciones: 10,      // Publicaciones principales
+                    meta_historias: 6,            // Días de historias/interacción
+                    meta_reels_tiktoks: 3,        // Reels/TikToks
+                    meta_whatsapp: 0,             // Conversiones via WhatsApp (rastrear después)
+                    meta_facebook: 0,             // Amplificación via Facebook
+                    
+                    // Contadores automáticos (se actualizarán según tareas completadas)
+                    completadas_publicaciones: 0,
+                    completadas_historias: 0,
+                    completadas_reels_tiktoks: 0,
+                    completadas_videos: 0
                 };
                 saveData();
             }
@@ -3404,9 +3651,10 @@
         function cambiarSeccionCrecimiento(seccion) {
             seccionCrecimientoActual = seccion;
             
-            // Ocultar ambas secciones
+            // Ocultar todas las secciones
             document.getElementById('seccionMetas').style.display = 'none';
             document.getElementById('seccionPlanMensual').style.display = 'none';
+            document.getElementById('seccionCalendarioContenido').style.display = 'none';
             
             // Mostrar la sección seleccionada
             if (seccion === 'metas') {
@@ -3415,13 +3663,101 @@
                 document.getElementById('btnSeccionMetas').style.fontWeight = 'bold';
                 document.getElementById('btnSeccionPlan').style.background = '#f4a6c1';
                 document.getElementById('btnSeccionPlan').style.fontWeight = 'normal';
+                document.getElementById('btnSeccionCalendario').style.background = '#e8b4d4';
+                document.getElementById('btnSeccionCalendario').style.fontWeight = 'normal';
             } else if (seccion === 'plan') {
                 document.getElementById('seccionPlanMensual').style.display = 'block';
                 document.getElementById('btnSeccionPlan').style.background = '#d4547e';
                 document.getElementById('btnSeccionPlan').style.fontWeight = 'bold';
                 document.getElementById('btnSeccionMetas').style.background = '#f4a6c1';
                 document.getElementById('btnSeccionMetas').style.fontWeight = 'normal';
+                document.getElementById('btnSeccionCalendario').style.background = '#e8b4d4';
+                document.getElementById('btnSeccionCalendario').style.fontWeight = 'normal';
+            } else if (seccion === 'calendario') {
+                document.getElementById('seccionCalendarioContenido').style.display = 'block';
+                document.getElementById('btnSeccionCalendario').style.background = '#d4547e';
+                document.getElementById('btnSeccionCalendario').style.fontWeight = 'bold';
+                document.getElementById('btnSeccionMetas').style.background = '#f4a6c1';
+                document.getElementById('btnSeccionMetas').style.fontWeight = 'normal';
+                document.getElementById('btnSeccionPlan').style.background = '#f4a6c1';
+                document.getElementById('btnSeccionPlan').style.fontWeight = 'normal';
+                // Generar calendario cuando se abre
+                generarCalendarioPerfecto();
             }
+        }
+
+        // NUEVA FUNCIÓN: Agregar contenido desde calendario
+        function agregarContenidoNuevo() {
+            const fecha = document.getElementById('fechaContenidoNuevo').value;
+            const tipo = document.getElementById('tipoContenidoNuevo').value;
+            const copy = document.getElementById('copyContenidoNuevo').value.trim();
+            
+            // Recopilar plataformas
+            const plataformas = [];
+            if (document.getElementById('platConIG').checked) plataformas.push('Instagram');
+            if (document.getElementById('platConTK').checked) plataformas.push('TikTok');
+            if (document.getElementById('platConFB').checked) plataformas.push('Facebook');
+            if (document.getElementById('platConWA').checked) plataformas.push('WhatsApp');
+            
+            const hashtags = document.getElementById('hashtagsContenidoNuevo').value.trim();
+
+            // Validar
+            if (!fecha || !tipo || !copy || plataformas.length === 0) {
+                alert('Por favor completa: Fecha, Tipo, Descripción y al menos una Plataforma');
+                return;
+            }
+
+            // Crear tarea de contenido (apunta al mismo planMensual)
+            const tarea = {
+                id: Date.now(),
+                tipoActividad: tipo,
+                nombreCustom: '',
+                fecha: fecha,
+                categoria: 'Contenido/Redes',  // SIEMPRE contenido
+                plataforma: plataformas[0],  // Principal
+                plataformasMultiples: plataformas,  // Todas
+                estado: 'Pendiente',
+                notas: '',
+                copy: copy,
+                hashtags: hashtags,
+                esContenido: true,  // SIEMPRE true
+                
+                // Campos de resultados
+                alcance: 0,
+                interacciones: 0,
+                mensajes: 0,
+                citasGeneradas: 0,
+                ingresoGenerado: 0,
+                
+                fechaCreacion: new Date().toLocaleDateString('es-CO')
+            };
+
+            // Agregar a planMensual (MISMO ARRAY que Plan Mensual)
+            planMensual.push(tarea);
+
+            // Limpiar formulario
+            document.getElementById('fechaContenidoNuevo').valueAsDate = new Date();
+            document.getElementById('tipoContenidoNuevo').value = '';
+            document.getElementById('copyContenidoNuevo').value = '';
+            document.getElementById('platConIG').checked = false;
+            document.getElementById('platConTK').checked = false;
+            document.getElementById('platConFB').checked = false;
+            document.getElementById('platConWA').checked = false;
+            document.getElementById('hashtagsContenidoNuevo').value = '';
+
+            // Guardar y regenerar calendario
+            saveData();
+            generarCalendarioPerfecto();
+            renderPlanMensual(); // ACTUALIZAR: Actualizar Plan Mensual también
+            
+            // Feedback
+            const btn = event.target;
+            btn.textContent = '✓ ¡Agregado!';
+            btn.style.background = '#4caf50';
+            setTimeout(() => {
+                btn.textContent = '✨ Agregar a Calendario';
+                btn.style.background = 'linear-gradient(135deg, #ff6b9d 0%, #d4547e 100%)';
+            }, 1500);
         }
 
         // ===== FUNCIONES PARA MÓDULO 2: PLAN MENSUAL =====
@@ -3430,6 +3766,327 @@
         function mostrarCampoOtra() {
             const tipoActividad = document.getElementById('tipoActividad').value;
             const campoCustom = document.getElementById('nombreTareaCustom');
+            if (tipoActividad === 'Otra') {
+                campoCustom.style.display = 'block';
+                campoCustom.focus();
+            } else {
+                campoCustom.style.display = 'none';
+            }
+        }
+
+        // NUEVA FUNCIÓN: Generar Calendario Perfecto (HERMOSO)
+        function generarCalendarioPerfecto() {
+            const container = document.getElementById('calendarioDiasPerfecto');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            const [año, mes] = mesActualConsulta.split('-');
+            const primerDia = new Date(año, mes - 1, 1);
+            const ultimoDia = new Date(año, mes, 0);
+            const diasEnMes = ultimoDia.getDate();
+            const diaInicio = primerDia.getDay();
+
+            // Encabezados de días
+            const diasSemana = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
+            diasSemana.forEach(dia => {
+                const header = document.createElement('div');
+                header.style.cssText = `
+                    font-weight: bold; 
+                    color: #d4547e; 
+                    text-align: center; 
+                    padding: 8px; 
+                    font-size: 12px;
+                    border-bottom: 2px solid #d4547e;
+                `;
+                header.textContent = dia;
+                container.appendChild(header);
+            });
+
+            // Espacios vacíos antes del primer día
+            for (let i = 0; i < diaInicio; i++) {
+                const vacio = document.createElement('div');
+                container.appendChild(vacio);
+            }
+
+            // Generar días del mes
+            for (let dia = 1; dia <= diasEnMes; dia++) {
+                const fechaStr = `${año}-${mes.padStart(2, '0')}-${dia.toString().padStart(2, '0')}`;
+                // ARREGLADO: Mostrar TODAS las tareas del día (sin filtro de categoría)
+                const tareasDelDia = planMensual.filter(t => t.fecha === fechaStr);
+                const completadas = tareasDelDia.filter(t => t.estado === 'Completada').length;
+                const pendientes = tareasDelDia.length - completadas;
+
+                const celda = document.createElement('div');
+                celda.style.cssText = `
+                    background: white;
+                    border: 2px solid #e0b0c0;
+                    border-radius: 8px;
+                    padding: 8px;
+                    min-height: 90px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    flex-direction: column;
+                    position: relative;
+                    overflow: hidden;
+                `;
+
+                // Colores según estado
+                if (tareasDelDia.length > 0) {
+                    if (completadas === tareasDelDia.length) {
+                        celda.style.background = 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)';
+                        celda.style.borderColor = '#4caf50';
+                        celda.style.boxShadow = '0 2px 8px rgba(76, 175, 80, 0.2)';
+                    } else if (completadas > 0) {
+                        celda.style.background = 'linear-gradient(135deg, #fff8e1 0%, #ffe0b2 100%)';
+                        celda.style.borderColor = '#ffc107';
+                        celda.style.boxShadow = '0 2px 8px rgba(255, 193, 7, 0.2)';
+                    } else {
+                        celda.style.background = 'linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%)';
+                        celda.style.borderColor = '#ff6b9d';
+                        celda.style.boxShadow = '0 2px 8px rgba(255, 107, 157, 0.2)';
+                    }
+
+                    // Hover effect
+                    celda.onmouseover = function() {
+                        this.style.transform = 'translateY(-2px)';
+                        this.style.boxShadow = '0 6px 16px rgba(0,0,0,0.15)';
+                    };
+                    celda.onmouseout = function() {
+                        this.style.transform = 'translateY(0)';
+                    };
+                }
+
+                // Número del día
+                const numeroDia = document.createElement('div');
+                numeroDia.style.cssText = `
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #d4547e;
+                    margin-bottom: 6px;
+                `;
+                numeroDia.textContent = dia;
+                celda.appendChild(numeroDia);
+
+                // Contenido del día
+                if (tareasDelDia.length > 0) {
+                    const contenidoDiv = document.createElement('div');
+                    contenidoDiv.style.cssText = `
+                        flex: 1;
+                        font-size: 11px;
+                        color: #333;
+                        line-height: 1.3;
+                        margin-bottom: 6px;
+                        display: -webkit-box;
+                        -webkit-line-clamp: 2;
+                        -webkit-box-orient: vertical;
+                        overflow: hidden;
+                    `;
+
+                    // Mostrar primeras dos tareas
+                    let texto = '';
+                    tareasDelDia.slice(0, 2).forEach((t, idx) => {
+                        const emoji = t.tipoActividad === 'Publicación' ? '📸' :
+                                    t.tipoActividad === 'Historia' ? '📖' :
+                                    t.tipoActividad === 'Reel' ? '🎬' :
+                                    t.tipoActividad === 'TikTok' ? '🎵' : '🎥';
+                        const checkmark = t.estado === 'Completada' ? '✓ ' : '';
+                        texto += `${emoji} ${checkmark}${t.copy.substring(0, 25)}...\n`;
+                    });
+
+                    if (tareasDelDia.length > 2) {
+                        texto += `+${tareasDelDia.length - 2} más`;
+                    }
+
+                    contenidoDiv.textContent = texto.trim();
+                    celda.appendChild(contenidoDiv);
+
+                    // Indicador de estado
+                    const indicador = document.createElement('div');
+                    indicador.style.cssText = `
+                        font-size: 9px;
+                        font-weight: bold;
+                        color: white;
+                        background: ${completadas === tareasDelDia.length ? '#4caf50' : pendientes > 0 ? '#ff6b9d' : '#ffc107'};
+                        padding: 2px 6px;
+                        border-radius: 3px;
+                        text-align: center;
+                    `;
+                    indicador.textContent = `${completadas}/${tareasDelDia.length}`;
+                    celda.appendChild(indicador);
+
+                    // Click para ver detalles
+                    celda.onclick = () => {
+                        mostrarDetallesDiaContenido(fechaStr, tareasDelDia);
+                    };
+                }
+
+                container.appendChild(celda);
+            }
+        }
+
+        // Mostrar modal con detalles de un día
+        function mostrarDetallesDiaContenido(fecha, tareas) {
+            const modal = document.getElementById('modalDetalleActividad');
+            
+            if (tareas.length === 0) return;
+
+            // Guardar datos globales para usar en editar/eliminar
+            window.actividadActualDelModal = null;
+            window.fechaActualDelModal = fecha;
+            window.tareasDelDiaEnModal = tareas;
+
+            // Si hay múltiples actividades
+            if (tareas.length > 1) {
+                document.getElementById('selectoresActividades').style.display = 'block';
+                const lista = document.getElementById('listaActividadesDelDia');
+                lista.innerHTML = '';
+                
+                tareas.forEach((t, idx) => {
+                    const btn = document.createElement('button');
+                    btn.textContent = `${t.tipoActividad} ${idx + 1}`;
+                    btn.style.cssText = `
+                        padding: 6px 10px;
+                        border: 1px solid #d4547e;
+                        background: ${idx === 0 ? '#d4547e' : 'white'};
+                        color: ${idx === 0 ? 'white' : '#d4547e'};
+                        border-radius: 4px;
+                        font-size: 11px;
+                        cursor: pointer;
+                        font-weight: bold;
+                        transition: all 0.2s ease;
+                    `;
+                    btn.onclick = () => {
+                        mostrarActividadEnModal(t);
+                        // Cambiar estilos
+                        document.querySelectorAll('#listaActividadesDelDia button').forEach(b => {
+                            b.style.background = 'white';
+                            b.style.color = '#d4547e';
+                        });
+                        btn.style.background = '#d4547e';
+                        btn.style.color = 'white';
+                    };
+                    lista.appendChild(btn);
+                });
+                
+                // Mostrar la primera por defecto
+                mostrarActividadEnModal(tareas[0]);
+            } else {
+                // Una sola actividad
+                document.getElementById('selectoresActividades').style.display = 'none';
+                mostrarActividadEnModal(tareas[0]);
+            }
+
+            // Mostrar modal
+            modal.style.display = 'flex';
+        }
+
+        // Mostrar una actividad específica en el modal
+        function mostrarActividadEnModal(tarea) {
+            window.actividadActualDelModal = tarea;
+
+            // Llenar campos
+            document.getElementById('modalFecha').textContent = tarea.fecha;
+            document.getElementById('modalTipo').textContent = tarea.tipoActividad;
+            document.getElementById('modalCategoria').textContent = tarea.categoria;
+            document.getElementById('modalPlataforma').textContent = tarea.plataforma;
+            document.getElementById('modalPlataformasMultiples').textContent = 
+                tarea.plataformasMultiples && tarea.plataformasMultiples.length > 0 
+                    ? tarea.plataformasMultiples.join(', ')
+                    : '-';
+            document.getElementById('modalCopy').textContent = tarea.copy || '-';
+            document.getElementById('modalHashtags').textContent = tarea.hashtags || '-';
+            document.getElementById('modalNotas').textContent = tarea.notas || '(Sin notas)';
+            
+            // Estado
+            const estadoDiv = document.getElementById('modalEstado');
+            if (tarea.estado === 'Completada') {
+                estadoDiv.style.background = '#e8f5e9';
+                estadoDiv.style.color = '#4caf50';
+                estadoDiv.textContent = '✓ Completada';
+            } else {
+                estadoDiv.style.background = '#ffebee';
+                estadoDiv.style.color = '#ff6b9d';
+                estadoDiv.textContent = '○ Pendiente';
+            }
+        }
+
+        // Cerrar modal haciendo click afuera
+        // Cerrar modal
+        function cerrarModalActividad() {
+            document.getElementById('modalDetalleActividad').style.display = 'none';
+            window.actividadActualDelModal = null;
+        }
+
+        // Editar actividad desde modal
+        function editarActividadDesdeModal() {
+            if (!window.actividadActualDelModal) return;
+
+            const tarea = window.actividadActualDelModal;
+            
+            // Cambiar estado (toggle)
+            if (tarea.estado === 'Pendiente') {
+                tarea.estado = 'Completada';
+                actualizarMetasContenido(tarea, 'agregar');
+            } else {
+                tarea.estado = 'Pendiente';
+                actualizarMetasContenido(tarea, 'quitar');
+            }
+
+            // Guardar
+            saveData();
+
+            // Actualizar visualizaciones
+            generarCalendarioPerfecto();
+            renderCrecimiento();
+
+            // Actualizar modal
+            mostrarActividadEnModal(tarea);
+
+            // Feedback visual
+            const btn = event.target;
+            btn.textContent = '✓ Actualizado';
+            setTimeout(() => {
+                btn.textContent = '✏️ Editar';
+            }, 1000);
+        }
+
+        // Eliminar actividad desde modal
+        function eliminarActividadDesdeModal() {
+            if (!window.actividadActualDelModal) return;
+
+            if (!confirm('¿Eliminar esta actividad? No se puede deshacer.')) return;
+
+            const tarea = window.actividadActualDelModal;
+            const index = planMensual.findIndex(t => t.id === tarea.id);
+
+            if (index > -1) {
+                // Si estaba completada, revertir meta
+                if (tarea.estado === 'Completada' && tarea.esContenido) {
+                    actualizarMetasContenido(tarea, 'quitar');
+                }
+
+                // Eliminar del array
+                planMensual.splice(index, 1);
+
+                // Guardar
+                saveData();
+
+                // Actualizar visualizaciones
+                generarCalendarioPerfecto();
+                renderCrecimiento();
+
+                // Cerrar modal
+                cerrarModalActividad();
+            }
+        }
+
+        // Mostrar/ocultar campo de actividad personalizada
+        function mostrarCampoOtra() {
+            const tipoActividad = document.getElementById('tipoActividad').value;
+            const campoCustom = document.getElementById('nombreTareaCustom');
+
             
             if (tipoActividad === 'Otra') {
                 campoCustom.style.display = 'block';
@@ -3448,6 +4105,17 @@
             const categoria = document.getElementById('categoriaTarea').value;
             const plataforma = document.getElementById('plataformaTarea').value;
             const notas = document.getElementById('notasTarea').value.trim();
+            
+            // NUEVOS CAMPOS
+            const copy = document.getElementById('copyTarea').value.trim();
+            const hashtags = document.getElementById('hashtagsTarea').value.trim();
+            
+            // Capturar plataformas múltiples
+            const plataformasMultiples = [];
+            if (document.getElementById('platInstagram').checked) plataformasMultiples.push('Instagram');
+            if (document.getElementById('platFacebook').checked) plataformasMultiples.push('Facebook');
+            if (document.getElementById('platTikTok').checked) plataformasMultiples.push('TikTok');
+            if (document.getElementById('platWhatsApp').checked) plataformasMultiples.push('WhatsApp');
 
             // Validar campos obligatorios
             if (!tipoActividad || !fecha || !categoria || !plataforma) {
@@ -3461,16 +4129,30 @@
                 return;
             }
 
-            // Crear objeto de tarea - ESTRUCTURA NUEVA (DUAL-MODE)
+            // Crear objeto de tarea - ESTRUCTURA EXPANDIDA
             const tarea = {
                 id: Date.now(),
-                tipoActividad: tipoActividad,           // Nuevo: tipo predefinido
-                nombreCustom: tipoActividad === 'Otra' ? nombreCustom : '', // Nuevo: solo si es "Otra"
+                tipoActividad: tipoActividad,
+                nombreCustom: tipoActividad === 'Otra' ? nombreCustom : '',
                 fecha: fecha,
                 categoria: categoria,
                 plataforma: plataforma,
+                plataformasMultiples: plataformasMultiples,  // NUEVA
                 estado: 'Pendiente',
                 notas: notas,
+                
+                // NUEVOS CAMPOS DE CONTENIDO
+                copy: copy,
+                hashtags: hashtags,
+                esContenido: categoria === 'Contenido/Redes',  // NUEVA: boolean
+                
+                // CAMPOS PARA RESULTADOS (inicialmente 0)
+                alcance: 0,
+                interacciones: 0,
+                mensajes: 0,
+                citasGeneradas: 0,
+                ingresoGenerado: 0,
+                
                 fechaCreacion: new Date().toLocaleDateString('es-CO')
             };
 
@@ -3485,10 +4167,16 @@
             document.getElementById('categoriaTarea').value = '';
             document.getElementById('plataformaTarea').value = '';
             document.getElementById('notasTarea').value = '';
+            document.getElementById('copyTarea').value = '';  // NUEVA
+            document.getElementById('hashtagsTarea').value = '';  // NUEVA
+            document.getElementById('platInstagram').checked = false;  // NUEVA
+            document.getElementById('platFacebook').checked = false;  // NUEVA
+            document.getElementById('platTikTok').checked = false;  // NUEVA
+            document.getElementById('platWhatsApp').checked = false;  // NUEVA
 
             // Guardar y renderizar
             saveData();
-            renderCrecimiento();
+            renderPlanMensual();
         }
 
         // Función para filtrar por estado (IMPLEMENTADA)
@@ -3558,6 +4246,111 @@
             // Por defecto (nunca debería llegar aquí)
             return 'Tarea sin nombre';
         }
+
+        // NUEVA FUNCIÓN: Actualizar visualización de Meta de Contenido
+        function actualizarVisualizacionMetaContenido() {
+            const metas = metasContenido[mesActualConsulta];
+            if (!metas) return;
+
+            // Contar tareas completadas por tipo
+            const publicacionesCompletadas = planMensual.filter(t => 
+                t.tipoActividad === 'Publicación' && 
+                t.estado === 'Completada' && 
+                t.fecha.substring(0, 7) === mesActualConsulta
+            ).length;
+
+            const historiasCompletadas = planMensual.filter(t => 
+                t.tipoActividad === 'Historia' && 
+                t.estado === 'Completada' && 
+                t.fecha.substring(0, 7) === mesActualConsulta
+            ).length;
+
+            const reelsCompletados = planMensual.filter(t => 
+                (t.tipoActividad === 'Reel' || t.tipoActividad === 'TikTok') && 
+                t.estado === 'Completada' && 
+                t.fecha.substring(0, 7) === mesActualConsulta
+            ).length;
+
+            // Actualizar metas con los conteos reales
+            metas.completadas_publicaciones = publicacionesCompletadas;
+            metas.completadas_historias = historiasCompletadas;
+            metas.completadas_reels_tiktoks = reelsCompletados;
+
+            // Actualizar elementos en HTML
+            document.getElementById('pubRealizadas').textContent = publicacionesCompletadas;
+            document.getElementById('pubMeta').textContent = metas.meta_publicaciones;
+
+            document.getElementById('histRealizadas').textContent = historiasCompletadas;
+            document.getElementById('histMeta').textContent = metas.meta_historias;
+
+            document.getElementById('reelRealizadas').textContent = reelsCompletados;
+            document.getElementById('reelMeta').textContent = metas.meta_reels_tiktoks;
+
+            // Calcular progreso total
+            const totalRealizado = publicacionesCompletadas + historiasCompletadas + reelsCompletados;
+            const totalMeta = metas.meta_publicaciones + metas.meta_historias + metas.meta_reels_tiktoks;
+            const porcentaje = totalMeta > 0 ? Math.round((totalRealizado / totalMeta) * 100) : 0;
+
+            // Actualizar porcentaje y barra
+            document.getElementById('porcentajeContenido').textContent = porcentaje;
+            document.getElementById('textoProgreso').textContent = `${totalRealizado} de ${totalMeta}`;
+            document.getElementById('barraProgreso').style.width = porcentaje + '%';
+
+            // Cambiar color de barra según cumplimiento
+            const barraElement = document.getElementById('barraProgreso');
+            if (porcentaje >= 80) {
+                barraElement.style.background = 'linear-gradient(90deg, #4caf50 0%, #66bb6a 100%)'; // Verde
+            } else if (porcentaje >= 60) {
+                barraElement.style.background = 'linear-gradient(90deg, #ffc107 0%, #ffb300 100%)'; // Amarillo
+            } else {
+                barraElement.style.background = 'linear-gradient(90deg, #ff6b9d 0%, #ff5177 100%)'; // Rosa/Rojo
+            }
+
+            // Actualizar mes en el título
+            document.getElementById('mesMetaContenido').textContent = obtenerNombreMes(mesActualConsulta);
+
+            // NUEVA: Actualizar resumen de contenido
+            actualizarResumenContenido();
+            
+            // NUEVA: Generar calendario visual
+            generarCalendarioPerfecto();
+        }
+
+        // NUEVA FUNCIÓN: Actualizar resumen de contenido (contadores)
+        function actualizarResumenContenido() {
+            // Contar por tipo (solo completadas del mes actual)
+            const publicaciones = planMensual.filter(t => 
+                t.tipoActividad === 'Publicación' && 
+                t.estado === 'Completada' && 
+                t.fecha.substring(0, 7) === mesActualConsulta
+            ).length;
+
+            const historias = planMensual.filter(t => 
+                t.tipoActividad === 'Historia' && 
+                t.estado === 'Completada' && 
+                t.fecha.substring(0, 7) === mesActualConsulta
+            ).length;
+
+            const reels = planMensual.filter(t => 
+                t.tipoActividad === 'Reel' && 
+                t.estado === 'Completada' && 
+                t.fecha.substring(0, 7) === mesActualConsulta
+            ).length;
+
+            const videos = planMensual.filter(t => 
+                t.tipoActividad === 'Video' && 
+                t.estado === 'Completada' && 
+                t.fecha.substring(0, 7) === mesActualConsulta
+            ).length;
+
+            // Actualizar elementos
+            document.getElementById('resumenPublicaciones').textContent = publicaciones;
+            document.getElementById('resumenHistorias').textContent = historias;
+            document.getElementById('resumenReels').textContent = reels;
+            document.getElementById('resumenVideos').textContent = videos;
+        }
+
+        // NUEVA FUNCIÓN: Generar calendario visual
 
         function renderPlanMensual() {
             const container = document.getElementById('tareasContainer');
@@ -3650,6 +4443,15 @@
                             
                             <!-- Notas si existen -->
                             ${t.notas ? `<div style="font-size: 12px; color: #999; font-style: italic; margin-bottom: 6px; padding: 4px 6px; background: #f9f9f9; border-radius: 3px;">💭 "${t.notas}"</div>` : ''}
+                            
+                            <!-- NUEVA: Copy si existe (para contenido) -->
+                            ${t.copy ? `<div style="font-size: 12px; color: #666; margin-bottom: 6px; padding: 8px; background: #f5f5f5; border-radius: 3px; border-left: 3px solid #d4547e; line-height: 1.4;">✍️ "${t.copy}"</div>` : ''}
+                            
+                            <!-- NUEVA: Hashtags si existen -->
+                            ${t.hashtags ? `<div style="font-size: 11px; color: #7b68ee; margin-bottom: 6px; padding: 4px 6px; background: #f0e6ff; border-radius: 3px;">#️⃣ ${t.hashtags}</div>` : ''}
+                            
+                            <!-- NUEVA: Plataformas múltiples si existen -->
+                            ${t.plataformasMultiples && t.plataformasMultiples.length > 0 ? `<div style="font-size: 11px; color: #00bfa5; margin-bottom: 6px; padding: 4px 6px; background: #e6f7f5; border-radius: 3px;">📢 Plataformas: ${t.plataformasMultiples.join(', ')}</div>` : ''}
                             
                             <!-- Badge de Estado -->
                             <div style="display: inline-flex; align-items: center; gap: 4px; background: ${bgEstado}; border-radius: 4px; padding: 4px 8px; font-size: 11px; font-weight: bold; color: ${colorEstado};">
@@ -3834,17 +4636,61 @@
             // Cambiar estado
             if (tarea.estado === 'Pendiente') {
                 tarea.estado = 'Completada';
+                
+                // NUEVA: Actualizar metas de contenido si es una tarea de contenido
+                if (tarea.esContenido) {
+                    actualizarMetasContenido(tarea, 'agregar');
+                }
             } else {
                 tarea.estado = 'Pendiente';
+                
+                // NUEVA: Revertir actualización de metas si se desCompleta
+                if (tarea.esContenido) {
+                    actualizarMetasContenido(tarea, 'quitar');
+                }
             }
 
             // Guardar y renderizar
             saveData();
             renderCrecimiento();
         }
+        
+        // NUEVA FUNCIÓN: Actualizar metas de contenido automáticamente
+        function actualizarMetasContenido(tarea, accion) {
+            const mes = tarea.fecha.substring(0, 7); // YYYY-MM
+            const metas = metasContenido[mes];
+            
+            if (!metas) return;
+            
+            const multiplicador = accion === 'agregar' ? 1 : -1;
+            
+            // Actualizar contador según tipo de actividad
+            if (tarea.tipoActividad === 'Publicación') {
+                metas.completadas_publicaciones = (metas.completadas_publicaciones || 0) + (1 * multiplicador);
+            } else if (tarea.tipoActividad === 'Historia') {
+                metas.completadas_historias = (metas.completadas_historias || 0) + (1 * multiplicador);
+            } else if (tarea.tipoActividad === 'Reel') {
+                metas.completadas_reels_tiktoks = (metas.completadas_reels_tiktoks || 0) + (1 * multiplicador);
+            } else if (tarea.tipoActividad === 'TikTok') {
+                metas.completadas_reels_tiktoks = (metas.completadas_reels_tiktoks || 0) + (1 * multiplicador);
+            } else if (tarea.tipoActividad === 'Video') {
+                metas.completadas_videos = (metas.completadas_videos || 0) + (1 * multiplicador);
+            }
+            
+            // Guardar cambios
+            saveData();
+        }
 
         // Inicializar
         loadData();
+        
+        // Configurar evento para cerrar modal haciendo click afuera
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('modalDetalleActividad');
+            if (event.target === modal) {
+                cerrarModalActividad();
+            }
+        });
         
         // PASO 5.5: Migrar datos antiguos si es necesario
         const huboMigracion = migrarDatosAntiguos();
