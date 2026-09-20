@@ -456,7 +456,7 @@
                     <label for="mesSelector" style="font-weight: 600; color: #d4547e; white-space: nowrap;">📅 Mes:</label>
                     <input type="month" id="mesSelector" style="padding: 8px; border: 1px solid #f0e0e8; border-radius: 6px; font-size: 14px;">
                     <span id="mesInfo" style="font-size: 13px; color: #999;"></span>
-                    <button onclick="cargarTareasContenidoSeptiembre()" class="btn" style="margin-left: auto; background: #f4a6c1; font-size: 11px; padding: 6px 12px;">📥 Cargar Plan Sept</button>
+                    <button onclick="limpiarYCargarSeptiembre()" class="btn" style="margin-left: auto; background: #f4a6c1; font-size: 11px; padding: 6px 12px;">🔄 Recargar Plan Sept</button>
                 </div>
 
                 <!-- Metas del Mes -->
@@ -628,35 +628,23 @@
 
             <!-- NUEVA: Calendario de Contenido -->
             <div id="seccionCalendarioContenido" style="display: none;">
-                <!-- CALENDARIO HERMOSO DEL MES -->
-                <div class="card" style="padding: 14px; background: linear-gradient(135deg, #fff9fc 0%, #f5e6f0 100%); border: 2px solid #d4547e;">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
-                        <span style="font-size: 24px;">📆</span>
+                <!-- CALENDARIO VISUAL LEGIBLE -->
+                <div class="card" style="padding: 14px; background: white; border: 1px solid #ddd;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                        <span style="font-size: 22px;">📆</span>
                         <div>
-                            <h3 id="tituloCalendario" style="margin: 0; font-size: 16px; font-weight: bold; color: #d4547e;">Calendario de Septiembre</h3>
-                            <p style="margin: 0; font-size: 11px; color: #999;">Planifica tu contenido día a día</p>
+                            <h3 id="tituloCalendario" style="margin: 0; font-size: 16px; font-weight: 600; color: #d4547e;">📅 Calendario</h3>
                         </div>
                     </div>
 
-                    <!-- Calendario Grid Hermoso -->
-                    <div id="calendarioDiasPerfecto" style="display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: minmax(100px, auto); gap: 10px; margin-bottom: 20px; overflow: visible;">
+                    <!-- Calendario Grid - LEGIBLE Y ESPACIOSO -->
+                    <div id="calendarioDiasPerfecto" style="display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: auto; gap: 6px; margin-bottom: 4px; overflow: visible; padding: 6px; background: transparent;">
                         <!-- Se genera con JavaScript -->
                     </div>
 
-                    <!-- Leyenda -->
-                    <div style="padding: 12px; background: white; border-radius: 6px; border-left: 4px solid #7b68ee;">
-                        <div style="font-size: 10px; color: #999; font-weight: bold; margin-bottom: 6px;">LEYENDA:</div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 12px; font-size: 11px;">
-                            <span style="display: flex; align-items: center; gap: 4px;">
-                                <div style="width: 12px; height: 12px; background: white; border: 2px solid #999; border-radius: 3px;"></div> Sin contenido
-                            </span>
-                            <span style="display: flex; align-items: center; gap: 4px;">
-                                <div style="width: 12px; height: 12px; background: #ffebee; border: 2px solid #ff6b9d; border-radius: 3px;"></div> Pendiente
-                            </span>
-                            <span style="display: flex; align-items: center; gap: 4px;">
-                                <div style="width: 12px; height: 12px; background: #e8f5e9; border: 2px solid #4caf50; border-radius: 3px;"></div> Completado
-                            </span>
-                        </div>
+                    <!-- Leyenda MINIMAL -->
+                    <div style="padding: 6px; background: #f9f9f9; border-radius: 4px; margin-top: 8px; font-size: 9px; color: #999;">
+                        🟢 Completo · 🟡 Parcial · 🔴 Pendiente
                     </div>
                 </div>
             </div>
@@ -1632,6 +1620,30 @@
         }
 
         // NUEVA FUNCIÓN: Cargar tareas de contenido de septiembre
+        // NUEVA FUNCIÓN: Limpiar localStorage y cargar plan de septiembre
+        function limpiarYCargarSeptiembre() {
+            if (confirm('¿Limpiar datos locales y cargar el plan de septiembre? ¿Continuar?')) {
+                console.log('🧹 Limpiando datos...');
+                
+                // Guardar clientes
+                const clientesGuardados = localStorage.getItem('salon_clientes');
+                
+                // Limpiar todo
+                localStorage.clear();
+                
+                // Restaurar clientes si existían
+                if (clientesGuardados) localStorage.setItem('salon_clientes', clientesGuardados);
+                
+                console.log('✅ Limpieza completada');
+                console.log('🔄 Recargando página...');
+                
+                // Recargar
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            }
+        }
+
         function cargarTareasContenidoSeptiembre() {
             const tareasNuevas = [
                 {
@@ -1929,16 +1941,31 @@
         }
         function crearMetasDefault(mes) {
             if (!metasMensuales[mes]) {
-                metasMensuales[mes] = {
-                    meta_ingresos: 500000,
-                    meta_clientes: 10,
-                    meta_clientes_nuevos: 3,
-                    meta_servicios: 15,
-                    meta_instagram_publicaciones: 0,
-                    meta_instagram_historias: 0,
-                    meta_tiktok: 0,
-                    meta_whatsapp_estados: 0
-                };
+                // METAS SEPTIEMBRE 2026 (Basadas en plan de contenido)
+                if (mes === '2026-09') {
+                    metasMensuales[mes] = {
+                        meta_ingresos: 500000,
+                        meta_clientes: 10,
+                        meta_clientes_nuevos: 3,
+                        meta_servicios: 15,
+                        meta_instagram_publicaciones: 7,      // 7 posts
+                        meta_instagram_historias: 4,          // 4 días
+                        meta_tiktok: 4,                       // 4 videos
+                        meta_whatsapp_estados: 8              // 8 estados
+                    };
+                } else {
+                    // Metas por defecto para otros meses
+                    metasMensuales[mes] = {
+                        meta_ingresos: 500000,
+                        meta_clientes: 10,
+                        meta_clientes_nuevos: 3,
+                        meta_servicios: 15,
+                        meta_instagram_publicaciones: 0,
+                        meta_instagram_historias: 0,
+                        meta_tiktok: 0,
+                        meta_whatsapp_estados: 0
+                    };
+                }
                 saveData();
             }
         }
@@ -1946,19 +1973,36 @@
         // NUEVA FUNCIÓN: Crear metas de contenido por defecto
         function crearMetasContenidoDefault(mes) {
             if (!metasContenido[mes]) {
-                metasContenido[mes] = {
-                    meta_publicaciones: 10,      // Publicaciones principales
-                    meta_historias: 6,            // Días de historias/interacción
-                    meta_reels_tiktoks: 3,        // Reels/TikToks
-                    meta_whatsapp: 0,             // Conversiones via WhatsApp (rastrear después)
-                    meta_facebook: 0,             // Amplificación via Facebook
-                    
-                    // Contadores automáticos (se actualizarán según tareas completadas)
-                    completadas_publicaciones: 0,
-                    completadas_historias: 0,
-                    completadas_reels_tiktoks: 0,
-                    completadas_videos: 0
-                };
+                // METAS DE CONTENIDO SEPTIEMBRE 2026 (Basadas en 14 tareas)
+                if (mes === '2026-09') {
+                    metasContenido[mes] = {
+                        meta_publicaciones: 7,        // 7 posts Instagram
+                        meta_historias: 4,            // 4 días de historias
+                        meta_reels_tiktoks: 4,        // 4 Reels/TikToks
+                        meta_facebook: 7,             // 7 compartidos en Facebook
+                        meta_whatsapp: 8,             // 8 estados en WhatsApp
+                        
+                        // Contadores automáticos (se actualizarán según tareas completadas)
+                        completadas_publicaciones: 0,
+                        completadas_historias: 0,
+                        completadas_reels_tiktoks: 0,
+                        completadas_videos: 0
+                    };
+                } else {
+                    // Metas por defecto para otros meses
+                    metasContenido[mes] = {
+                        meta_publicaciones: 10,
+                        meta_historias: 6,
+                        meta_reels_tiktoks: 3,
+                        meta_facebook: 0,
+                        meta_whatsapp: 0,
+                        
+                        completadas_publicaciones: 0,
+                        completadas_historias: 0,
+                        completadas_reels_tiktoks: 0,
+                        completadas_videos: 0
+                    };
+                }
                 saveData();
             }
         }
@@ -4305,17 +4349,19 @@
             console.log('diasEnMes:', diasEnMes);
             console.log('diaInicio:', diaInicio);
 
-            // Encabezados de días
+            // Encabezados de días - LEGIBLES
             const diasSemana = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
             diasSemana.forEach(dia => {
                 const header = document.createElement('div');
                 header.style.cssText = `
-                    font-weight: bold; 
+                    font-weight: 600; 
                     color: #d4547e; 
                     text-align: center; 
-                    padding: 8px; 
-                    font-size: 12px;
-                    border-bottom: 2px solid #d4547e;
+                    padding: 4px 0px; 
+                    font-size: 11px;
+                    border-bottom: 1px solid #ddd;
+                    line-height: 1;
+                    margin-bottom: 3px;
                 `;
                 header.textContent = dia;
                 container.appendChild(header);
@@ -4338,103 +4384,103 @@
                 const celda = document.createElement('div');
                 celda.style.cssText = `
                     background: white;
-                    border: 2px solid #e0b0c0;
-                    border-radius: 8px;
+                    border: 1px solid #e0e0e0;
+                    border-radius: 6px;
                     padding: 8px;
-                    min-height: 90px;
+                    min-height: 110px;
                     cursor: pointer;
-                    transition: all 0.3s ease;
+                    transition: all 0.2s ease;
                     display: flex;
                     flex-direction: column;
                     position: relative;
                     overflow: hidden;
                 `;
 
-                // Colores según estado
+                // Colores según estado - SUTILES
                 if (tareasDelDia.length > 0) {
                     if (completadas === tareasDelDia.length) {
-                        celda.style.background = 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)';
-                        celda.style.borderColor = '#4caf50';
-                        celda.style.boxShadow = '0 2px 8px rgba(76, 175, 80, 0.2)';
+                        celda.style.background = '#f1f8f4';
+                        celda.style.borderColor = '#a5d6a7';
                     } else if (completadas > 0) {
-                        celda.style.background = 'linear-gradient(135deg, #fff8e1 0%, #ffe0b2 100%)';
-                        celda.style.borderColor = '#ffc107';
-                        celda.style.boxShadow = '0 2px 8px rgba(255, 193, 7, 0.2)';
+                        celda.style.background = '#fff8f0';
+                        celda.style.borderColor = '#ffb3ba';
                     } else {
-                        celda.style.background = 'linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%)';
-                        celda.style.borderColor = '#ff6b9d';
-                        celda.style.boxShadow = '0 2px 8px rgba(255, 107, 157, 0.2)';
+                        celda.style.background = '#fff5f9';
+                        celda.style.borderColor = '#f4a6c1';
                     }
-
-                    // Hover effect
-                    celda.onmouseover = function() {
-                        this.style.transform = 'translateY(-2px)';
-                        this.style.boxShadow = '0 6px 16px rgba(0,0,0,0.15)';
-                    };
-                    celda.onmouseout = function() {
-                        this.style.transform = 'translateY(0)';
-                    };
                 }
 
-                // Número del día
+                // Hover effect - SUAVE Y COMPACTO
+                celda.onmouseover = function() {
+                    this.style.transform = 'scale(1.01)';
+                    this.style.boxShadow = '0 2px 6px rgba(212, 84, 126, 0.1)';
+                    this.style.borderColor = '#d4547e';
+                };
+                celda.onmouseout = function() {
+                    this.style.transform = 'scale(1)';
+                    this.style.boxShadow = 'none';
+                };
+
+                // Número del día - LEGIBLE
                 const numeroDia = document.createElement('div');
                 numeroDia.style.cssText = `
-                    font-size: 18px;
-                    font-weight: bold;
+                    font-size: 16px;
+                    font-weight: 800;
                     color: #d4547e;
-                    margin-bottom: 6px;
+                    margin-bottom: 3px;
+                    line-height: 1;
+                    margin-right: auto;
                 `;
                 numeroDia.textContent = dia;
                 celda.appendChild(numeroDia);
 
-                // Contenido del día
+                // Contenido del día - LEGIBLE Y AMPLIO
                 if (tareasDelDia.length > 0) {
-                    const contenidoDiv = document.createElement('div');
-                    contenidoDiv.style.cssText = `
-                        flex: 1;
-                        font-size: 11px;
-                        color: #333;
-                        line-height: 1.3;
-                        margin-bottom: 6px;
-                        display: -webkit-box;
-                        -webkit-line-clamp: 2;
-                        -webkit-box-orient: vertical;
-                        overflow: hidden;
-                    `;
-
-                    // Mostrar primeras dos tareas
-                    let texto = '';
+                    // Mostrar solo las 2 primeras actividades con títulos truncados
                     tareasDelDia.slice(0, 2).forEach((t, idx) => {
+                        const actividadDiv = document.createElement('div');
+                        actividadDiv.style.cssText = `
+                            font-size: 12px;
+                            color: #333;
+                            line-height: 1.5;
+                            margin-bottom: 4px;
+                            display: -webkit-box;
+                            -webkit-line-clamp: 2;
+                            -webkit-box-orient: vertical;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            padding-right: 22px;
+                            flex: 1;
+                        `;
+
                         const emoji = t.tipoActividad === 'Publicación' ? '📸' :
                                     t.tipoActividad === 'Historia' ? '📖' :
                                     t.tipoActividad === 'Reel' ? '🎬' :
                                     t.tipoActividad === 'TikTok' ? '🎵' : '🎥';
-                        const checkmark = t.estado === 'Completada' ? '✓ ' : '';
-                        // ARREGLO: Usar copy si existe, sino tipoActividad
-                        const copyText = (t.copy || t.tipoActividad || 'Tarea').substring(0, 25);
-                        texto += `${emoji} ${checkmark}${copyText}...\n`;
+                        
+                        const titulo = (t.copy || t.tipoActividad || 'Tarea').substring(0, 50);
+                        actividadDiv.textContent = `${emoji} ${titulo}`;
+                        celda.appendChild(actividadDiv);
                     });
 
-                    if (tareasDelDia.length > 2) {
-                        texto += `+${tareasDelDia.length - 2} más`;
-                    }
-
-                    contenidoDiv.textContent = texto.trim();
-                    celda.appendChild(contenidoDiv);
-
-                    // Indicador de estado
-                    const indicador = document.createElement('div');
-                    indicador.style.cssText = `
+                    // Badge de progreso - PEQUEÑO EN LA ESQUINA
+                    const badge = document.createElement('div');
+                    badge.style.cssText = `
                         font-size: 9px;
-                        font-weight: bold;
+                        font-weight: 700;
                         color: white;
                         background: ${completadas === tareasDelDia.length ? '#4caf50' : pendientes > 0 ? '#ff6b9d' : '#ffc107'};
-                        padding: 2px 6px;
+                        padding: 2px 5px;
                         border-radius: 3px;
+                        position: absolute;
+                        bottom: 3px;
+                        right: 3px;
+                        min-width: 20px;
                         text-align: center;
+                        line-height: 1;
                     `;
-                    indicador.textContent = `${completadas}/${tareasDelDia.length}`;
-                    celda.appendChild(indicador);
+                    badge.textContent = `${completadas}/${tareasDelDia.length}`;
+                    celda.appendChild(badge);
 
                     // Click para ver detalles
                     celda.onclick = () => {
