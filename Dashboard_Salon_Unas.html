@@ -366,6 +366,20 @@
 
         <!-- DASHBOARD TAB -->
         <div id="dashboard" class="tab-content active">
+            <!-- PANEL DE RECORDATORIOS -->
+            <div class="card" style="background: linear-gradient(135deg, #fff9fc 0%, #ffe8f5 100%); border: 2px solid #d4547e; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 24px;">🔔</span>
+                        <h3 style="margin: 0; color: #d4547e;">Recordatorios y Tareas Pendientes</h3>
+                    </div>
+                    <button onclick="solicitarPermisosNotificacion()" class="btn" style="background: #d4547e; padding: 6px 12px; font-size: 12px; white-space: nowrap;">📲 Activar Notificaciones</button>
+                </div>
+                <div id="recordatoriosPanel" style="min-height: 80px;">
+                    <div class="empty">Cargando recordatorios...</div>
+                </div>
+            </div>
+            
             <div class="kpi-grid">
                 <div class="kpi-card">
                     <div class="kpi-label">Entradas</div>
@@ -645,6 +659,12 @@
                     <!-- Leyenda MINIMAL -->
                     <div style="padding: 6px; background: #f9f9f9; border-radius: 4px; margin-top: 8px; font-size: 9px; color: #999;">
                         🟢 Completo · 🟡 Parcial · 🔴 Pendiente
+                    </div>
+                    
+                    <!-- Botones de Exportación - Plan Mensual/Calendario -->
+                    <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid #ddd;">
+                        <h4 style="color: #d4547e; font-size: 13px; margin-bottom: 10px;">📥 Exportar Plan</h4>
+                        <button onclick="exportarDatos('planMensual')" class="btn" style="background: #9c27b0;">📋 Exportar Plan Mensual a CSV</button>
                     </div>
                 </div>
             </div>
@@ -991,6 +1011,12 @@
                     <tbody></tbody>
                 </table>
                 <div id="clientesEmpty" class="empty">No hay clientes registrados aún</div>
+                
+                <!-- Botones de Exportación - Clientes -->
+                <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid #ddd;">
+                    <h4 style="color: #d4547e; font-size: 13px; margin-bottom: 10px;">📥 Exportar Clientes</h4>
+                    <button onclick="exportarDatos('clientes')" class="btn" style="background: #2196f3;">👥 Exportar Clientes a CSV</button>
+                </div>
             </div>
         </div>
 
@@ -1012,6 +1038,15 @@
                     <tbody></tbody>
                 </table>
                 <div id="transaccionesEmpty" class="empty">No hay transacciones registradas</div>
+            </div>
+            
+            <!-- Botones de Exportación - Finanzas -->
+            <div style="margin-top: 20px; padding-top: 15px; border-top: 2px solid #ddd;">
+                <h4 style="color: #d4547e; font-size: 13px; margin-bottom: 12px;">📥 Exportar Datos Financieros</h4>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button onclick="exportarDatos('completo')" class="btn" style="background: #4caf50;">📥 Exportar Todo</button>
+                    <button onclick="exportarDatos('transacciones')" class="btn" style="background: #ff9800;">💰 Transacciones</button>
+                </div>
             </div>
         </div>
 
@@ -1621,6 +1656,103 @@
 
         // NUEVA FUNCIÓN: Cargar tareas de contenido de septiembre
         // NUEVA FUNCIÓN: Limpiar localStorage y cargar plan de septiembre
+        // NUEVA FUNCIÓN: Exportar datos a CSV (VERSION FINAL CORREGIDA)
+        function exportarDatos(tipo) {
+            let csv = '';
+            let nombreArchivo = '';
+            
+            // Función para crear fila CSV correctamente
+            const crearFila = (...valores) => {
+                return valores.map(v => {
+                    if (v === undefined || v === null || v === '') {
+                        return '';
+                    }
+                    // Limpiar emojis y caracteres especiales
+                    let texto = String(v)
+                        .replace(/[\u{1F300}-\u{1F9FF}]/gu, '') // Todos los emojis
+                        .replace(/[\r\n\t]/g, ' ') // Saltos de línea y tabs
+                        .replace(/"/g, '""') // Escapar comillas
+                        .trim();
+                    
+                    // Solo poner comillas si tiene comas, comillas o espacios al inicio/final
+                    if (texto.includes(',') || texto.includes('"') || texto.startsWith(' ') || texto.endsWith(' ')) {
+                        return `"${texto}"`;
+                    }
+                    return texto;
+                }).join(',');
+            };
+            
+            if (tipo === 'clientes') {
+                csv = crearFila('ID', 'Nombre', 'Telefono', 'Email', 'Servicios Completados', 'Visitas', 'Ultima Visita', 'Fidelizacion %', 'Fecha Creacion') + '\n';
+                clientes.forEach(c => {
+                    const ultimaVisita = c.ultimaVisita ? new Date(c.ultimaVisita).toLocaleDateString('es-CO') : '';
+                    const fechaCreacion = c.fechaCreacion ? new Date(c.fechaCreacion).toLocaleDateString('es-CO') : '';
+                    csv += crearFila(c.id, c.nombre, c.telefono || '', c.email || '', c.servicios || '', c.visitas || '', ultimaVisita, c.fidelizacion || '', fechaCreacion) + '\n';
+                });
+                nombreArchivo = `Clientes_${mesActualConsulta}.csv`;
+            } 
+            else if (tipo === 'transacciones') {
+                csv = crearFila('Fecha', 'Descripcion', 'Monto COP', 'Tipo', 'Metodo Pago', 'Categoria', 'Notas') + '\n';
+                transacciones.forEach(t => {
+                    const fecha = new Date(t.fecha).toLocaleDateString('es-CO');
+                    csv += crearFila(fecha, t.descripcion || '', t.monto || '', t.tipo || '', t.metodo || '', t.categoria || '', t.notas || '') + '\n';
+                });
+                nombreArchivo = `Transacciones_${mesActualConsulta}.csv`;
+            }
+            else if (tipo === 'planMensual') {
+                csv = crearFila('Fecha', 'Tipo', 'Categoria', 'Plataforma', 'Estado', 'Descripcion', 'Hashtags', 'Alcance', 'Interacciones', 'Mensajes', 'Citas Generadas', 'Ingreso') + '\n';
+                planMensual.forEach(t => {
+                    if (t.fecha.startsWith(mesActualConsulta)) {
+                        const desc = (t.copy || t.tipoActividad || '').substring(0, 50);
+                        csv += crearFila(t.fecha, t.tipoActividad || '', t.categoria || '', t.plataforma || '', t.estado || '', desc, t.hashtags || '', t.alcance || '', t.interacciones || '', t.mensajes || '', t.citasGeneradas || '', t.ingresoGenerado || '') + '\n';
+                    }
+                });
+                nombreArchivo = `Plan_Mensual_${mesActualConsulta}.csv`;
+            }
+            else if (tipo === 'completo') {
+                // SECCIÓN CLIENTES
+                csv += crearFila('CLIENTES') + '\n';
+                csv += crearFila('ID', 'Nombre', 'Telefono', 'Email', 'Servicios', 'Visitas', 'Ultima Visita', 'Fidelizacion %') + '\n';
+                clientes.forEach(c => {
+                    const ultimaVisita = c.ultimaVisita ? new Date(c.ultimaVisita).toLocaleDateString('es-CO') : '';
+                    csv += crearFila(c.id, c.nombre, c.telefono || '', c.email || '', c.servicios || '', c.visitas || '', ultimaVisita, c.fidelizacion || '') + '\n';
+                });
+                
+                // SECCIÓN TRANSACCIONES
+                csv += '\n' + crearFila('TRANSACCIONES DEL MES') + '\n';
+                csv += crearFila('Fecha', 'Descripcion', 'Monto', 'Tipo', 'Metodo', 'Categoria') + '\n';
+                transacciones.filter(t => t.fecha.startsWith(mesActualConsulta)).forEach(t => {
+                    const fecha = new Date(t.fecha).toLocaleDateString('es-CO');
+                    csv += crearFila(fecha, t.descripcion || '', t.monto || '', t.tipo || '', t.metodo || '', t.categoria || '') + '\n';
+                });
+                
+                // SECCIÓN PLAN MENSUAL
+                csv += '\n' + crearFila('PLAN MENSUAL') + '\n';
+                csv += crearFila('Fecha', 'Tipo', 'Plataforma', 'Estado', 'Descripcion', 'Alcance', 'Interacciones') + '\n';
+                planMensual.filter(t => t.fecha.startsWith(mesActualConsulta)).forEach(t => {
+                    const desc = (t.copy || t.tipoActividad || '').substring(0, 50);
+                    csv += crearFila(t.fecha, t.tipoActividad || '', t.plataforma || '', t.estado || '', desc, t.alcance || '', t.interacciones || '') + '\n';
+                });
+                
+                nombreArchivo = `Dashboard_Completo_${mesActualConsulta}.csv`;
+            }
+
+            // Descargar archivo
+            if (csv) {
+                const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', nombreArchivo);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                console.log(`✅ Archivo descargado: ${nombreArchivo}`);
+                alert(`✅ Archivo descargado: ${nombreArchivo}`);
+            }
+        }
+
         function limpiarYCargarSeptiembre() {
             if (confirm('¿Limpiar datos locales y cargar el plan de septiembre? ¿Continuar?')) {
                 console.log('🧹 Limpiando datos...');
@@ -2965,7 +3097,182 @@
             return '$ ' + Math.round(n).toLocaleString('es-CO') + ' COP';
         }
 
+        // ===== SISTEMA DE RECORDATORIOS Y NOTIFICACIONES =====
+        
+        function verificarRecordatorios() {
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            const fechaHoy = hoy.toISOString().split('T')[0];
+            
+            let recordatorios = [];
+            
+            // Verificar tareas vencidas y próximas
+            planMensual.forEach(tarea => {
+                const fechaTarea = new Date(tarea.fecha);
+                fechaTarea.setHours(0, 0, 0, 0);
+                const diasFalta = Math.floor((fechaTarea - hoy) / (1000 * 60 * 60 * 24));
+                
+                // TAREAS VENCIDAS (hace más de 1 día)
+                if (diasFalta < -1 && tarea.estado === 'Pendiente') {
+                    recordatorios.push({
+                        tipo: 'vencida',
+                        tarea: tarea,
+                        diasFalta: diasFalta,
+                        urgencia: 'roja'
+                    });
+                }
+                // TAREAS HOY (vencidas hoy)
+                else if (diasFalta === 0 && tarea.estado === 'Pendiente') {
+                    recordatorios.push({
+                        tipo: 'hoy',
+                        tarea: tarea,
+                        diasFalta: 0,
+                        urgencia: 'naranja'
+                    });
+                }
+                // TAREAS MAÑANA (falta 1 día)
+                else if (diasFalta === 1 && tarea.estado === 'Pendiente') {
+                    recordatorios.push({
+                        tipo: 'manana',
+                        tarea: tarea,
+                        diasFalta: 1,
+                        urgencia: 'amarilla'
+                    });
+                }
+                // TAREAS EN 2 DÍAS
+                else if (diasFalta === 2 && tarea.estado === 'Pendiente') {
+                    recordatorios.push({
+                        tipo: 'proximamente',
+                        tarea: tarea,
+                        diasFalta: 2,
+                        urgencia: 'azul'
+                    });
+                }
+            });
+            
+            return recordatorios;
+        }
+
+        function mostrarNotificacionBuscador(titulo, opciones = {}) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(titulo, {
+                    icon: '📆',
+                    badge: '📋',
+                    ...opciones
+                });
+            }
+        }
+
+        function solicitarPermisosNotificacion() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        console.log('✅ Notificaciones habilitadas');
+                        mostrarNotificacionBuscador('✅ Notificaciones activadas', {
+                            body: 'Recibirás alertas de tareas próximas'
+                        });
+                    }
+                });
+            }
+        }
+
+        function renderizarRecordatorios() {
+            const recordatorios = verificarRecordatorios();
+            const container = document.getElementById('recordatoriosPanel');
+            
+            if (!container) return;
+            
+            if (recordatorios.length === 0) {
+                container.innerHTML = '<div class="empty" style="color: #4caf50; font-weight: bold; text-align: center;">✅ No hay tareas pendientes - ¡Todo al día!</div>';
+                return;
+            }
+            
+            let html = '';
+            
+            const vencidas = recordatorios.filter(r => r.tipo === 'vencida');
+            const hoy = recordatorios.filter(r => r.tipo === 'hoy');
+            const manana = recordatorios.filter(r => r.tipo === 'manana');
+            const proximamente = recordatorios.filter(r => r.tipo === 'proximamente');
+            
+            if (vencidas.length > 0) {
+                html += '<div style="margin-bottom: 15px; border-left: 4px solid #f44336; padding: 10px; background: #ffebee; border-radius: 4px;">';
+                html += '<h4 style="margin: 0 0 8px 0; color: #f44336;">🔴 TAREAS VENCIDAS (' + vencidas.length + ')</h4>';
+                vencidas.forEach(r => {
+                    html += `<div style="font-size: 12px; margin-bottom: 6px; color: #c62828;">
+                        📅 ${r.tarea.fecha} - ${r.tarea.tipoActividad} - ${r.tarea.plataforma}
+                    </div>`;
+                });
+                html += '</div>';
+            }
+            
+            if (hoy.length > 0) {
+                html += '<div style="margin-bottom: 15px; border-left: 4px solid #ff9800; padding: 10px; background: #fff3e0; border-radius: 4px;">';
+                html += '<h4 style="margin: 0 0 8px 0; color: #ff9800;">🟠 PARA HOY (' + hoy.length + ')</h4>';
+                hoy.forEach(r => {
+                    html += `<div style="font-size: 12px; margin-bottom: 6px; color: #e65100;">
+                        📅 ${r.tarea.fecha} - ${r.tarea.tipoActividad} - ${r.tarea.plataforma}
+                    </div>`;
+                });
+                html += '</div>';
+            }
+            
+            if (manana.length > 0) {
+                html += '<div style="margin-bottom: 15px; border-left: 4px solid #fbc02d; padding: 10px; background: #fffde7; border-radius: 4px;">';
+                html += '<h4 style="margin: 0 0 8px 0; color: #f57f17;">🟡 PARA MAÑANA (' + manana.length + ')</h4>';
+                manana.forEach(r => {
+                    html += `<div style="font-size: 12px; margin-bottom: 6px; color: #f57f17;">
+                        📅 ${r.tarea.fecha} - ${r.tarea.tipoActividad} - ${r.tarea.plataforma}
+                    </div>`;
+                });
+                html += '</div>';
+            }
+            
+            if (proximamente.length > 0) {
+                html += '<div style="margin-bottom: 15px; border-left: 4px solid #2196f3; padding: 10px; background: #e3f2fd; border-radius: 4px;">';
+                html += '<h4 style="margin: 0 0 8px 0; color: #1976d2;">🔵 EN 2 DÍAS (' + proximamente.length + ')</h4>';
+                proximamente.forEach(r => {
+                    html += `<div style="font-size: 12px; margin-bottom: 6px; color: #1565c0;">
+                        📅 ${r.tarea.fecha} - ${r.tarea.tipoActividad} - ${r.tarea.plataforma}
+                    </div>`;
+                });
+                html += '</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function iniciarVerificadorRecordatorios() {
+            // Primera verificación inmediata
+            renderizarRecordatorios();
+            
+            // Verificar cada hora
+            setInterval(() => {
+                renderizarRecordatorios();
+                
+                const recordatorios = verificarRecordatorios();
+                if (recordatorios.length > 0) {
+                    const ultimaNotificacion = localStorage.getItem('ultimaNotificacion');
+                    const hoy = new Date().toISOString().split('T')[0];
+                    
+                    if (ultimaNotificacion !== hoy) {
+                        const urgentes = recordatorios.filter(r => r.tipo === 'vencida' || r.tipo === 'hoy');
+                        if (urgentes.length > 0) {
+                            mostrarNotificacionBuscador(`⚠️ ${urgentes.length} tarea(s) urgente(s)`, {
+                                body: `Tienes ${urgentes.length} tarea(s) pendiente(s) hoy. Revisa tu dashboard.`,
+                                tag: 'recordatorio-diario',
+                                requireInteraction: false
+                            });
+                            localStorage.setItem('ultimaNotificacion', hoy);
+                        }
+                    }
+                }
+            }, 3600000); // Cada hora
+        }
+
         function render() {
+            // Actualizar panel de recordatorios
+            renderizarRecordatorios();
+            
             // Actualizar timestamp de último guardado
             const ultimoGuardado = localStorage.getItem('ultimo_guardado');
             if (ultimoGuardado) {
@@ -5249,6 +5556,9 @@
 
         // Inicializar
         loadData();
+        
+        // Iniciar sistema de recordatorios y notificaciones
+        iniciarVerificadorRecordatorios();
         
         // Configurar evento para cerrar modal haciendo click afuera
         document.addEventListener('click', function(event) {
