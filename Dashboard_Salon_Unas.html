@@ -365,32 +365,6 @@
 
         <!-- DASHBOARD TAB -->
         <div id="dashboard" class="tab-content" style="display: none;">
-            <!-- 1️⃣ KPIs DEL MES (PRIMERO - LO MÁS IMPORTANTE) -->
-            <div class="kpi-grid">
-                <div class="kpi-card">
-                    <div class="kpi-label">💰 Ganancia Neta</div>
-                    <div class="kpi-number" style="color: #27ae60; font-size: 28px; font-weight: 900;" id="ganancia">$ 0 COP</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">💵 Entradas</div>
-                    <div class="kpi-number" id="totalIngresos">$ 0 COP</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">💸 Gastos</div>
-                    <div class="kpi-number" style="color: #e8899f;" id="totalGastos">$ 0 COP</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">📈 % Ganancia</div>
-                    <div class="kpi-number" style="color: #27ae60;" id="porcentaje">0%</div>
-                </div>
-            </div>
-
-            <!-- 2️⃣ COMPARATIVA vs MES ANTERIOR -->
-            <div id="mejoraDiv"></div>
-            
-            <!-- 3️⃣ AVISOS IMPORTANTES -->
-            <div id="avisosContainer"></div>
-
             <!-- 4️⃣ ESTADO DE METAS DEL MES -->
             <div id="estadoMetasDashboard" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px;">
                 <p style="color: #999; text-align: center; padding: 15px; grid-column: 1/-1;">Cargando estado de metas...</p>
@@ -443,7 +417,33 @@
                 <div id="ultimasTransaccionesEmpty" class="empty">Sin transacciones registradas</div>
             </div>
         </div>
-        <div id="crecimiento" class="tab-content">
+        <div id="crecimiento" class="tab-content active">
+            <!-- KPIs DEL MES -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-label">💰 Ganancia Neta</div>
+                    <div class="kpi-number" style="color: #27ae60; font-size: 28px; font-weight: 900;" id="ganancia">$ 0 COP</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">💵 Entradas</div>
+                    <div class="kpi-number" id="totalIngresos">$ 0 COP</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">💸 Gastos</div>
+                    <div class="kpi-number" style="color: #e8899f;" id="totalGastos">$ 0 COP</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">📈 % Ganancia</div>
+                    <div class="kpi-number" style="color: #27ae60;" id="porcentaje">0%</div>
+                </div>
+            </div>
+
+            <!-- COMPARATIVA vs MES ANTERIOR -->
+            <div id="mejoraDiv"></div>
+
+            <!-- AVISOS IMPORTANTES -->
+            <div id="avisosContainer"></div>
+
             <!-- NAVEGACIÓN INTERNA DE CRECIMIENTO -->
             <div class="card" style="display: flex; gap: 10px; margin-bottom: 20px; padding: 12px;">
                 <button id="btnSeccionMetas" class="btn" style="flex: 1; background: #d4547e; font-weight: bold;" onclick="cambiarSeccionCrecimiento('metas')">📊 Metas del Mes</button>
@@ -1067,36 +1067,6 @@
                 <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid #ddd;">
                     <h4 style="color: #d4547e; font-size: 13px; margin-bottom: 10px;">📥 Exportar Clientes</h4>
                     <button onclick="exportarDatos('clientes')" class="btn" style="background: #2196f3;">👥 Exportar Clientes a CSV</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- TRANSACCIONES TAB -->
-        <div id="transacciones" class="tab-content">
-            <div class="card">
-                <h3>💼 Historial de Transacciones</h3>
-                <table id="transaccionesTable">
-                    <thead>
-                        <tr>
-                            <th>Tipo</th>
-                            <th>Descripción</th>
-                            <th>Monto</th>
-                            <th>Categoría</th>
-                            <th>Fecha</th>
-                            <th>Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-                <div id="transaccionesEmpty" class="empty">No hay transacciones registradas</div>
-            </div>
-            
-            <!-- Botones de Exportación - Finanzas -->
-            <div style="margin-top: 20px; padding-top: 15px; border-top: 2px solid #ddd;">
-                <h4 style="color: #d4547e; font-size: 13px; margin-bottom: 12px;">📥 Exportar Datos Financieros</h4>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button onclick="exportarDatos('completo')" class="btn" style="background: #4caf50;">📥 Exportar Todo</button>
-                    <button onclick="exportarDatos('transacciones')" class="btn" style="background: #ff9800;">💰 Transacciones</button>
                 </div>
             </div>
         </div>
@@ -3652,23 +3622,37 @@
             renderizarUltimosClientes();
             renderizarUltimasTransacciones();
             
-            // Mostrar la sección de Metas PRIMERO (visible)
-            document.getElementById('seccionMetas').style.display = 'block';
-            document.getElementById('seccionPlanMensual').style.display = 'none';
-            document.getElementById('seccionCalendarioContenido').style.display = 'none';
+            // Mostrar sección Metas
+            const seccionMetas = document.getElementById('seccionMetas');
+            const seccionPlan = document.getElementById('seccionPlanMensual');
+            const seccionCal = document.getElementById('seccionCalendarioContenido');
             
-            // Marcar Metas como activo
-            document.getElementById('btnSeccionMetas').style.background = '#d4547e';
-            document.getElementById('btnSeccionMetas').style.fontWeight = 'bold';
-            document.getElementById('btnSeccionPlan').style.background = '#f4a6c1';
-            document.getElementById('btnSeccionPlan').style.fontWeight = 'normal';
-            document.getElementById('btnSeccionCalendario').style.background = '#e8b4d4';
-            document.getElementById('btnSeccionCalendario').style.fontWeight = 'normal';
+            if (seccionMetas) seccionMetas.style.display = 'block';
+            if (seccionPlan) seccionPlan.style.display = 'none';
+            if (seccionCal) seccionCal.style.display = 'none';
             
-            // Renderizar contenido con pequeño delay para que DOM esté listo
+            // Marcar botones
+            const btnMetas = document.getElementById('btnSeccionMetas');
+            const btnPlan = document.getElementById('btnSeccionPlan');
+            const btnCal = document.getElementById('btnSeccionCalendario');
+            
+            if (btnMetas) {
+                btnMetas.style.background = '#d4547e';
+                btnMetas.style.fontWeight = 'bold';
+            }
+            if (btnPlan) {
+                btnPlan.style.background = '#f4a6c1';
+                btnPlan.style.fontWeight = 'normal';
+            }
+            if (btnCal) {
+                btnCal.style.background = '#e8b4d4';
+                btnCal.style.fontWeight = 'normal';
+            }
+            
+            // Luego renderizar con delay
             setTimeout(() => {
                 renderCrecimiento();
-            }, 50);
+            }, 200);
             
             // Cargar valores de bolsillos Nequi
             cargarValoresBolsillos();
