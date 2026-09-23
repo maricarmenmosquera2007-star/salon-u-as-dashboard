@@ -8,7 +8,6 @@
     <!-- Firebase SDK - COMPAT VERSION (compatible con HTML puro) -->
     <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-database-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     
     <style>
         * {
@@ -367,11 +366,14 @@
 
         <!-- DASHBOARD TAB -->
         <div id="dashboard" class="tab-content active">
-            
-            <!-- ===== SECCIÓN 1: INDICADORES PRINCIPALES ===== -->
-            <div class="kpi-grid" style="margin-bottom: 25px;">
+            <!-- 1️⃣ KPIs DEL MES (PRIMERO - LO MÁS IMPORTANTE) -->
+            <div class="kpi-grid">
                 <div class="kpi-card">
-                    <div class="kpi-label">💰 Entradas</div>
+                    <div class="kpi-label">💰 Ganancia Neta</div>
+                    <div class="kpi-number" style="color: #27ae60; font-size: 28px; font-weight: 900;" id="ganancia">$ 0 COP</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">💵 Entradas</div>
                     <div class="kpi-number" id="totalIngresos">$ 0 COP</div>
                 </div>
                 <div class="kpi-card">
@@ -379,99 +381,68 @@
                     <div class="kpi-number" style="color: #e8899f;" id="totalGastos">$ 0 COP</div>
                 </div>
                 <div class="kpi-card">
-                    <div class="kpi-label">📈 Ganancia Neta</div>
-                    <div class="kpi-number" style="color: #27ae60;" id="ganancia">$ 0 COP</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">📊 % Ganancia</div>
+                    <div class="kpi-label">📈 % Ganancia</div>
                     <div class="kpi-number" style="color: #27ae60;" id="porcentaje">0%</div>
                 </div>
             </div>
 
-            <!-- ===== NUEVA SECCIÓN: COMPARATIVA RÁPIDA (VS MES PASADO) ===== -->
-            <div class="card" style="background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%); border-left: 5px solid #607d8b; margin-bottom: 20px;">
-                <h3 style="margin: 0 0 12px 0; color: #37474f;">📊 Comparativa vs Mes Pasado</h3>
-                <div id="comparativaRapida" style="min-height: 100px;">
-                    <p style="color: #999; text-align: center; padding: 15px;">Cargando comparativa...</p>
-                </div>
+            <!-- 2️⃣ COMPARATIVA vs MES ANTERIOR -->
+            <div id="mejoraDiv"></div>
+            
+            <!-- 3️⃣ AVISOS IMPORTANTES -->
+            <div id="avisosContainer"></div>
+
+            <!-- 4️⃣ ESTADO DE METAS DEL MES -->
+            <div id="estadoMetasDashboard" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                <p style="color: #999; text-align: center; padding: 15px; grid-column: 1/-1;">Cargando estado de metas...</p>
             </div>
 
-            <!-- ===== NUEVA SECCIÓN: ESTADO DE METAS ===== -->
-            <div class="card" style="background: linear-gradient(135deg, #fff9fc 0%, #ffe8f5 100%); border-left: 5px solid #d4547e; margin-bottom: 20px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <h3 style="margin: 0; color: #d4547e;">🎯 Estado de Metas (% Completado Hasta Hoy)</h3>
-                    <button onclick="mostrarFormularioMetas()" class="btn" style="background: #d4547e; padding: 6px 12px; font-size: 12px;">✏️ Editar</button>
+            <!-- 5️⃣ RECORDATORIOS COMPACTO (reducido, al final) -->
+            <div class="card" style="background: linear-gradient(135deg, #fff9fc 0%, #ffe8f5 100%); border: 2px solid #d4547e; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 20px;">🔔</span>
+                        <h3 style="margin: 0; color: #d4547e; font-size: 16px;">Recordatorios Próximos</h3>
+                    </div>
+                    <button onclick="solicitarPermisosNotificacion()" class="btn" style="background: #d4547e; padding: 4px 10px; font-size: 11px; white-space: nowrap;">📲 Notificaciones</button>
                 </div>
-                <div id="estadoMetasDashboard" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
-                    <p style="color: #999; text-align: center; padding: 15px; grid-column: 1/-1;">Cargando estado de metas...</p>
-                </div>
-            </div>
-
-            <!-- ===== NUEVA SECCIÓN: DINERO REAL DISPONIBLE ===== -->
-            <div class="card" style="background: linear-gradient(135deg, #f1f8e9 0%, #e8f5e9 100%); border-left: 5px solid #4caf50; margin-bottom: 20px;">
-                <h3 style="margin: 0 0 12px 0; color: #2e7d32;">💰 Tu Dinero Real Disponible</h3>
-                <div id="dineroRealDashboard" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
-                    <p style="color: #999; text-align: center; padding: 15px; grid-column: 1/-1;">Cargando dinero disponible...</p>
-                </div>
-            </div>
-
-            <!-- ===== NUEVA SECCIÓN: ESTADÍSTICAS DE CONTENIDO ===== -->
-            <div class="card" style="background: linear-gradient(135deg, #f3e5f5 0%, #ede7f6 100%); border-left: 5px solid #9c27b0; margin-bottom: 20px;">
-                <h3 style="margin: 0 0 12px 0; color: #6a1b9a;">📈 Tu Contenido Este Mes</h3>
-                <div id="estadisticasContenidoDashboard" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
-                    <p style="color: #999; text-align: center; padding: 15px; grid-column: 1/-1;">Cargando estadísticas de contenido...</p>
-                </div>
-            </div>
-
-            <!-- ===== SECCIÓN: METAS DEL MES (COMPACTA) ===== -->
-            <div class="card" style="background: linear-gradient(135deg, #fff9fc 0%, #ffe8f5 100%); border-left: 5px solid #d4547e; margin-bottom: 20px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h3 style="margin: 0; color: #d4547e;">🎯 Metas del Mes (Detallado)</h3>
-                    <button onclick="mostrarFormularioMetas()" class="btn" style="background: #d4547e; padding: 6px 12px; font-size: 12px;">✏️ Editar</button>
-                </div>
-                <div id="metasResumenDashboard" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
-                    <p style="color: #999; text-align: center; padding: 15px; grid-column: 1/-1;">Cargando metas...</p>
-                </div>
-            </div>
-
-            <!-- ===== SECCIÓN: RECORDATORIOS (COMPACTA) ===== -->
-            <div class="card" style="background: linear-gradient(135deg, #f5f9ff 0%, #e3f2fd 100%); border-left: 5px solid #2196f3; margin-bottom: 20px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <h3 style="margin: 0; color: #1976d2;">🔔 Recordatorios</h3>
-                    <a href="#" onclick="switchTab(event, 'crecimiento'); cambiarSeccionCrecimiento('calendario');" class="btn" style="background: #2196f3; padding: 6px 12px; font-size: 12px; text-decoration: none;">📅 Ver Plan</a>
-                </div>
-                <div id="recordatoriosCompacto" style="min-height: 60px; max-height: 150px; overflow-y: auto;">
+                <div id="recordatoriosPanel" style="min-height: 60px;">
                     <div class="empty">Cargando recordatorios...</div>
                 </div>
             </div>
 
-            <!-- ===== SECCIÓN: PRÓXIMOS CUMPLEAÑOS ===== -->
-            <div class="card" style="background: linear-gradient(135deg, #ffe8f0 0%, #fff9fc 100%); border-left: 5px solid #e91e63; margin-bottom: 20px;">
-                <h3 style="margin: 0 0 12px 0; color: #e91e63;">🎂 Próximos Cumpleaños</h3>
-                <div id="cumpleanosResumen" style="min-height: 50px;">
-                    <p style="color: #999; text-align: center; padding: 10px;">Cargando cumpleaños...</p>
-                </div>
+            <!-- 6️⃣ ÚLTIMOS CLIENTES (mini-tabla) -->
+            <div class="card">
+                <h3>👥 Últimos Clientes Registrados</h3>
+                <table id="ultimosClientesTable" style="font-size: 13px;">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Teléfono</th>
+                            <th>Fecha Registro</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <div id="ultimosClientesEmpty" class="empty">Sin clientes registrados</div>
             </div>
 
-            <!-- ===== SECCIÓN: RESUMEN RÁPIDO DE CLIENTES ===== -->
-            <div class="card" style="background: linear-gradient(135deg, #f0f4f9 0%, #e8eef5 100%); border-left: 5px solid #3498db;">
-                <h3 style="margin: 0 0 12px 0; color: #3498db;">👥 Clientes</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
-                    <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #ddd; text-align: center;">
-                        <div style="font-size: 24px; font-weight: bold; color: #3498db;" id="totalClientesNum">0</div>
-                        <div style="font-size: 12px; color: #999;">Total Clientes</div>
-                    </div>
-                    <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #ddd; text-align: center;">
-                        <div style="font-size: 24px; font-weight: bold; color: #2ecc71;" id="clientesActivoNum">0</div>
-                        <div style="font-size: 12px; color: #999;">Activos (últimas 2 semanas)</div>
-                    </div>
-                    <div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #ddd; text-align: center;">
-                        <div style="font-size: 24px; font-weight: bold; color: #f39c12;" id="clientesNuevosNum">0</div>
-                        <div style="font-size: 12px; color: #999;">Nuevos (este mes)</div>
-                    </div>
-                </div>
+            <!-- 7️⃣ ÚLTIMAS TRANSACCIONES (mini-tabla) -->
+            <div class="card">
+                <h3>💳 Últimas Transacciones</h3>
+                <table id="ultimasTransaccionesTable" style="font-size: 13px;">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Descripción</th>
+                            <th>Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <div id="ultimasTransaccionesEmpty" class="empty">Sin transacciones registradas</div>
             </div>
-
         </div>
         <div id="crecimiento" class="tab-content">
             <!-- NAVEGACIÓN INTERNA DE CRECIMIENTO -->
@@ -777,110 +748,77 @@
         </div>
 
         <div id="finanzas" class="tab-content">
-            <!-- NAVEGACIÓN INTERNA DE FINANZAS -->
-            <div class="card" style="display: flex; gap: 8px; margin-bottom: 20px; padding: 12px; flex-wrap: wrap;">
-                <button id="btnSeccionResumen" class="btn" style="flex: 1; min-width: 130px; background: #d4547e; font-weight: bold;" onclick="cambiarSeccionFinanzas('resumen')">📊 Resumen</button>
-                <button id="btnSeccionIngresos" class="btn" style="flex: 1; min-width: 130px; background: #f4a6c1;" onclick="cambiarSeccionFinanzas('ingresos')">💵 Ingresos</button>
-                <button id="btnSeccionGastos" class="btn" style="flex: 1; min-width: 130px; background: #f4a6c1;" onclick="cambiarSeccionFinanzas('gastos')">💸 Gastos</button>
-                <button id="btnSeccionDinero" class="btn" style="flex: 1; min-width: 130px; background: #f4a6c1;" onclick="cambiarSeccionFinanzas('dinero')">💰 Dónde está el dinero</button>
-                <button id="btnSeccionTransacciones" class="btn" style="flex: 1; min-width: 130px; background: #f4a6c1;" onclick="cambiarSeccionFinanzas('transacciones')">📋 Transacciones</button>
+            <!-- NAVEGACIÓN INTERNA DE FINANZAS - PRIMERA FILA -->
+            <div class="card" style="display: flex; gap: 10px; margin-bottom: 10px; padding: 12px;">
+                <button id="btnSeccionIngreso" class="btn" style="flex: 1; background: #27ae60; font-weight: bold; color: white;" onclick="cambiarSeccionFinanzas('ingreso')">➕ Registrar Ingreso</button>
+                <button id="btnSeccionGasto" class="btn" style="flex: 1; background: #e8899f; font-weight: bold; color: white;" onclick="cambiarSeccionFinanzas('gasto')">➕ Registrar Gasto</button>
             </div>
 
-            <!-- NUEVA SUBSECCIÓN: RESUMEN FINANCIERO -->
-            <div id="seccionResumen" style="display: none;">
-                <div class="kpi-grid">
-                    <div class="kpi-card">
-                        <div class="kpi-label">💰 Ingresos Totales</div>
-                        <div class="kpi-number" id="resumenIngresos" style="color: #27ae60;">$ 0 COP</div>
-                    </div>
-                    <div class="kpi-card">
-                        <div class="kpi-label">💸 Gastos Totales</div>
-                        <div class="kpi-number" id="resumenGastos" style="color: #e8899f;">$ 0 COP</div>
-                    </div>
-                    <div class="kpi-card">
-                        <div class="kpi-label">📈 Ganancia Neta</div>
-                        <div class="kpi-number" id="resumenGanancia" style="color: #27ae60;">$ 0 COP</div>
-                    </div>
-                    <div class="kpi-card">
-                        <div class="kpi-label">📊 % Ganancia</div>
-                        <div class="kpi-number" id="resumenPorcentaje" style="color: #27ae60;">0%</div>
-                    </div>
-                </div>
-
-                <!-- Fondo de Insumos -->
-                <div class="card">
-                    <h3>🧴 Fondo de Insumos (18% de ganancias)</h3>
-                    <div class="kpi-grid">
-                        <div class="kpi-card">
-                            <div class="kpi-label">Fondo Acumulado</div>
-                            <div class="kpi-number" id="fondoInsumos" style="color: #ff9800;">$ 0 COP</div>
-                        </div>
-                        <div class="kpi-card">
-                            <div class="kpi-label">18% de</div>
-                            <div class="kpi-number" id="baseCalculoFondo" style="color: #666;">$ 0 COP</div>
-                        </div>
-                    </div>
-                </div>
+            <!-- NAVEGACIÓN INTERNA DE FINANZAS - SEGUNDA FILA -->
+            <div class="card" style="display: flex; gap: 10px; margin-bottom: 20px; padding: 12px;">
+                <button id="btnSeccionDinero" class="btn" style="flex: 1; background: #d4547e; font-weight: bold;" onclick="cambiarSeccionFinanzas('dinero')">💸 Dónde está el dinero</button>
+                <button id="btnSeccionAnalisis" class="btn" style="flex: 1; background: #f4a6c1;" onclick="cambiarSeccionFinanzas('analisis')">📊 Análisis Financiero</button>
+                <button id="btnSeccionTransacciones" class="btn" style="flex: 1; background: #f4a6c1;" onclick="cambiarSeccionFinanzas('transacciones')">💰 Transacciones</button>
             </div>
 
-            <!-- NUEVA SUBSECCIÓN: INGRESOS -->
-            <div id="seccionIngresos" style="display: none;">
-                <div class="card">
-                    <h3>➕ Registrar Ingreso</h3>
-                    <div class="form-group">
-                        <select id="clienteSelect">
-                            <option value="">Selecciona cliente</option>
-                        </select>
-                        <select id="servicio" style="padding: 8px; border: 1px solid #e0b0c0; border-radius: 4px; width: 100%;">
-                            <option value="">Selecciona un servicio</option>
-                            <option value="Esmaltado semipermanente">Esmaltado semipermanente</option>
-                            <option value="Esmaltado semipermanente hombre">Esmaltado semipermanente hombre</option>
-                            <option value="Soft Gel con extensión">Soft Gel con extensión</option>
-                            <option value="Poly Gel con extensión">Poly Gel con extensión</option>
-                            <option value="Baño en Poly Gel">Baño en Poly Gel</option>
-                            <option value="Rubber Base">Rubber Base</option>
-                        </select>
-                        <input type="number" id="montoIngreso" placeholder="Monto ($)" step="0.01">
-                        <input type="date" id="fechaIngreso">
-                    </div>
-                    <div class="form-group">
-                        <select id="ubicacionDinero" required>
-                            <option value="">Ubicación del dinero</option>
-                            <option value="efectivo">💵 Efectivo</option>
-                            <option value="nequi">📱 Nequi</option>
-                        </select>
-                    </div>
-                    <button class="btn" onclick="addIngreso()">💵 Registrar Ingreso</button>
+            <!-- SUBSECCIÓN: REGISTRAR INGRESO -->
+            <div id="seccionIngreso" style="display: none;">
+            <div class="card">
+                <h3>➕ Registrar Ingreso</h3>
+                <div class="form-group">
+                    <select id="clienteSelect">
+                        <option value="">Selecciona cliente</option>
+                    </select>
+                    <select id="servicio" style="padding: 8px; border: 1px solid #e0b0c0; border-radius: 4px; width: 100%;">
+                        <option value="">Selecciona un servicio</option>
+                        <option value="Esmaltado semipermanente">Esmaltado semipermanente</option>
+                        <option value="Esmaltado semipermanente hombre">Esmaltado semipermanente hombre</option>
+                        <option value="Soft Gel con extensión">Soft Gel con extensión</option>
+                        <option value="Poly Gel con extensión">Poly Gel con extensión</option>
+                        <option value="Baño en Poly Gel">Baño en Poly Gel</option>
+                        <option value="Rubber Base">Rubber Base</option>
+                    </select>
+                    <input type="number" id="montoIngreso" placeholder="Monto ($)" step="0.01">
+                    <input type="date" id="fechaIngreso">
                 </div>
+                <div class="form-group">
+                    <select id="ubicacionDinero" required>
+                        <option value="">Ubicación del dinero</option>
+                        <option value="efectivo">💵 Efectivo</option>
+                        <option value="nequi">📱 Nequi</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="addIngreso()">💵 Registrar Ingreso</button>
+            </div>
             </div>
 
-            <!-- NUEVA SUBSECCIÓN: GASTOS -->
-            <div id="seccionGastos" style="display: none;">
-                <div class="card">
-                    <h3>➕ Registrar Gasto</h3>
-                    <div class="form-group">
-                        <input type="text" id="descGasto" placeholder="Descripción (ej: Esmaltes)">
-                        <input type="number" id="montoGasto" placeholder="Monto ($)" step="0.01">
-                        <input type="date" id="fechaGasto">
-                        <select id="categoriaGasto" style="padding: 8px; border: 1px solid #e0b0c0; border-radius: 6px; font-size: 13px;">
-                            <option value="">Selecciona categoría</option>
-                            <option value="Insumos/Materiales">Insumos/Materiales</option>
-                            <option value="Kit Atención Clientas">Kit Atención Clientas</option>
-                            <option value="Mobiliario/Equipamiento">Mobiliario/Equipamiento</option>
-                            <option value="Inversión Inicial">Inversión Inicial</option>
-                            <option value="Otros">Otros</option>
-                        </select>
-                        <select id="ubicacionGasto" style="padding: 8px; border: 1px solid #e0b0c0; border-radius: 6px; font-size: 13px;">
-                            <option value="">¿De dónde sale el dinero?</option>
-                            <option value="efectivo">Efectivo</option>
-                            <option value="nequi">Nequi</option>
-                        </select>
-                    </div>
-                    <button class="btn" onclick="addGasto()">💸 Registrar Gasto</button>
+            <!-- SUBSECCIÓN: REGISTRAR GASTO -->
+            <div id="seccionGasto" style="display: none;">
+            <div class="card">
+                <h3>➕ Registrar Gasto</h3>
+                <div class="form-group">
+                    <input type="text" id="descGasto" placeholder="Descripción (ej: Esmaltes)">
+                    <input type="number" id="montoGasto" placeholder="Monto ($)" step="0.01">
+                    <input type="date" id="fechaGasto">
+                    <select id="categoriaGasto" style="padding: 8px; border: 1px solid #e0b0c0; border-radius: 6px; font-size: 13px;">
+                        <option value="">Selecciona categoría</option>
+                        <option value="Insumos/Materiales">Insumos/Materiales</option>
+                        <option value="Kit Atención Clientas">Kit Atención Clientas</option>
+                        <option value="Mobiliario/Equipamiento">Mobiliario/Equipamiento</option>
+                        <option value="Inversión Inicial">Inversión Inicial</option>
+                        <option value="Otros">Otros</option>
+                    </select>
+                    <select id="ubicacionGasto" style="padding: 8px; border: 1px solid #e0b0c0; border-radius: 6px; font-size: 13px;">
+                        <option value="">Ubicación</option>
+                        <option value="efectivo">💵 Efectivo</option>
+                        <option value="nequi">📱 Nequi</option>
+                    </select>
                 </div>
+                <button class="btn" onclick="addGasto()">🔴 Registrar Gasto</button>
+            </div>
             </div>
 
-            <!-- SUBSECCIÓN: DÓNDE ESTÁ EL DINERO (renombrada) -->
+            <!-- SUBSECCIÓN: DÓNDE ESTÁ EL DINERO -->
             <div id="seccionDinero" style="display: none;">
             <div class="kpi-grid">
                 <!-- TARJETA EFECTIVO -->
@@ -1218,7 +1156,7 @@
         let seccionCrecimientoActual = 'metas';  // 'metas' o 'plan'
 
         // VARIABLE PARA NAVEGACIÓN INTERNA DE FINANZAS
-        let seccionFinanzasActual = 'resumen';  // 'resumen', 'ingresos', 'gastos', 'dinero' o 'transacciones'
+        let seccionFinanzasActual = 'dinero';  // 'dinero' o 'transacciones'
 
         // Cargar datos al iniciar - ESTRATEGIA HÍBRIDA (localStorage + Firebase)
         function loadData() {
@@ -3358,16 +3296,10 @@
         function iniciarVerificadorRecordatorios() {
             // Primera verificación inmediata
             renderizarRecordatorios();
-            renderizarResumenMetasDashboard();
-            renderizarCumpleanosProximos();
-            renderizarResumenClientes();
             
             // Verificar cada hora
             setInterval(() => {
                 renderizarRecordatorios();
-                renderizarResumenMetasDashboard();
-                renderizarCumpleanosProximos();
-                renderizarResumenClientes();
                 
                 const recordatorios = verificarRecordatorios();
                 if (recordatorios.length > 0) {
@@ -3389,1020 +3321,63 @@
             }, 3600000); // Cada hora
         }
 
-        // NUEVA FUNCIÓN: Renderizar Metas Resumen en Dashboard
-        function renderizarResumenMetasDashboard() {
-            const container = document.getElementById('metasResumenDashboard');
-            if (!container) return;
-            
-            const mesActual = getMesActual();
-            const metas = metasMensuales[mesActual] || {};
-            
-            if (Object.keys(metas).length === 0) {
-                container.innerHTML = '<p style="color: #999; text-align: center; padding: 15px; grid-column: 1/-1;">No hay metas configuradas para este mes</p>';
-                return;
-            }
-            
-            let html = '';
-            
-            // Mostrar solo las metas principales
-            const metasPrincipales = ['ingresos', 'clientes', 'clientesNuevos', 'publicaciones'];
-            
-            metasPrincipales.forEach(clave => {
-                if (metas[clave] !== undefined) {
-                    const meta = metas[clave];
-                    let etiqueta = '';
-                    let valor = 0;
-                    let progreso = 0;
-                    
-                    switch(clave) {
-                        case 'ingresos':
-                            etiqueta = '💰 Ingresos';
-                            const ingresosReales = transacciones.filter(t => t.tipo === 'ingreso' && t.fecha.startsWith(mesActual)).reduce((s, t) => s + t.monto, 0);
-                            valor = ingresosReales;
-                            progreso = meta > 0 ? Math.min(100, (ingresosReales / meta) * 100) : 0;
-                            break;
-                        case 'clientes':
-                            etiqueta = '👥 Clientes Meta';
-                            valor = clientes.length;
-                            progreso = meta > 0 ? Math.min(100, (clientes.length / meta) * 100) : 0;
-                            break;
-                        case 'clientesNuevos':
-                            etiqueta = '✨ Clientes Nuevos';
-                            const clientesNuevosNum = clientes.filter(c => c.fechaCreacion && c.fechaCreacion.startsWith(mesActual)).length;
-                            valor = clientesNuevosNum;
-                            progreso = meta > 0 ? Math.min(100, (clientesNuevosNum / meta) * 100) : 0;
-                            break;
-                        case 'publicaciones':
-                            etiqueta = '📸 Publicaciones';
-                            valor = meta;
-                            progreso = 50; // Placeholder
-                            break;
-                    }
-                    
-                    html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #d4547e;">
-                        <div style="font-weight: bold; font-size: 13px; margin-bottom: 6px; color: #333;">${etiqueta}</div>
-                        <div style="font-size: 12px; color: #666; margin-bottom: 6px;">${valor} / ${meta}</div>
-                        <div style="background: #f0f0f0; height: 6px; border-radius: 3px; overflow: hidden;">
-                            <div style="background: #d4547e; height: 100%; width: ${progreso}%; transition: width 0.3s;"></div>
-                        </div>
-                        <div style="font-size: 10px; color: #999; margin-top: 4px; text-align: right;">${Math.round(progreso)}%</div>
-                    </div>`;
-                }
-            });
-            
-            container.innerHTML = html || '<p style="color: #999;">Sin metas configuradas</p>';
-        }
-
-        // NUEVA FUNCIÓN: Renderizar Recordatorios Compactos
-        function renderizarRecordatoriosCompacto() {
-            const recordatorios = verificarRecordatorios();
-            const container = document.getElementById('recordatoriosCompacto');
-            
-            if (!container) return;
-            
-            if (recordatorios.length === 0) {
-                container.innerHTML = '<div style="color: #4caf50; text-align: center; padding: 12px; font-weight: bold;">✅ Sin tareas pendientes</div>';
-                return;
-            }
-            
-            // Mostrar solo los 5 más urgentes
-            const urgentes = recordatorios
-                .sort((a, b) => {
-                    const prioridad = { 'vencida': 0, 'hoy': 1, 'manana': 2, 'proximamente': 3 };
-                    return prioridad[a.tipo] - prioridad[b.tipo];
-                })
-                .slice(0, 5);
-            
-            let html = '';
-            urgentes.forEach(r => {
-                const emoji = r.tipo === 'vencida' ? '🔴' : r.tipo === 'hoy' ? '🟠' : r.tipo === 'manana' ? '🟡' : '🔵';
-                html += `<div style="font-size: 12px; padding: 6px 0; color: #333; border-bottom: 1px solid #eee; display: flex; gap: 8px;">
-                    <span>${emoji}</span>
-                    <span>${r.tarea.tipoActividad} - ${r.tarea.fecha}</span>
-                </div>`;
-            });
-            
-            container.innerHTML = html;
-        }
-
-        // NUEVA FUNCIÓN: Renderizar Cumpleaños Próximos
-        function renderizarCumpleanosProximos() {
-            const container = document.getElementById('cumpleanosResumen');
-            if (!container) return;
-            
-            const hoy = new Date();
-            const proximosMeses = 2; // Mostrar cumpleaños del próximo mes
-            
-            const cumpleanosProximos = clientes
-                .filter(c => c.cumpleaños) // Solo si tienen cumpleaños
-                .map(c => {
-                    const [mes, dia] = c.cumpleaños.split('-');
-                    const fechaCumple = new Date(hoy.getFullYear(), parseInt(mes) - 1, parseInt(dia));
-                    if (fechaCumple < hoy) {
-                        fechaCumple.setFullYear(hoy.getFullYear() + 1);
-                    }
-                    const diasFalta = Math.floor((fechaCumple - hoy) / (1000 * 60 * 60 * 24));
-                    return { cliente: c, diasFalta, fecha: fechaCumple };
-                })
-                .filter(c => c.diasFalta <= 30) // Solo próximos 30 días
-                .sort((a, b) => a.diasFalta - b.diasFalta)
-                .slice(0, 5); // Mostrar máximo 5
-            
-            if (cumpleanosProximos.length === 0) {
-                container.innerHTML = '<p style="color: #999; text-align: center; padding: 10px;">🎂 No hay cumpleaños próximos</p>';
-                return;
-            }
-            
-            let html = '';
-            cumpleanosProximos.forEach(c => {
-                const fechaFormato = c.fecha.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' });
-                html += `<div style="font-size: 13px; padding: 8px; color: #333; display: flex; justify-content: space-between;">
-                    <span>🎂 ${c.cliente.nombre}</span>
-                    <span style="color: #999; font-size: 12px;">${fechaFormato}</span>
-                </div>`;
-            });
-            
-            container.innerHTML = html;
-        }
-
-        // ===== FUNCIONES PARA COMPARATIVAS Y ANÁLISIS =====
+        // ===== FUNCIONES PARA MINI-TABLAS DEL DASHBOARD =====
         
-        function obtenerMesAnterior(mes) {
-            const partes = mes.split('-');
-            let year = parseInt(partes[0]);
-            let month = parseInt(partes[1]);
+        function renderizarUltimosClientes() {
+            const tabla = document.getElementById('ultimosClientesTable');
+            const empty = document.getElementById('ultimosClientesEmpty');
             
-            month--;
-            if (month === 0) {
-                month = 12;
-                year--;
+            if (!tabla) return;
+            
+            const tbody = tabla.querySelector('tbody');
+            
+            // Últimos 5 clientes
+            const ultimos = [...clientes].reverse().slice(0, 5);
+            
+            if (ultimos.length === 0) {
+                tbody.innerHTML = '';
+                empty.style.display = 'block';
+            } else {
+                empty.style.display = 'none';
+                tbody.innerHTML = ultimos.map(c => `
+                    <tr>
+                        <td>${c.nombre}</td>
+                        <td>${c.numero || '-'}</td>
+                        <td>${c.fechaRegistro || '-'}</td>
+                    </tr>
+                `).join('');
             }
-            
-            return year + '-' + (month < 10 ? '0' + month : month);
         }
         
-        function calcularComparativaMeses() {
-            const mesActual = getMesActual();
-            const mesAnterior = obtenerMesAnterior(mesActual);
+        function renderizarUltimasTransacciones() {
+            const tabla = document.getElementById('ultimasTransaccionesTable');
+            const empty = document.getElementById('ultimasTransaccionesEmpty');
             
-            // Ingresos
-            const ingresosActual = transacciones.filter(t => t.tipo === 'ingreso' && t.fecha.startsWith(mesActual)).reduce((s, t) => s + t.monto, 0);
-            const ingresosAnterior = transacciones.filter(t => t.tipo === 'ingreso' && t.fecha.startsWith(mesAnterior)).reduce((s, t) => s + t.monto, 0);
-            const cambioIngresos = ingresosActual - ingresosAnterior;
-            const porcentajeIngresos = ingresosAnterior > 0 ? ((cambioIngresos / ingresosAnterior) * 100) : 0;
+            if (!tabla) return;
             
-            // Gastos
-            const gastosActual = transacciones.filter(t => t.tipo === 'gasto' && t.fecha.startsWith(mesActual)).reduce((s, t) => s + t.monto, 0);
-            const gastosAnterior = transacciones.filter(t => t.tipo === 'gasto' && t.fecha.startsWith(mesAnterior)).reduce((s, t) => s + t.monto, 0);
-            const cambioGastos = gastosActual - gastosAnterior;
-            const porcentajeGastos = gastosAnterior > 0 ? ((cambioGastos / gastosAnterior) * 100) : 0;
+            const tbody = tabla.querySelector('tbody');
             
-            // Ganancias
-            const gananciaActual = ingresosActual - gastosActual;
-            const gananciaAnterior = ingresosAnterior - gastosAnterior;
-            const cambioGanancia = gananciaActual - gananciaAnterior;
-            const porcentajeGanancia = gananciaAnterior > 0 ? ((cambioGanancia / gananciaAnterior) * 100) : 0;
+            // Últimas 5 transacciones (ordenadas por fecha descendente)
+            const sorted = [...transacciones].sort((a, b) => new Date(b.fecha) - new Date(a.fecha)).slice(0, 5);
             
-            // Clientes nuevos
-            const clientesNuevosActual = clientes.filter(c => c.fechaCreacion && c.fechaCreacion.startsWith(mesActual)).length;
-            const clientesNuevosAnterior = clientes.filter(c => c.fechaCreacion && c.fechaCreacion.startsWith(mesAnterior)).length;
-            const cambioClientes = clientesNuevosActual - clientesNuevosAnterior;
-            
-            return {
-                ingresos: { actual: ingresosActual, anterior: ingresosAnterior, cambio: cambioIngresos, porcentaje: porcentajeIngresos },
-                gastos: { actual: gastosActual, anterior: gastosAnterior, cambio: cambioGastos, porcentaje: porcentajeGastos },
-                ganancia: { actual: gananciaActual, anterior: gananciaAnterior, cambio: cambioGanancia, porcentaje: porcentajeGanancia },
-                clientesNuevos: { actual: clientesNuevosActual, anterior: clientesNuevosAnterior, cambio: cambioClientes }
-            };
-        }
-        
-        function obtenerIndicadorFlecha(valor) {
-            if (valor > 0) return '📈 ↑';
-            if (valor < 0) return '📉 ↓';
-            return '➡️ →';
-        }
-        
-        function obtenerColorTrend(valor) {
-            if (valor > 0) return '#27ae60';
-            if (valor < 0) return '#e74c3c';
-            return '#999';
-        }
-
-        // NUEVA FUNCIÓN: Renderizar Comparativa Rápida
-        function renderizarComparativaRapida() {
-            const container = document.getElementById('comparativaRapida');
-            if (!container) return;
-            
-            const comp = calcularComparativaMeses();
-            const mesActual = getMesEnEspanol(getMesActual());
-            const mesAnterior = getMesEnEspanol(obtenerMesAnterior(getMesActual()));
-            
-            let html = `<div style="font-size: 12px; color: #999; margin-bottom: 12px; text-align: center;">
-                Comparativa: ${mesAnterior} vs ${mesActual}
-            </div>`;
-            
-            html += `<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">`;
-            
-            // Ingresos
-            const flechaIngresos = obtenerIndicadorFlecha(comp.ingresos.cambio);
-            const colorIngresos = obtenerColorTrend(comp.ingresos.cambio);
-            html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #27ae60;">
-                <div style="font-size: 12px; color: #666; margin-bottom: 6px;">💰 Ingresos</div>
-                <div style="font-size: 16px; font-weight: bold; color: #27ae60; margin-bottom: 4px;">${formatMoney(comp.ingresos.actual)}</div>
-                <div style="font-size: 11px; color: ${colorIngresos};">
-                    ${flechaIngresos} ${formatMoney(Math.abs(comp.ingresos.cambio))} (${Math.round(comp.ingresos.porcentaje)}%)
-                </div>
-            </div>`;
-            
-            // Gastos
-            const flechaGastos = obtenerIndicadorFlecha(-comp.gastos.cambio); // Negativo porque menos gastos es mejor
-            const colorGastos = obtenerColorTrend(-comp.gastos.cambio);
-            html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #e8899f;">
-                <div style="font-size: 12px; color: #666; margin-bottom: 6px;">💸 Gastos</div>
-                <div style="font-size: 16px; font-weight: bold; color: #e8899f; margin-bottom: 4px;">${formatMoney(comp.gastos.actual)}</div>
-                <div style="font-size: 11px; color: ${colorGastos};">
-                    ${flechaGastos} ${formatMoney(Math.abs(comp.gastos.cambio))} (${Math.round(Math.abs(comp.gastos.porcentaje))}%)
-                </div>
-            </div>`;
-            
-            // Ganancia
-            const flechaGanancia = obtenerIndicadorFlecha(comp.ganancia.cambio);
-            const colorGanancia = obtenerColorTrend(comp.ganancia.cambio);
-            html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #2ecc71;">
-                <div style="font-size: 12px; color: #666; margin-bottom: 6px;">📈 Ganancia</div>
-                <div style="font-size: 16px; font-weight: bold; color: #2ecc71; margin-bottom: 4px;">${formatMoney(comp.ganancia.actual)}</div>
-                <div style="font-size: 11px; color: ${colorGanancia};">
-                    ${flechaGanancia} ${formatMoney(Math.abs(comp.ganancia.cambio))} (${Math.round(comp.ganancia.porcentaje)}%)
-                </div>
-            </div>`;
-            
-            // Clientes nuevos
-            const flechaClientes = obtenerIndicadorFlecha(comp.clientesNuevos.cambio);
-            const colorClientes = obtenerColorTrend(comp.clientesNuevos.cambio);
-            html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #3498db;">
-                <div style="font-size: 12px; color: #666; margin-bottom: 6px;">👥 Clientes Nuevos</div>
-                <div style="font-size: 16px; font-weight: bold; color: #3498db; margin-bottom: 4px;">${comp.clientesNuevos.actual}</div>
-                <div style="font-size: 11px; color: ${colorClientes};">
-                    ${flechaClientes} ${Math.abs(comp.clientesNuevos.cambio)} vs mes pasado
-                </div>
-            </div>`;
-            
-            html += '</div>';
-            container.innerHTML = html;
-        }
-
-        // NUEVA FUNCIÓN: Renderizar Estado de Metas (2/5 al día, etc)
-        function renderizarEstadoMetas() {
-            const container = document.getElementById('estadoMetasDashboard');
-            if (!container) return;
-            
-            const mesActual = getMesActual();
-            const metas = metasMensuales[mesActual] || {};
-            
-            if (Object.keys(metas).length === 0) {
-                container.innerHTML = '<p style="color: #999; text-align: center; padding: 15px;">No hay metas configuradas</p>';
-                return;
+            if (sorted.length === 0) {
+                tbody.innerHTML = '';
+                empty.style.display = 'block';
+            } else {
+                empty.style.display = 'none';
+                tbody.innerHTML = sorted.map(t => `
+                    <tr>
+                        <td>${t.fecha}</td>
+                        <td>${t.tipo === 'ingreso' ? '💵 Ingreso' : '💸 Gasto'}</td>
+                        <td>${t.descripcion || '-'}</td>
+                        <td style="color: ${t.tipo === 'ingreso' ? '#27ae60' : '#e8899f'}; font-weight: bold;">${t.tipo === 'ingreso' ? '+' : '-'} ${formatMoney(t.monto)}</td>
+                    </tr>
+                `).join('');
             }
-            
-            // Calcular días transcurridos del mes
-            const ahora = new Date();
-            const diasDelMes = new Date(ahora.getFullYear(), ahora.getMonth() + 1, 0).getDate();
-            const diasTranscurridos = ahora.getDate();
-            const porcentajeMesTranscurrido = Math.round((diasTranscurridos / diasDelMes) * 100);
-            
-            let html = `<div style="font-size: 11px; color: #999; margin-bottom: 12px; text-align: center;">
-                ${diasTranscurridos} de ${diasDelMes} días transcurridos (${porcentajeMesTranscurrido}%)
-            </div>`;
-            
-            html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">';
-            
-            // Meta de ingresos
-            if (metas.ingresos !== undefined) {
-                const ingresosReales = transacciones.filter(t => t.tipo === 'ingreso' && t.fecha.startsWith(mesActual)).reduce((s, t) => s + t.monto, 0);
-                const ingresosEsperados = (metas.ingresos / diasDelMes) * diasTranscurridos;
-                const estado = ingresosReales >= ingresosEsperados ? '✅ Bien' : ingresosReales >= (ingresosEsperados * 0.8) ? '⚠️ Lento' : '❌ Retrasado';
-                const color = ingresosReales >= ingresosEsperados ? '#27ae60' : ingresosReales >= (ingresosEsperados * 0.8) ? '#f39c12' : '#e74c3c';
-                
-                html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid ${color};">
-                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">💰 Ingresos Meta</div>
-                    <div style="font-size: 14px; font-weight: bold; color: ${color}; margin-bottom: 4px;">${formatMoney(ingresosReales)}</div>
-                    <div style="font-size: 11px; color: #999; margin-bottom: 6px;">Meta: ${formatMoney(metas.ingresos)}</div>
-                    <div style="font-size: 11px; color: #999; margin-bottom: 6px;">Esperado al día ${diasTranscurridos}: ${formatMoney(ingresosEsperados)}</div>
-                    <div style="font-size: 12px; font-weight: bold; color: ${color};">${estado}</div>
-                </div>`;
-            }
-            
-            // Meta de clientes
-            if (metas.clientes !== undefined) {
-                const clientesReales = clientes.length;
-                const clientesEsperados = (metas.clientes / diasDelMes) * diasTranscurridos;
-                const estado = clientesReales >= clientesEsperados ? '✅ Bien' : clientesReales >= (clientesEsperados * 0.8) ? '⚠️ Lento' : '❌ Retrasado';
-                const color = clientesReales >= clientesEsperados ? '#27ae60' : clientesReales >= (clientesEsperados * 0.8) ? '#f39c12' : '#e74c3c';
-                
-                html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid ${color};">
-                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">👥 Clientes Meta</div>
-                    <div style="font-size: 14px; font-weight: bold; color: ${color}; margin-bottom: 4px;">${clientesReales}</div>
-                    <div style="font-size: 11px; color: #999; margin-bottom: 6px;">Meta: ${metas.clientes}</div>
-                    <div style="font-size: 11px; color: #999; margin-bottom: 6px;">Esperado: ${Math.round(clientesEsperados)}</div>
-                    <div style="font-size: 12px; font-weight: bold; color: ${color};">${estado}</div>
-                </div>`;
-            }
-            
-            // Meta de publicaciones
-            if (metas.publicaciones !== undefined) {
-                const publicacionesReales = planMensual.filter(t => t.fecha.startsWith(mesActual) && t.tipoActividad === 'Publicación').length;
-                const publicacionesEsperadas = (metas.publicaciones / diasDelMes) * diasTranscurridos;
-                const estado = publicacionesReales >= publicacionesEsperadas ? '✅ Bien' : publicacionesReales >= (publicacionesEsperadas * 0.8) ? '⚠️ Lento' : '❌ Retrasado';
-                const color = publicacionesReales >= publicacionesEsperadas ? '#27ae60' : publicacionesReales >= (publicacionesEsperadas * 0.8) ? '#f39c12' : '#e74c3c';
-                
-                html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid ${color};">
-                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">📸 Publicaciones Meta</div>
-                    <div style="font-size: 14px; font-weight: bold; color: ${color}; margin-bottom: 4px;">${publicacionesReales}</div>
-                    <div style="font-size: 11px; color: #999; margin-bottom: 6px;">Meta: ${metas.publicaciones}</div>
-                    <div style="font-size: 11px; color: #999; margin-bottom: 6px;">Esperado: ${Math.round(publicacionesEsperadas)}</div>
-                    <div style="font-size: 12px; font-weight: bold; color: ${color};">${estado}</div>
-                </div>`;
-            }
-            
-            html += '</div>';
-            container.innerHTML = html;
-        }
-
-        // NUEVA FUNCIÓN: Renderizar Dinero Real
-        function renderizarDineroReal() {
-            const container = document.getElementById('dineroRealDashboard');
-            if (!container) return;
-            
-            const mesActual = getMesActual();
-            const ingresos = transacciones.filter(t => t.tipo === 'ingreso' && t.fecha.startsWith(mesActual)).reduce((s, t) => s + t.monto, 0);
-            const gastos = transacciones.filter(t => t.tipo === 'gasto' && t.fecha.startsWith(mesActual)).reduce((s, t) => s + t.monto, 0);
-            const ganancia = ingresos - gastos;
-            const fondo = ganancia * 0.18;
-            const disponible = ganancia - fondo;
-            
-            // Distribuir entre efectivo y nequi (asumir 50/50 por defecto)
-            const efectivoDisponible = disponible * 0.5;
-            const nequiDisponible = disponible * 0.5;
-            
-            let html = `<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">`;
-            
-            html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #27ae60;">
-                <div style="font-size: 12px; color: #666; margin-bottom: 6px;">💵 Efectivo</div>
-                <div style="font-size: 18px; font-weight: bold; color: #27ae60;">${formatMoney(efectivoDisponible)}</div>
-                <div style="font-size: 10px; color: #999; margin-top: 4px;">Disponible para usar</div>
-            </div>`;
-            
-            html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #3498db;">
-                <div style="font-size: 12px; color: #666; margin-bottom: 6px;">📱 Nequi</div>
-                <div style="font-size: 18px; font-weight: bold; color: #3498db;">${formatMoney(nequiDisponible)}</div>
-                <div style="font-size: 10px; color: #999; margin-top: 4px;">Disponible para usar</div>
-            </div>`;
-            
-            html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #ff9800;">
-                <div style="font-size: 12px; color: #666; margin-bottom: 6px;">🧴 Reservado (18%)</div>
-                <div style="font-size: 18px; font-weight: bold; color: #ff9800;">${formatMoney(fondo)}</div>
-                <div style="font-size: 10px; color: #999; margin-top: 4px;">Para insumos</div>
-            </div>`;
-            
-            html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #2ecc71;">
-                <div style="font-size: 12px; color: #666; margin-bottom: 6px;">💰 Total Real</div>
-                <div style="font-size: 18px; font-weight: bold; color: #2ecc71;">${formatMoney(disponible + fondo)}</div>
-                <div style="font-size: 10px; color: #999; margin-top: 4px;">De esta ganancia</div>
-            </div>`;
-            
-            html += '</div>';
-            container.innerHTML = html;
-        }
-
-        // NUEVA FUNCIÓN: Renderizar Estadísticas de Contenido
-        function renderizarEstadisticasContenido() {
-            const container = document.getElementById('estadisticasContenidoDashboard');
-            if (!container) return;
-            
-            const mesActual = getMesActual();
-            const tareasDelMes = planMensual.filter(t => t.fecha.startsWith(mesActual));
-            
-            const publicaciones = tareasDelMes.filter(t => t.tipoActividad === 'Publicación').length;
-            const historias = tareasDelMes.filter(t => t.tipoActividad === 'Historia').length;
-            const reels = tareasDelMes.filter(t => t.tipoActividad === 'Reel').length;
-            const tiktoks = tareasDelMes.filter(t => t.tipoActividad === 'TikTok').length;
-            
-            const alcanceTotal = tareasDelMes.reduce((s, t) => s + (t.alcance || 0), 0);
-            const interaccionesTotal = tareasDelMes.reduce((s, t) => s + (t.interacciones || 0), 0);
-            const mensajesTotal = tareasDelMes.reduce((s, t) => s + (t.mensajes || 0), 0);
-            const citasGeneradas = tareasDelMes.reduce((s, t) => s + (t.citasGeneradas || 0), 0);
-            const ingresoGenerado = tareasDelMes.reduce((s, t) => s + (t.ingresoGenerado || 0), 0);
-            
-            const alcancePromedio = tareasDelMes.length > 0 ? Math.round(alcanceTotal / tareasDelMes.length) : 0;
-            
-            let html = `<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">`;
-            
-            html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #9c27b0;">
-                <div style="font-size: 12px; color: #666; margin-bottom: 6px;">📸 Publicaciones</div>
-                <div style="font-size: 18px; font-weight: bold; color: #9c27b0;">${publicaciones}</div>
-                <div style="font-size: 10px; color: #999; margin-top: 4px;">Publicadas</div>
-            </div>`;
-            
-            html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #e91e63;">
-                <div style="font-size: 12px; color: #666; margin-bottom: 6px;">📖 Historias</div>
-                <div style="font-size: 18px; font-weight: bold; color: #e91e63;">${historias}</div>
-                <div style="font-size: 10px; color: #999; margin-top: 4px;">Subidas</div>
-            </div>`;
-            
-            html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #f44336;">
-                <div style="font-size: 12px; color: #666; margin-bottom: 6px;">🎬 Reels</div>
-                <div style="font-size: 18px; font-weight: bold; color: #f44336;">${reels}</div>
-                <div style="font-size: 10px; color: #999; margin-top: 4px;">Videos</div>
-            </div>`;
-            
-            html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #4caf50;">
-                <div style="font-size: 12px; color: #666; margin-bottom: 6px;">🎵 TikToks</div>
-                <div style="font-size: 18px; font-weight: bold; color: #4caf50;">${tiktoks}</div>
-                <div style="font-size: 10px; color: #999; margin-top: 4px;">Publicados</div>
-            </div>`;
-            
-            html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #2196f3;">
-                <div style="font-size: 12px; color: #666; margin-bottom: 6px;">📊 Alcance Total</div>
-                <div style="font-size: 18px; font-weight: bold; color: #2196f3;">${alcanceTotal.toLocaleString()}</div>
-                <div style="font-size: 10px; color: #999; margin-top: 4px;">Promedio: ${alcancePromedio}</div>
-            </div>`;
-            
-            html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #ff9800;">
-                <div style="font-size: 12px; color: #666; margin-bottom: 6px;">💬 Interacciones</div>
-                <div style="font-size: 18px; font-weight: bold; color: #ff9800;">${interaccionesTotal}</div>
-                <div style="font-size: 10px; color: #999; margin-top: 4px;">Likes, comentarios...</div>
-            </div>`;
-            
-            html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #00bcd4;">
-                <div style="font-size: 12px; color: #666; margin-bottom: 6px;">💬 Mensajes</div>
-                <div style="font-size: 18px; font-weight: bold; color: #00bcd4;">${mensajesTotal}</div>
-                <div style="font-size: 10px; color: #999; margin-top: 4px;">Consultas por DM</div>
-            </div>`;
-            
-            html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #ffc107;">
-                <div style="font-size: 12px; color: #666; margin-bottom: 6px;">📞 Citas Generadas</div>
-                <div style="font-size: 18px; font-weight: bold; color: #ffc107;">${citasGeneradas}</div>
-                <div style="font-size: 10px; color: #999; margin-top: 4px;">Conversiones</div>
-            </div>`;
-            
-            if (ingresoGenerado > 0) {
-                html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #4caf50;">
-                    <div style="font-size: 12px; color: #666; margin-bottom: 6px;">💰 Ingreso Generado</div>
-                    <div style="font-size: 18px; font-weight: bold; color: #4caf50;">${formatMoney(ingresoGenerado)}</div>
-                    <div style="font-size: 10px; color: #999; margin-top: 4px;">Por contenido</div>
-                </div>`;
-            }
-            
-            html += '</div>';
-            container.innerHTML = html;
-        }
-
-        // ===== OPCIÓN B: ANÁLISIS PROFUNDOS =====
-        
-        function obtenerUltimos3Meses() {
-            const mesActual = getMesActual();
-            const meses = [mesActual];
-            
-            let mesTemp = mesActual;
-            for (let i = 0; i < 2; i++) {
-                mesTemp = obtenerMesAnterior(mesTemp);
-                meses.unshift(mesTemp);
-            }
-            
-            return meses;
-        }
-        
-        function calcularDatosUltimos3Meses() {
-            const meses = obtenerUltimos3Meses();
-            const datos = [];
-            
-            meses.forEach(mes => {
-                const ingresos = transacciones.filter(t => t.tipo === 'ingreso' && t.fecha.startsWith(mes)).reduce((s, t) => s + t.monto, 0);
-                const gastos = transacciones.filter(t => t.tipo === 'gasto' && t.fecha.startsWith(mes)).reduce((s, t) => s + t.monto, 0);
-                const ganancia = ingresos - gastos;
-                const clientesNuevos = clientes.filter(c => c.fechaCreacion && c.fechaCreacion.startsWith(mes)).length;
-                const publicaciones = planMensual.filter(t => t.fecha.startsWith(mes) && t.tipoActividad === 'Publicación').length;
-                
-                datos.push({
-                    mes: getMesEnEspanol(mes),
-                    mesCorto: mes.split('-')[1],
-                    ingresos,
-                    gastos,
-                    ganancia,
-                    clientesNuevos,
-                    publicaciones
-                });
-            });
-            
-            return datos;
-        }
-        
-        function analizarMejorContenido() {
-            const mesActual = getMesActual();
-            const tareasDelMes = planMensual.filter(t => t.fecha.startsWith(mesActual));
-            
-            if (tareasDelMes.length === 0) return null;
-            
-            const mejorAlcance = tareasDelMes
-                .filter(t => t.alcance > 0)
-                .sort((a, b) => b.alcance - a.alcance)[0];
-            
-            const mejorInteracciones = tareasDelMes
-                .filter(t => t.interacciones > 0)
-                .sort((a, b) => b.interacciones - a.interacciones)[0];
-            
-            const mejorEngagement = tareasDelMes
-                .filter(t => t.alcance > 0)
-                .map(t => ({ ...t, engagement: t.interacciones / t.alcance }))
-                .sort((a, b) => b.engagement - a.engagement)[0];
-            
-            return {
-                mejorAlcance,
-                mejorInteracciones,
-                mejorEngagement
-            };
-        }
-        
-        function analizarPlataformasEfectivas() {
-            const mesActual = getMesActual();
-            const tareasDelMes = planMensual.filter(t => t.fecha.startsWith(mesActual));
-            
-            const plataformas = {};
-            
-            tareasDelMes.forEach(t => {
-                if (!plataformas[t.plataforma]) {
-                    plataformas[t.plataforma] = {
-                        cantidad: 0,
-                        alcanceTotal: 0,
-                        interaccionesTotal: 0,
-                        citasGeneradas: 0,
-                        ingresoGenerado: 0
-                    };
-                }
-                
-                plataformas[t.plataforma].cantidad++;
-                plataformas[t.plataforma].alcanceTotal += t.alcance || 0;
-                plataformas[t.plataforma].interaccionesTotal += t.interacciones || 0;
-                plataformas[t.plataforma].citasGeneradas += t.citasGeneradas || 0;
-                plataformas[t.plataforma].ingresoGenerado += t.ingresoGenerado || 0;
-            });
-            
-            const mejorPlataforma = Object.entries(plataformas)
-                .sort((a, b) => b[1].alcanceTotal - a[1].alcanceTotal)[0];
-            
-            return {
-                datos: plataformas,
-                mejorPlataforma: mejorPlataforma ? mejorPlataforma[0] : null
-            };
-        }
-        
-        function obtenerTop3Clientes() {
-            if (clientes.length === 0) return [];
-            
-            return clientes
-                .map(c => {
-                    const totalGastado = transacciones
-                        .filter(t => t.tipo === 'ingreso' && t.descripcion && t.descripcion.includes(c.nombre))
-                        .reduce((s, t) => s + t.monto, 0);
-                    
-                    return { ...c, totalGastado };
-                })
-                .sort((a, b) => b.totalGastado - a.totalGastado)
-                .slice(0, 3);
-        }
-        
-        function obtenerTop3Servicios() {
-            const mesActual = getMesActual();
-            const servicios = {};
-            
-            transacciones
-                .filter(t => t.tipo === 'ingreso' && t.fecha.startsWith(mesActual))
-                .forEach(t => {
-                    const servicioNombre = t.descripcion || 'Otro servicio';
-                    if (!servicios[servicioNombre]) {
-                        servicios[servicioNombre] = { cantidad: 0, total: 0 };
-                    }
-                    servicios[servicioNombre].cantidad++;
-                    servicios[servicioNombre].total += t.monto;
-                });
-            
-            return Object.entries(servicios)
-                .map(([nombre, datos]) => ({ nombre, ...datos }))
-                .sort((a, b) => b.total - a.total)
-                .slice(0, 3);
-        }
-        
-        function obtenerDiasMasRentables() {
-            const mesActual = getMesActual();
-            const dias = {};
-            
-            transacciones
-                .filter(t => t.tipo === 'ingreso' && t.fecha.startsWith(mesActual))
-                .forEach(t => {
-                    const fecha = new Date(t.fecha);
-                    const nombreDia = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][fecha.getDay()];
-                    
-                    if (!dias[nombreDia]) {
-                        dias[nombreDia] = { cantidad: 0, total: 0 };
-                    }
-                    dias[nombreDia].cantidad++;
-                    dias[nombreDia].total += t.monto;
-                });
-            
-            return Object.entries(dias)
-                .map(([nombre, datos]) => ({ nombre, ...datos }))
-                .sort((a, b) => b.total - a.total)
-                .slice(0, 3);
-        }
-        
-        function generarResumenEjecutivo() {
-            const mesActual = getMesActual();
-            const comp = calcularComparativaMeses();
-            const ingresos = comp.ingresos.actual;
-            const gastos = comp.gastos.actual;
-            const ganancia = comp.ganancia.actual;
-            
-            const alertas = [];
-            
-            if (ingresos < 1000) {
-                alertas.push({
-                    tipo: 'peligro',
-                    mensaje: '⚠️ Ingresos muy bajos este mes',
-                    detalle: `Llevas ${formatMoney(ingresos)} con ${getMesEnEspanol(mesActual)}`
-                });
-            }
-            
-            if (gastos > (ingresos * 0.5)) {
-                alertas.push({
-                    tipo: 'advertencia',
-                    mensaje: '⚠️ Gastos muy altos',
-                    detalle: `Tus gastos son el ${Math.round((gastos/ingresos)*100)}% de tus ingresos`
-                });
-            }
-            
-            if (ganancia < 0) {
-                alertas.push({
-                    tipo: 'peligro',
-                    mensaje: '🚨 Estás en pérdidas',
-                    detalle: `Hasta ahora llevas una pérdida de ${formatMoney(Math.abs(ganancia))}`
-                });
-            }
-            
-            const hace14Dias = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
-            const activosNum = clientes.filter(c => c.ultimaVisita && new Date(c.ultimaVisita) > hace14Dias).length;
-            if (activosNum < 3) {
-                alertas.push({
-                    tipo: 'advertencia',
-                    mensaje: '⚠️ Pocos clientes activos',
-                    detalle: `Solo ${activosNum} cliente(s) en las últimas 2 semanas`
-                });
-            }
-            
-            const publicacionesDelMes = planMensual.filter(t => t.fecha.startsWith(mesActual)).length;
-            if (publicacionesDelMes < 3) {
-                alertas.push({
-                    tipo: 'advertencia',
-                    mensaje: '📱 Poco contenido publicado',
-                    detalle: `Solo ${publicacionesDelMes} tarea(s) en ${getMesEnEspanol(mesActual)}`
-                });
-            }
-            
-            return alertas;
-        }
-        
-        function renderizarResumenEjecutivo() {
-            const container = document.getElementById('resumenEjecutivoDashboard');
-            if (!container) return;
-            
-            const alertas = generarResumenEjecutivo();
-            
-            if (alertas.length === 0) {
-                container.innerHTML = '<div style="background: #e8f5e9; padding: 15px; border-radius: 6px; color: #2e7d32; text-align: center; font-weight: bold;">✅ Todo va bien - Sin alertas</div>';
-                return;
-            }
-            
-            let html = '';
-            alertas.forEach(alerta => {
-                const color = alerta.tipo === 'peligro' ? '#ffebee' : '#fff3e0';
-                const colorBorde = alerta.tipo === 'peligro' ? '#f44336' : '#ff9800';
-                
-                html += `<div style="background: ${color}; border-left: 4px solid ${colorBorde}; padding: 12px; margin-bottom: 8px; border-radius: 4px;">
-                    <div style="font-weight: bold; color: ${colorBorde}; margin-bottom: 4px;">${alerta.mensaje}</div>
-                    <div style="font-size: 12px; color: #666;">${alerta.detalle}</div>
-                </div>`;
-            });
-            
-            container.innerHTML = html;
-        }
-        
-        function renderizarAnalisisGraficos() {
-            const container = document.getElementById('analisisGraficosDashboard');
-            if (!container) return;
-            
-            const datos = calcularDatosUltimos3Meses();
-            
-            let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">';
-            
-            // Gráfico de Ingresos vs Gastos
-            html += `<div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                <h4 style="margin: 0 0 15px 0; color: #333;">📊 Ingresos vs Gastos (3 meses)</h4>
-                <canvas id="graficoCandlesticoIngresosGastos" style="max-height: 250px;"></canvas>
-            </div>`;
-            
-            // Gráfico de Ganancia
-            html += `<div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                <h4 style="margin: 0 0 15px 0; color: #333;">💰 Ganancia Neta (3 meses)</h4>
-                <canvas id="graficoGanancia" style="max-height: 250px;"></canvas>
-            </div>`;
-            
-            // Gráfico de Crecimiento de Clientes
-            html += `<div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                <h4 style="margin: 0 0 15px 0; color: #333;">👥 Clientes Nuevos (3 meses)</h4>
-                <canvas id="graficoClientesNuevos" style="max-height: 250px;"></canvas>
-            </div>`;
-            
-            // Gráfico de Publicaciones
-            html += `<div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                <h4 style="margin: 0 0 15px 0; color: #333;">📱 Publicaciones (3 meses)</h4>
-                <canvas id="graficoPublicaciones" style="max-height: 250px;"></canvas>
-            </div>`;
-            
-            html += '</div>';
-            container.innerHTML = html;
-            
-            // Dibujar gráficos con Chart.js
-            setTimeout(() => {
-                dibujarGraficos(datos);
-            }, 100);
-        }
-        
-        function dibujarGraficos(datos) {
-            const ctx1 = document.getElementById('graficoCandlesticoIngresosGastos');
-            const ctx2 = document.getElementById('graficoGanancia');
-            const ctx3 = document.getElementById('graficoClientesNuevos');
-            const ctx4 = document.getElementById('graficoPublicaciones');
-            
-            if (!ctx1 || !ctx2 || !ctx3 || !ctx4) return;
-            
-            // Gráfico Ingresos vs Gastos
-            new Chart(ctx1, {
-                type: 'bar',
-                data: {
-                    labels: datos.map(d => d.mes),
-                    datasets: [
-                        {
-                            label: 'Ingresos',
-                            data: datos.map(d => d.ingresos),
-                            backgroundColor: '#27ae60',
-                            borderRadius: 5
-                        },
-                        {
-                            label: 'Gastos',
-                            data: datos.map(d => d.gastos),
-                            backgroundColor: '#e8899f',
-                            borderRadius: 5
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { legend: { position: 'top' } }
-                }
-            });
-            
-            // Gráfico Ganancia
-            new Chart(ctx2, {
-                type: 'line',
-                data: {
-                    labels: datos.map(d => d.mes),
-                    datasets: [{
-                        label: 'Ganancia Neta',
-                        data: datos.map(d => d.ganancia),
-                        borderColor: '#2ecc71',
-                        backgroundColor: 'rgba(46, 204, 113, 0.1)',
-                        borderWidth: 3,
-                        tension: 0.4,
-                        fill: true,
-                        pointBackgroundColor: '#2ecc71',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { legend: { position: 'top' } }
-                }
-            });
-            
-            // Gráfico Clientes Nuevos
-            new Chart(ctx3, {
-                type: 'doughnut',
-                data: {
-                    labels: datos.map(d => d.mes),
-                    datasets: [{
-                        data: datos.map(d => d.clientesNuevos),
-                        backgroundColor: ['#3498db', '#2196f3', '#1e88e5']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { legend: { position: 'bottom' } }
-                }
-            });
-            
-            // Gráfico Publicaciones
-            new Chart(ctx4, {
-                type: 'radar',
-                data: {
-                    labels: datos.map(d => d.mes),
-                    datasets: [{
-                        label: 'Publicaciones',
-                        data: datos.map(d => d.publicaciones),
-                        borderColor: '#9c27b0',
-                        backgroundColor: 'rgba(156, 39, 176, 0.2)',
-                        pointBackgroundColor: '#9c27b0',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true
-                }
-            });
-        }
-        
-        function renderizarRendimientoContenido() {
-            const container = document.getElementById('rendimientoContenidoDashboard');
-            if (!container) return;
-            
-            const mejor = analizarMejorContenido();
-            const plataformas = analizarPlataformasEfectivas();
-            
-            if (!mejor) {
-                container.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Sin contenido este mes</p>';
-                return;
-            }
-            
-            let html = `<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">`;
-            
-            // Mejor por alcance
-            if (mejor.mejorAlcance) {
-                html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #2196f3;">
-                    <div style="font-size: 12px; color: #666; margin-bottom: 6px;">🏆 Mayor Alcance</div>
-                    <div style="font-size: 14px; font-weight: bold; color: #2196f3; margin-bottom: 4px;">${mejor.mejorAlcance.alcance} personas</div>
-                    <div style="font-size: 11px; color: #999;">${(mejor.mejorAlcance.copy || mejor.mejorAlcance.tipoActividad).substring(0, 40)}...</div>
-                </div>`;
-            }
-            
-            // Mejor por interacciones
-            if (mejor.mejorInteracciones) {
-                html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #ff9800;">
-                    <div style="font-size: 12px; color: #666; margin-bottom: 6px;">💬 Mayor Engagement</div>
-                    <div style="font-size: 14px; font-weight: bold; color: #ff9800; margin-bottom: 4px;">${mejor.mejorInteracciones.interacciones} interacciones</div>
-                    <div style="font-size: 11px; color: #999;">${(mejor.mejorInteracciones.copy || mejor.mejorInteracciones.tipoActividad).substring(0, 40)}...</div>
-                </div>`;
-            }
-            
-            // Mejor plataforma
-            if (plataformas.mejorPlataforma) {
-                const datosPlataforma = plataformas.datos[plataformas.mejorPlataforma];
-                html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #4caf50;">
-                    <div style="font-size: 12px; color: #666; margin-bottom: 6px;">🚀 Plataforma Más Efectiva</div>
-                    <div style="font-size: 14px; font-weight: bold; color: #4caf50; margin-bottom: 4px;">${plataformas.mejorPlataforma}</div>
-                    <div style="font-size: 11px; color: #999;">Alcance: ${datosPlataforma.alcanceTotal} | Citas: ${datosPlataforma.citasGeneradas}</div>
-                </div>`;
-            }
-            
-            html += '</div>';
-            container.innerHTML = html;
-        }
-        
-        function renderizarTop3() {
-            const containerClientes = document.getElementById('top3ClientesDashboard');
-            const containerServicios = document.getElementById('top3ServiciosDashboard');
-            const containerDias = document.getElementById('top3DiasDashboard');
-            
-            // Top 3 Clientes
-            if (containerClientes) {
-                const top3Clientes = obtenerTop3Clientes();
-                if (top3Clientes.length === 0) {
-                    containerClientes.innerHTML = '<p style="color: #999;">Sin datos</p>';
-                } else {
-                    let html = '';
-                    top3Clientes.forEach((c, idx) => {
-                        html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #3498db; margin-bottom: 8px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <div style="font-weight: bold; color: #333; margin-bottom: 2px;">#${idx + 1} ${c.nombre}</div>
-                                    <div style="font-size: 12px; color: #999;">${c.visitas} visitas</div>
-                                </div>
-                                <div style="font-size: 14px; font-weight: bold; color: #27ae60;">${formatMoney(c.totalGastado || 0)}</div>
-                            </div>
-                        </div>`;
-                    });
-                    containerClientes.innerHTML = html;
-                }
-            }
-            
-            // Top 3 Servicios
-            if (containerServicios) {
-                const top3Servicios = obtenerTop3Servicios();
-                if (top3Servicios.length === 0) {
-                    containerServicios.innerHTML = '<p style="color: #999;">Sin datos</p>';
-                } else {
-                    let html = '';
-                    top3Servicios.forEach((s, idx) => {
-                        html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #ff9800; margin-bottom: 8px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <div style="font-weight: bold; color: #333; margin-bottom: 2px;">#${idx + 1} ${s.nombre}</div>
-                                    <div style="font-size: 12px; color: #999;">${s.cantidad} venta(s)</div>
-                                </div>
-                                <div style="font-size: 14px; font-weight: bold; color: #27ae60;">${formatMoney(s.total)}</div>
-                            </div>
-                        </div>`;
-                    });
-                    containerServicios.innerHTML = html;
-                }
-            }
-            
-            // Top 3 Días
-            if (containerDias) {
-                const top3Dias = obtenerDiasMasRentables();
-                if (top3Dias.length === 0) {
-                    containerDias.innerHTML = '<p style="color: #999;">Sin datos</p>';
-                } else {
-                    let html = '';
-                    top3Dias.forEach((d, idx) => {
-                        html += `<div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #4caf50; margin-bottom: 8px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <div style="font-weight: bold; color: #333; margin-bottom: 2px;">#${idx + 1} ${d.nombre}</div>
-                                    <div style="font-size: 12px; color: #999;">${d.cantidad} transacción(es)</div>
-                                </div>
-                                <div style="font-size: 14px; font-weight: bold; color: #27ae60;">${formatMoney(d.total)}</div>
-                            </div>
-                        </div>`;
-                    });
-                    containerDias.innerHTML = html;
-                }
-            }
-        }
-
-        function renderizarResumenClientes() {
-            const totalNum = clientes.length;
-            const hace14Dias = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
-            const activosNum = clientes.filter(c => c.ultimaVisita && new Date(c.ultimaVisita) > hace14Dias).length;
-            const mesActual = getMesActual();
-            const nuevosNum = clientes.filter(c => c.fechaCreacion && c.fechaCreacion.startsWith(mesActual)).length;
-            
-            const elemTotal = document.getElementById('totalClientesNum');
-            const elemActivos = document.getElementById('clientesActivoNum');
-            const elemNuevos = document.getElementById('clientesNuevosNum');
-            
-            if (elemTotal) elemTotal.textContent = totalNum;
-            if (elemActivos) elemActivos.textContent = activosNum;
-            if (elemNuevos) elemNuevos.textContent = nuevosNum;
-        }
-
-        // NUEVA FUNCIÓN: Actualizar Resumen Financiero en Finanzas
-        function actualizarResumenFinanzas() {
-            const mesActual = getMesActual();
-            const ingresos = transacciones.filter(t => t.tipo === 'ingreso' && t.fecha.startsWith(mesActual)).reduce((s, t) => s + t.monto, 0);
-            const gastos = transacciones.filter(t => t.tipo === 'gasto' && t.fecha.startsWith(mesActual)).reduce((s, t) => s + t.monto, 0);
-            const ganancia = ingresos - gastos;
-            const porcentaje = ingresos > 0 ? Math.round((ganancia / ingresos) * 100) : 0;
-            const fondo = ganancia * 0.18;
-            
-            const elemIngresos = document.getElementById('resumenIngresos');
-            const elemGastos = document.getElementById('resumenGastos');
-            const elemGanancia = document.getElementById('resumenGanancia');
-            const elemPorcentaje = document.getElementById('resumenPorcentaje');
-            const elemFondo = document.getElementById('fondoInsumos');
-            const elemBase = document.getElementById('baseCalculoFondo');
-            
-            if (elemIngresos) elemIngresos.textContent = formatMoney(ingresos);
-            if (elemGastos) elemGastos.textContent = formatMoney(gastos);
-            if (elemGanancia) elemGanancia.textContent = formatMoney(ganancia);
-            if (elemPorcentaje) elemPorcentaje.textContent = porcentaje + '%';
-            if (elemFondo) elemFondo.textContent = formatMoney(fondo);
-            if (elemBase) elemBase.textContent = formatMoney(ganancia);
         }
 
         function render() {
-            // Actualizar TODAS las secciones del Dashboard (OPCIÓN A)
-            renderizarComparativaRapida();
-            renderizarEstadoMetas();
-            renderizarDineroReal();
-            renderizarEstadisticasContenido();
-            renderizarResumenMetasDashboard();
-            renderizarRecordatoriosCompacto();
-            renderizarCumpleanosProximos();
-            renderizarResumenClientes();
+            // Actualizar panel de recordatorios
             renderizarRecordatorios();
             
             // Actualizar timestamp de último guardado
@@ -4674,6 +3649,10 @@
             // Renderizar sección de Crecimiento
             renderCrecimiento();
             
+            // Renderizar mini-tablas del Dashboard
+            renderizarUltimosClientes();
+            renderizarUltimasTransacciones();
+            
             // Cargar valores de bolsillos Nequi
             cargarValoresBolsillos();
         }
@@ -4915,54 +3894,43 @@
             seccionFinanzasActual = seccion;
             
             // Ocultar todas las secciones
-            document.getElementById('seccionResumen').style.display = 'none';
-            document.getElementById('seccionIngresos').style.display = 'none';
-            document.getElementById('seccionGastos').style.display = 'none';
+            document.getElementById('seccionIngreso').style.display = 'none';
+            document.getElementById('seccionGasto').style.display = 'none';
             document.getElementById('seccionDinero').style.display = 'none';
+            document.getElementById('seccionAnalisis').style.display = 'none';
             document.getElementById('seccionTransacciones').style.display = 'none';
             
             // Resetear estilos de botones
-            if (document.getElementById('btnSeccionResumen')) {
-                document.getElementById('btnSeccionResumen').style.background = '#f4a6c1';
-                document.getElementById('btnSeccionResumen').style.fontWeight = 'normal';
-            }
-            if (document.getElementById('btnSeccionIngresos')) {
-                document.getElementById('btnSeccionIngresos').style.background = '#f4a6c1';
-                document.getElementById('btnSeccionIngresos').style.fontWeight = 'normal';
-            }
-            if (document.getElementById('btnSeccionGastos')) {
-                document.getElementById('btnSeccionGastos').style.background = '#f4a6c1';
-                document.getElementById('btnSeccionGastos').style.fontWeight = 'normal';
-            }
+            document.getElementById('btnSeccionIngreso').style.background = '#27ae60';
+            document.getElementById('btnSeccionIngreso').style.fontWeight = 'normal';
+            document.getElementById('btnSeccionGasto').style.background = '#e8899f';
+            document.getElementById('btnSeccionGasto').style.fontWeight = 'normal';
             document.getElementById('btnSeccionDinero').style.background = '#f4a6c1';
             document.getElementById('btnSeccionDinero').style.fontWeight = 'normal';
+            document.getElementById('btnSeccionAnalisis').style.background = '#f4a6c1';
+            document.getElementById('btnSeccionAnalisis').style.fontWeight = 'normal';
             document.getElementById('btnSeccionTransacciones').style.background = '#f4a6c1';
             document.getElementById('btnSeccionTransacciones').style.fontWeight = 'normal';
             
             // Mostrar la sección seleccionada
-            if (seccion === 'resumen') {
-                document.getElementById('seccionResumen').style.display = 'block';
-                if (document.getElementById('btnSeccionResumen')) {
-                    document.getElementById('btnSeccionResumen').style.background = '#d4547e';
-                    document.getElementById('btnSeccionResumen').style.fontWeight = 'bold';
-                }
-                actualizarResumenFinanzas();
-            } else if (seccion === 'ingresos') {
-                document.getElementById('seccionIngresos').style.display = 'block';
-                if (document.getElementById('btnSeccionIngresos')) {
-                    document.getElementById('btnSeccionIngresos').style.background = '#d4547e';
-                    document.getElementById('btnSeccionIngresos').style.fontWeight = 'bold';
-                }
-            } else if (seccion === 'gastos') {
-                document.getElementById('seccionGastos').style.display = 'block';
-                if (document.getElementById('btnSeccionGastos')) {
-                    document.getElementById('btnSeccionGastos').style.background = '#d4547e';
-                    document.getElementById('btnSeccionGastos').style.fontWeight = 'bold';
-                }
+            if (seccion === 'ingreso') {
+                document.getElementById('seccionIngreso').style.display = 'block';
+                document.getElementById('btnSeccionIngreso').style.background = '#1abc9c';
+                document.getElementById('btnSeccionIngreso').style.fontWeight = 'bold';
+            } else if (seccion === 'gasto') {
+                document.getElementById('seccionGasto').style.display = 'block';
+                document.getElementById('btnSeccionGasto').style.background = '#c0392b';
+                document.getElementById('btnSeccionGasto').style.fontWeight = 'bold';
             } else if (seccion === 'dinero') {
                 document.getElementById('seccionDinero').style.display = 'block';
                 document.getElementById('btnSeccionDinero').style.background = '#d4547e';
                 document.getElementById('btnSeccionDinero').style.fontWeight = 'bold';
+            } else if (seccion === 'analisis') {
+                document.getElementById('seccionAnalisis').style.display = 'block';
+                document.getElementById('btnSeccionAnalisis').style.background = '#d4547e';
+                document.getElementById('btnSeccionAnalisis').style.fontWeight = 'bold';
+                // Actualizar análisis cuando se abre la sección
+                actualizarAnalisisFinanzas();
             } else if (seccion === 'transacciones') {
                 document.getElementById('seccionTransacciones').style.display = 'block';
                 document.getElementById('btnSeccionTransacciones').style.background = '#d4547e';
@@ -6714,9 +5682,8 @@
         // Inicializar
         loadData();
         
-        // Inicializar secciones por defecto
-        cambiarSeccionFinanzas('resumen');
-        cambiarSeccionCrecimiento('metas');
+        // Inicializar subpestaña de Finanzas por defecto
+        cambiarSeccionFinanzas('ingreso');
         
         // Iniciar sistema de recordatorios y notificaciones
         iniciarVerificadorRecordatorios();
