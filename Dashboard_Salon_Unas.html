@@ -358,14 +358,13 @@
 
         <!-- TABS -->
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab(event, 'dashboard')">📊 Dashboard</button>
-            <button class="tab-btn" onclick="switchTab(event, 'crecimiento')">📈 Crecimiento</button>
+            <button class="tab-btn active" onclick="switchTab(event, 'crecimiento')">📈 Crecimiento</button>
             <button class="tab-btn" onclick="switchTab(event, 'finanzas')">💸 Finanzas</button>
             <button class="tab-btn" onclick="switchTab(event, 'clientes')">👥 Clientes</button>
         </div>
 
         <!-- DASHBOARD TAB -->
-        <div id="dashboard" class="tab-content active">
+        <div id="dashboard" class="tab-content" style="display: none;">
             <!-- 1️⃣ KPIs DEL MES (PRIMERO - LO MÁS IMPORTANTE) -->
             <div class="kpi-grid">
                 <div class="kpi-card">
@@ -453,7 +452,7 @@
             </div>
 
             <!-- MÓDULO 1: METAS DEL MES -->
-            <div id="seccionMetas" style="display: block;">
+            <div id="seccionMetas" style="display: none;">
                 <!-- Selector de Mes -->
                 <div class="card" style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
                     <label for="mesSelector" style="font-weight: 600; color: #d4547e; white-space: nowrap;">📅 Mes:</label>
@@ -1103,7 +1102,7 @@
         </div>
 
         <div class="footer">
-            <p>💾 Los datos se guardan automáticamente en tu navegador | © 2024 Dashboard Salón de Uñas</p>
+            <p style="font-size: 11px; color: #999; margin: 10px 0; text-align: center;">💾 Los datos se guardan automáticamente | © 2024 Dashboard Salón de Uñas</p>
             <p id="ultimoGuardado" style="font-size: 11px; color: #bbb; margin-top: 8px;"></p>
         </div>
     </div>
@@ -3653,22 +3652,53 @@
             renderizarUltimosClientes();
             renderizarUltimasTransacciones();
             
+            // Mostrar la sección de Metas PRIMERO (visible)
+            document.getElementById('seccionMetas').style.display = 'block';
+            document.getElementById('seccionPlanMensual').style.display = 'none';
+            document.getElementById('seccionCalendarioContenido').style.display = 'none';
+            
+            // Marcar Metas como activo
+            document.getElementById('btnSeccionMetas').style.background = '#d4547e';
+            document.getElementById('btnSeccionMetas').style.fontWeight = 'bold';
+            document.getElementById('btnSeccionPlan').style.background = '#f4a6c1';
+            document.getElementById('btnSeccionPlan').style.fontWeight = 'normal';
+            document.getElementById('btnSeccionCalendario').style.background = '#e8b4d4';
+            document.getElementById('btnSeccionCalendario').style.fontWeight = 'normal';
+            
+            // Renderizar contenido con pequeño delay para que DOM esté listo
+            setTimeout(() => {
+                renderCrecimiento();
+            }, 50);
+            
             // Cargar valores de bolsillos Nequi
             cargarValoresBolsillos();
         }
 
         // Función para renderizar sección de Crecimiento
         function renderCrecimiento() {
-            renderMetasMensual();
-            renderPlanMensual();
+            try {
+                renderMetasMensual();
+                renderPlanMensual();
+                console.log('✅ renderCrecimiento() ejecutado correctamente');
+            } catch(e) {
+                console.error('❌ Error en renderCrecimiento():', e);
+            }
         }
 
         // Renderizar metas del mes
         function renderMetasMensual() {
             try {
+                console.log('🔍 renderMetasMensual() iniciando...');
+                console.log('mesActualConsulta:', mesActualConsulta);
+                console.log('metasMensuales:', metasMensuales);
+                
                 crearMetasDefault(mesActualConsulta);
                 const metas = metasMensuales[mesActualConsulta];
+                
+                console.log('metas después de crearMetasDefault:', metas);
+                
                 const container = document.getElementById('metasContainer');
+                console.log('container encontrado:', !!container);
 
                 if (!container) {
                     console.error('❌ metasContainer no encontrado');
@@ -5682,6 +5712,12 @@
         // Inicializar
         loadData();
         
+        // PASO 5.5: Migrar datos antiguos si es necesario
+        const huboMigracion = migrarDatosAntiguos();
+        
+        // Renderizar interfaz PRIMERO (y aplicar cambios si hubo migración)
+        render();
+        
         // Inicializar subpestaña de Finanzas por defecto
         cambiarSeccionFinanzas('ingreso');
         
@@ -5695,12 +5731,6 @@
                 cerrarModalActividad();
             }
         });
-        
-        // PASO 5.5: Migrar datos antiguos si es necesario
-        const huboMigracion = migrarDatosAntiguos();
-        
-        // Renderizar interfaz (y aplicar cambios si hubo migración)
-        render();
     </script>
 </body>
 </html>
