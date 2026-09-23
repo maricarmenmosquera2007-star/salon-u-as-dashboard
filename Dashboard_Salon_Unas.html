@@ -1708,7 +1708,7 @@
                 clientes.forEach(c => {
                     const ultimaVisita = c.ultimaVisita ? new Date(c.ultimaVisita).toLocaleDateString('es-CO') : '';
                     const fechaCreacion = c.fechaCreacion ? new Date(c.fechaCreacion).toLocaleDateString('es-CO') : '';
-                    csv += crearFila(c.id, c.nombre, c.telefono || '', c.email || '', c.servicios || '', c.visitas || '', ultimaVisita, c.fidelizacion || '', fechaCreacion) + '\n';
+                    csv += crearFila(c.id, c.nombre, c.numero || '', c.email || '', c.servicios || '', c.visitas || '', ultimaVisita, c.fidelizacion || '', fechaCreacion) + '\n';
                 });
                 nombreArchivo = `Clientes_${mesActualConsulta}.csv`;
             } 
@@ -1736,7 +1736,7 @@
                 csv += crearFila('ID', 'Nombre', 'Telefono', 'Email', 'Servicios', 'Visitas', 'Ultima Visita', 'Fidelizacion %') + '\n';
                 clientes.forEach(c => {
                     const ultimaVisita = c.ultimaVisita ? new Date(c.ultimaVisita).toLocaleDateString('es-CO') : '';
-                    csv += crearFila(c.id, c.nombre, c.telefono || '', c.email || '', c.servicios || '', c.visitas || '', ultimaVisita, c.fidelizacion || '') + '\n';
+                    csv += crearFila(c.id, c.nombre, c.numero || '', c.email || '', c.servicios || '', c.visitas || '', ultimaVisita, c.fidelizacion || '') + '\n';
                 });
                 
                 // SECCIÓN TRANSACCIONES
