@@ -444,19 +444,7 @@
             <!-- AVISOS IMPORTANTES -->
             <div id="avisosContainer"></div>
 
-            <!-- PANEL DE DIAGNÓSTICO FIREBASE (temporal) -->
-            <div id="panelDiagnostico" style="background:#1a1a2e;color:#00ff88;font-family:monospace;font-size:12px;padding:12px 16px;border-radius:10px;margin-bottom:16px;line-height:1.8;">
-                <div style="color:#ff9f43;font-weight:bold;margin-bottom:6px;">🔧 Diagnóstico Firebase (temporal)</div>
-                <div id="diagEstado">⏳ Iniciando...</div>
-                <div id="diagTimestamps" style="margin-top:6px;color:#a8d8ea;"></div>
-                <div id="diagResultado" style="margin-top:6px;"></div>
-                <div id="diagClientes" style="margin-top:6px;color:#ffd32a;"></div>
-                <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-                    <button onclick="forzarSubidaAFirebase()" style="background:#e17055;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:bold;">⬆️ Subir MIS datos a Firebase</button>
-                    <button onclick="forzarDescargaDeFirebase()" style="background:#0984e3;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:bold;">⬇️ Descargar datos de Firebase</button>
-                    <button onclick="document.getElementById('panelDiagnostico').style.display='none'" style="background:#333;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:11px;">X Cerrar</button>
-                </div>
-            </div>
+
 
             <!-- NAVEGACIÓN INTERNA DE CRECIMIENTO -->
             <div class="card" style="display: flex; gap: 10px; margin-bottom: 20px; padding: 12px;">
@@ -722,16 +710,19 @@
                     <div style="margin-bottom: 12px;">
                         <label style="font-size: 10px; font-weight: bold; color: #999; display: block; margin-bottom: 4px;">✍️ Copy / Caption</label>
                         <div id="modalCopy" style="font-size: 13px; color: #333; background: #f5f5f5; padding: 8px; border-radius: 4px; line-height: 1.4; border-left: 4px solid #d4547e; min-height: 60px;"></div>
+                        <textarea id="modalCopyEdit" style="display:none; width:100%; font-size:13px; color:#333; background:#fff; padding:8px; border-radius:4px; border:2px solid #d4547e; line-height:1.4; min-height:80px; resize:vertical; box-sizing:border-box; font-family:inherit;"></textarea>
                     </div>
 
                     <div style="margin-bottom: 12px;">
                         <label style="font-size: 10px; font-weight: bold; color: #999; display: block; margin-bottom: 4px;">#️⃣ Hashtags</label>
                         <div id="modalHashtags" style="font-size: 13px; color: #7b68ee; background: #f0e6ff; padding: 8px; border-radius: 4px; font-weight: 500;"></div>
+                        <input id="modalHashtagsEdit" type="text" style="display:none; width:100%; font-size:13px; color:#7b68ee; background:#f0e6ff; padding:8px; border-radius:4px; border:2px solid #7b68ee; font-weight:500; box-sizing:border-box; font-family:inherit;">
                     </div>
 
                     <div style="margin-bottom: 12px;">
                         <label style="font-size: 10px; font-weight: bold; color: #999; display: block; margin-bottom: 4px;">💭 Notas</label>
                         <div id="modalNotas" style="font-size: 13px; color: #333; background: #f5f5f5; padding: 8px; border-radius: 4px; font-style: italic; min-height: 40px;"></div>
+                        <textarea id="modalNotasEdit" style="display:none; width:100%; font-size:13px; color:#333; background:#fff; padding:8px; border-radius:4px; border:2px solid #999; min-height:50px; resize:vertical; box-sizing:border-box; font-family:inherit; font-style:italic;"></textarea>
                     </div>
 
                     <div style="margin-bottom: 16px;">
@@ -740,16 +731,29 @@
                     </div>
                 </div>
 
-                <!-- Botones de Acción -->
-                <div style="display: flex; gap: 10px; border-top: 1px solid #e0e0e0; padding-top: 12px;">
-                    <button onclick="editarActividadDesdeModal()" style="flex: 1; padding: 10px; background: #f4a6c1; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">
+                <!-- Botones modo VISTA -->
+                <div id="botonesVista" style="display: flex; gap: 10px; border-top: 1px solid #e0e0e0; padding-top: 12px;">
+                    <button onclick="activarModoEdicion()" style="flex: 1; padding: 10px; background: #f4a6c1; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">
                         ✏️ Editar
+                    </button>
+                    <button onclick="toggleEstadoDesdeModal()" style="flex: 1; padding: 10px; background: #a8d8b9; color: #2e7d32; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">
+                        ✓ Cambiar estado
                     </button>
                     <button onclick="eliminarActividadDesdeModal()" style="flex: 1; padding: 10px; background: #e0e0e0; color: #333; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">
                         🗑️ Eliminar
                     </button>
                     <button onclick="cerrarModalActividad()" style="flex: 1; padding: 10px; background: #d4547e; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">
                         ✕ Cerrar
+                    </button>
+                </div>
+
+                <!-- Botones modo EDICIÓN -->
+                <div id="botonesEdicion" style="display: none; gap: 10px; border-top: 1px solid #e0e0e0; padding-top: 12px;">
+                    <button onclick="guardarEdicionDesdeCalendario()" style="flex: 1; padding: 10px; background: #27ae60; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">
+                        💾 Guardar cambios
+                    </button>
+                    <button onclick="cancelarEdicionDesdeCalendario()" style="flex: 1; padding: 10px; background: #e0e0e0; color: #333; border: none; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">
+                        ✕ Cancelar
                     </button>
                 </div>
 
@@ -1087,6 +1091,16 @@
 
         <div class="footer">
             <p style="font-size: 11px; color: #999; margin: 10px 0; text-align: center;">💾 Los datos se guardan automáticamente | © 2026 Mari Nails</p>
+            <div style="text-align:center; margin-top:4px;">
+                <span onclick="document.getElementById('sincPanel').style.display = document.getElementById('sincPanel').style.display === 'none' ? 'block' : 'none'" style="font-size:10px;color:#ccc;cursor:pointer;user-select:none;">⚙️ Sincronización</span>
+                <div id="sincPanel" style="display:none; margin-top:8px;">
+                    <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap;">
+                        <button onclick="forzarSubidaAFirebase()" style="background:#e17055;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:11px;">⬆️ Subir mis datos</button>
+                        <button onclick="forzarDescargaDeFirebase()" style="background:#0984e3;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:11px;">⬇️ Descargar de Firebase</button>
+                    </div>
+                    <div id="sincMensaje" style="font-size:11px;color:#27ae60;margin-top:6px;"></div>
+                </div>
+            </div>
             <p id="ultimoGuardado" style="font-size: 11px; color: #bbb; margin-top: 8px;"></p>
         </div>
     </div>
@@ -1250,37 +1264,21 @@
         // Sincronizar con Firebase — Firebase es la fuente de verdad compartida entre dispositivos.
         function sincronizarConFirebase() {
             const ref = database.ref('salon_data');
-            const diag = (id, msg) => { const el = document.getElementById(id); if(el) el.innerHTML = msg; };
-            
-            diag('diagEstado', '🔄 Conectando con Firebase...');
             
             ref.once('value').then((snapshot) => {
                 const dataFirebase = snapshot.val();
                 
                 if (dataFirebase) {
-                    const timestampFirebase = dataFirebase.timestamp || 0;
-                    const ultimaDescarga    = parseInt(localStorage.getItem('ultimaDescargaFirebase') || '0');
+                    const timestampFirebase   = dataFirebase.timestamp || 0;
+                    const ultimaDescarga      = parseInt(localStorage.getItem('ultimaDescargaFirebase') || '0');
                     const ultimoGuardadoLocal = parseInt(localStorage.getItem('ultimoGuardadoLocal') || '0');
-                    const clientesEnFirebase  = dataFirebase.clientes ? dataFirebase.clientes.length : 0;
-                    const clientesLocales     = clientes.length;
                     
-                    const fechaFB   = timestampFirebase ? new Date(timestampFirebase).toLocaleString('es-CO') : 'nunca';
-                    const fechaDesc = ultimaDescarga    ? new Date(ultimaDescarga).toLocaleString('es-CO')    : 'nunca';
-                    const fechaLocal= ultimoGuardadoLocal ? new Date(ultimoGuardadoLocal).toLocaleString('es-CO') : 'nunca';
-                    
-                    diag('diagEstado', '✅ Firebase conectado');
-                    diag('diagTimestamps',
-                        'Firebase guardado: ' + fechaFB + '<br>' +
-                        'Este dispositivo descargó: ' + fechaDesc + '<br>' +
-                        'Este dispositivo guardó local: ' + fechaLocal
-                    );
-                    diag('diagClientes',
-                        'Clientes en Firebase: ' + clientesEnFirebase + ' | Clientes locales: ' + clientesLocales
-                    );
+                    console.log('📊 Firebase:', new Date(timestampFirebase).toLocaleString('es-CO'));
+                    console.log('📊 Última descarga:', ultimaDescarga ? new Date(ultimaDescarga).toLocaleString('es-CO') : 'nunca');
                     
                     if (timestampFirebase > ultimaDescarga) {
-                        diag('diagResultado', '📥 Firebase tiene datos nuevos — DESCARGANDO...');
-                        
+                        // Firebase tiene datos más recientes — descargar
+                        console.log('📥 Descargando datos de Firebase...');
                         if (dataFirebase.clientes)       clientes       = dataFirebase.clientes;
                         if (dataFirebase.transacciones)  transacciones  = dataFirebase.transacciones;
                         if (dataFirebase.metasMensuales) metasMensuales = dataFirebase.metasMensuales;
@@ -1290,29 +1288,24 @@
                         guardarEnLocalStorage();
                         localStorage.setItem('ultimaDescargaFirebase', timestampFirebase);
                         localStorage.setItem('ultimoGuardadoLocal', timestampFirebase);
-                        
                         render();
-                        diag('diagResultado', '✅ Datos descargados desde Firebase y aplicados');
-                        diag('diagClientes',
-                            'Clientes en Firebase: ' + clientesEnFirebase + ' | Clientes locales ahora: ' + clientes.length
-                        );
+                        console.log('✅ Datos sincronizados desde Firebase');
                         
                     } else if (ultimoGuardadoLocal > ultimaDescarga) {
-                        diag('diagResultado', '☁️ Este dispositivo tiene datos nuevos — SUBIENDO a Firebase...');
+                        // Este dispositivo tiene datos nuevos — subir
+                        console.log('☁️ Subiendo datos locales a Firebase...');
                         guardarEnFirebase();
-                        diag('diagResultado', '✅ Datos subidos a Firebase');
                         
                     } else {
-                        diag('diagResultado', '✅ Ya sincronizado — sin cambios pendientes');
+                        console.log('✅ Ya sincronizado — sin cambios pendientes');
                     }
                     
                 } else {
-                    diag('diagEstado', '📝 Firebase vacío — subiendo datos locales...');
+                    // Firebase vacío — subir datos locales
+                    console.log('📝 Firebase vacío — subiendo datos locales...');
                     guardarEnFirebase();
-                    diag('diagResultado', '✅ Datos subidos a Firebase por primera vez');
                 }
             }).catch((error) => {
-                diag('diagEstado', '❌ Error Firebase: ' + error.message);
                 console.log('⚠️ Error al sincronizar con Firebase:', error.message);
             });
         }
@@ -1331,26 +1324,27 @@
             localStorage.setItem('ultimoGuardadoLocal', ahora);
         }
 
-        // Forzar subida de datos locales a Firebase (botón manual del panel de diagnóstico)
+        // Forzar subida de datos locales a Firebase
         function forzarSubidaAFirebase() {
-            const diag = (id, msg) => { const el = document.getElementById(id); if(el) el.innerHTML = msg; };
-            diag('diagResultado', '⬆️ Subiendo datos locales a Firebase...');
-            // Resetear timestamps para que Firebase acepte estos datos como los más recientes
+            const msg = document.getElementById('sincMensaje');
+            if (msg) msg.innerHTML = '⬆️ Subiendo datos a Firebase...';
             localStorage.removeItem('ultimaDescargaFirebase');
             localStorage.removeItem('ultimoGuardadoLocal');
             guardarEnFirebase();
             setTimeout(() => {
-                diag('diagResultado', '✅ Datos subidos. Recargue el celular para sincronizar.');
-                diag('diagClientes', 'Clientes subidos: ' + clientes.length + ' | Transacciones: ' + transacciones.length);
+                if (msg) msg.innerHTML = '✅ Datos subidos. Recargue el otro dispositivo.';
             }, 2000);
         }
 
-        // Forzar descarga de datos de Firebase (botón manual del panel de diagnóstico)
+        // Forzar descarga de datos de Firebase
         function forzarDescargaDeFirebase() {
-            const diag = (id, msg) => { const el = document.getElementById(id); if(el) el.innerHTML = msg; };
-            diag('diagResultado', '⬇️ Descargando datos de Firebase...');
+            const msg = document.getElementById('sincMensaje');
+            if (msg) msg.innerHTML = '⬇️ Descargando datos de Firebase...';
             localStorage.removeItem('ultimaDescargaFirebase');
             sincronizarConFirebase();
+            setTimeout(() => {
+                if (msg) msg.innerHTML = '✅ Descarga completada.';
+            }, 3000);
         }
 
         // Guardar en Firebase — sube todos los datos y registra los timestamps de sincronización
@@ -4792,43 +4786,109 @@
         }
 
         // Cerrar modal haciendo click afuera
-        // Cerrar modal
+        // Cerrar modal — siempre volver a modo vista
         function cerrarModalActividad() {
+            // Asegurar que queda en modo vista para la próxima apertura
+            cancelarEdicionDesdeCalendario();
             document.getElementById('modalDetalleActividad').style.display = 'none';
             window.actividadActualDelModal = null;
         }
 
-        // Editar actividad desde modal
-        function editarActividadDesdeModal() {
-            if (!window.actividadActualDelModal) return;
-
+        // Activar modo edición en el modal
+        function activarModoEdicion() {
             const tarea = window.actividadActualDelModal;
-            
-            // Cambiar estado (toggle)
-            if (tarea.estado === 'Pendiente') {
-                tarea.estado = 'Completada';
-                actualizarMetasContenido(tarea, 'agregar');
-            } else {
-                tarea.estado = 'Pendiente';
-                actualizarMetasContenido(tarea, 'quitar');
+            if (!tarea) return;
+
+            // Poblar los campos editables con los valores actuales
+            document.getElementById('modalCopyEdit').value    = tarea.copy     || '';
+            document.getElementById('modalHashtagsEdit').value = tarea.hashtags || '';
+            document.getElementById('modalNotasEdit').value   = tarea.notas    || '';
+
+            // Ocultar vistas de solo lectura y mostrar campos editables
+            document.getElementById('modalCopy').style.display     = 'none';
+            document.getElementById('modalHashtags').style.display = 'none';
+            document.getElementById('modalNotas').style.display    = 'none';
+            document.getElementById('modalCopyEdit').style.display     = 'block';
+            document.getElementById('modalHashtagsEdit').style.display = 'block';
+            document.getElementById('modalNotasEdit').style.display    = 'block';
+
+            // Alternar botones
+            document.getElementById('botonesVista').style.display   = 'none';
+            document.getElementById('botonesEdicion').style.display  = 'flex';
+        }
+
+        // Cancelar edición — volver a modo vista sin guardar
+        function cancelarEdicionDesdeCalendario() {
+            // Restaurar vistas de solo lectura
+            document.getElementById('modalCopy').style.display     = 'block';
+            document.getElementById('modalHashtags').style.display = 'block';
+            document.getElementById('modalNotas').style.display    = 'block';
+            document.getElementById('modalCopyEdit').style.display     = 'none';
+            document.getElementById('modalHashtagsEdit').style.display = 'none';
+            document.getElementById('modalNotasEdit').style.display    = 'none';
+
+            // Restaurar botones
+            document.getElementById('botonesVista').style.display  = 'flex';
+            document.getElementById('botonesEdicion').style.display = 'none';
+        }
+
+        // Guardar cambios desde el modal del calendario al registro de planMensual
+        function guardarEdicionDesdeCalendario() {
+            const tarea = window.actividadActualDelModal;
+            if (!tarea) return;
+
+            // Leer valores de los campos editables
+            const nuevoCopy     = document.getElementById('modalCopyEdit').value.trim();
+            const nuevosHashtags = document.getElementById('modalHashtagsEdit').value.trim();
+            const nuevasNotas   = document.getElementById('modalNotasEdit').value.trim();
+
+            // Buscar el registro original en planMensual por ID y actualizarlo
+            const index = planMensual.findIndex(t => t.id === tarea.id);
+            if (index === -1) {
+                alert('No se encontró la actividad en el Plan Mensual.');
+                return;
             }
 
-            // Guardar
+            planMensual[index].copy     = nuevoCopy;
+            planMensual[index].hashtags  = nuevosHashtags;
+            planMensual[index].notas    = nuevasNotas;
+
+            // Actualizar la referencia del modal con los nuevos datos
+            window.actividadActualDelModal = planMensual[index];
+
+            // Guardar en localStorage y Firebase
             saveData();
 
-            // Actualizar visualizaciones
+            // Volver a modo vista mostrando los datos actualizados
+            cancelarEdicionDesdeCalendario();
+            mostrarActividadEnModal(planMensual[index]);
+
+            // Refrescar calendario y plan mensual
             generarCalendarioPerfecto();
             renderCrecimiento();
+        }
 
-            // Actualizar modal
-            mostrarActividadEnModal(tarea);
+        // Cambiar estado desde modal (separado del botón Editar)
+        function toggleEstadoDesdeModal() {
+            const tarea = window.actividadActualDelModal;
+            if (!tarea) return;
 
-            // Feedback visual
-            const btn = event.target;
-            btn.textContent = '✓ Actualizado';
-            setTimeout(() => {
-                btn.textContent = '✏️ Editar';
-            }, 1000);
+            const index = planMensual.findIndex(t => t.id === tarea.id);
+            if (index === -1) return;
+
+            if (planMensual[index].estado === 'Pendiente') {
+                planMensual[index].estado = 'Completada';
+                actualizarMetasContenido(planMensual[index], 'agregar');
+            } else {
+                planMensual[index].estado = 'Pendiente';
+                actualizarMetasContenido(planMensual[index], 'quitar');
+            }
+
+            window.actividadActualDelModal = planMensual[index];
+            saveData();
+            generarCalendarioPerfecto();
+            renderCrecimiento();
+            mostrarActividadEnModal(planMensual[index]);
         }
 
         // Eliminar actividad desde modal
