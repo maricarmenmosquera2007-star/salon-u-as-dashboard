@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Mi Salón de Uñas</title>
+    <title>Dashboard - Mari Nails</title>
     
     <!-- Firebase SDK - COMPAT VERSION (compatible con HTML puro) -->
     <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>
@@ -348,7 +348,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>💅 Dashboard de Mi Salón de Uñas</h1>
+        <h1>💅 Dashboard Mari Nails</h1>
 
         <!-- Indicador de Guardado -->
         <div class="save-indicator" id="saveIndicator">
@@ -444,6 +444,16 @@
             <!-- AVISOS IMPORTANTES -->
             <div id="avisosContainer"></div>
 
+            <!-- PANEL DE DIAGNÓSTICO FIREBASE (temporal) -->
+            <div id="panelDiagnostico" style="background:#1a1a2e;color:#00ff88;font-family:monospace;font-size:12px;padding:12px 16px;border-radius:10px;margin-bottom:16px;line-height:1.8;">
+                <div style="color:#ff9f43;font-weight:bold;margin-bottom:6px;">🔧 Diagnóstico Firebase (temporal)</div>
+                <div id="diagEstado">⏳ Iniciando...</div>
+                <div id="diagTimestamps" style="margin-top:6px;color:#a8d8ea;"></div>
+                <div id="diagResultado" style="margin-top:6px;"></div>
+                <div id="diagClientes" style="margin-top:6px;color:#ffd32a;"></div>
+                <button onclick="document.getElementById('panelDiagnostico').style.display='none'" style="margin-top:10px;background:#333;color:#fff;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;">X Cerrar panel</button>
+            </div>
+
             <!-- NAVEGACIÓN INTERNA DE CRECIMIENTO -->
             <div class="card" style="display: flex; gap: 10px; margin-bottom: 20px; padding: 12px;">
                 <button id="btnSeccionMetas" class="btn" style="flex: 1; background: #d4547e; font-weight: bold;" onclick="cambiarSeccionCrecimiento('metas')">📊 Metas del Mes</button>
@@ -458,7 +468,7 @@
                     <label for="mesSelector" style="font-weight: 600; color: #d4547e; white-space: nowrap;">📅 Mes:</label>
                     <input type="month" id="mesSelector" style="padding: 8px; border: 1px solid #f0e0e8; border-radius: 6px; font-size: 14px;">
                     <span id="mesInfo" style="font-size: 13px; color: #999;"></span>
-                    <button onclick="limpiarYCargarSeptiembre()" class="btn" style="margin-left: auto; background: #f4a6c1; font-size: 11px; padding: 6px 12px;">🔄 Recargar Plan Sept</button>
+
                 </div>
 
                 <!-- Metas del Mes -->
@@ -1072,7 +1082,7 @@
         </div>
 
         <div class="footer">
-            <p style="font-size: 11px; color: #999; margin: 10px 0; text-align: center;">💾 Los datos se guardan automáticamente | © 2024 Dashboard Salón de Uñas</p>
+            <p style="font-size: 11px; color: #999; margin: 10px 0; text-align: center;">💾 Los datos se guardan automáticamente | © 2026 Mari Nails</p>
             <p id="ultimoGuardado" style="font-size: 11px; color: #bbb; margin-top: 8px;"></p>
         </div>
     </div>
@@ -1223,388 +1233,119 @@
             resetearBeneficiosAnuales();
             calcularElegibilidadBeneficio();
 
-            // ✅ RENDERIZAR CON DATOS DE LOCALSTORAGE
+            // ✅ RENDERIZAR CON DATOS DE LOCALSTORAGE (render inmediato)
             render();
             console.log('✅ loadData() completado desde localStorage');
             
-            // NUEVA: Verificar si es septiembre y cargar tareas automáticamente
-            const mesActual = getMesActual();
-            if (mesActual === '2026-09' && planMensual.filter(t => t.categoria === 'Contenido/Redes').length === 0) {
-                console.log('📅 Detectado septiembre 2026 sin tareas de contenido - Cargando automáticamente...');
-                // Cargar tareas de septiembre
-                const tareasNuevas = [
-                    {
-                        id: Date.now() + 1,
-                        tipoActividad: 'Publicación',
-                        nombreCustom: '',
-                        fecha: '2026-09-17',
-                        categoria: 'Contenido/Redes',
-                        plataforma: 'Instagram',
-                        plataformasMultiples: ['Instagram', 'Facebook', 'WhatsApp'],
-                        estado: 'Pendiente',
-                        copy: 'Un pequeño detalle puede cambiarlo todo. ✨💅\n\nDelicada, femenina y hecha para destacar.\nTu momento de consentirte también merece un espacio. 🤍\nManicure, diseños y mucho cuidado en cada detalle.\n📲 Agenda tu cita por WhatsApp.',
-                        hashtags: '#uñas #nails #manicure #diseño',
-                        esContenido: true,
-                        alcance: 0,
-                        interacciones: 0,
-                        mensajes: 0,
-                        citasGeneradas: 0,
-                        ingresoGenerado: 0,
-                        notas: 'Foto del mejor trabajo disponible',
-                        fechaCreacion: new Date().toLocaleDateString('es-CO')
-                    },
-                    {
-                        id: Date.now() + 2,
-                        tipoActividad: 'Historia',
-                        nombreCustom: '',
-                        fecha: '2026-09-18',
-                        categoria: 'Contenido/Redes',
-                        plataforma: 'Instagram',
-                        plataformasMultiples: ['Instagram'],
-                        estado: 'Pendiente',
-                        copy: '¿Qué estilo elegirías para tu próxima manicure? 💅',
-                        hashtags: '#interacción #encuesta',
-                        esContenido: true,
-                        alcance: 0,
-                        interacciones: 0,
-                        mensajes: 0,
-                        citasGeneradas: 0,
-                        ingresoGenerado: 0,
-                        notas: 'Historias interactivas',
-                        fechaCreacion: new Date().toLocaleDateString('es-CO')
-                    },
-                    {
-                        id: Date.now() + 3,
-                        tipoActividad: 'Publicación',
-                        nombreCustom: '',
-                        fecha: '2026-09-19',
-                        categoria: 'Contenido/Redes',
-                        plataforma: 'Instagram',
-                        plataformasMultiples: ['Instagram', 'Facebook', 'WhatsApp'],
-                        estado: 'Pendiente',
-                        copy: 'Menos es más cuando cada detalle cuenta. 🤍\n\nUn estilo delicado, limpio y perfecto para cualquier ocasión. ✨',
-                        hashtags: '#natural #limpio #diseño',
-                        esContenido: true,
-                        alcance: 0,
-                        interacciones: 0,
-                        mensajes: 0,
-                        citasGeneradas: 0,
-                        ingresoGenerado: 0,
-                        notas: 'Post natural',
-                        fechaCreacion: new Date().toLocaleDateString('es-CO')
-                    },
-                    {
-                        id: Date.now() + 4,
-                        tipoActividad: 'Reel',
-                        nombreCustom: '',
-                        fecha: '2026-09-20',
-                        categoria: 'Contenido/Redes',
-                        plataforma: 'Instagram',
-                        plataformasMultiples: ['Instagram', 'TikTok', 'Facebook', 'WhatsApp'],
-                        estado: 'Pendiente',
-                        copy: 'Antes ✨ Después\n\n¿Te harías este cambio? 💅',
-                        hashtags: '#antesdespués #transformación',
-                        esContenido: true,
-                        alcance: 0,
-                        interacciones: 0,
-                        mensajes: 0,
-                        citasGeneradas: 0,
-                        ingresoGenerado: 0,
-                        notas: 'Video antes/después',
-                        fechaCreacion: new Date().toLocaleDateString('es-CO')
-                    },
-                    {
-                        id: Date.now() + 5,
-                        tipoActividad: 'Publicación',
-                        nombreCustom: '',
-                        fecha: '2026-09-21',
-                        categoria: 'Contenido/Redes',
-                        plataforma: 'Instagram',
-                        plataformasMultiples: ['Instagram', 'Facebook', 'WhatsApp'],
-                        estado: 'Pendiente',
-                        copy: 'Tus uñas también pueden ser parte de tu personalidad. 💅✨',
-                        hashtags: '#diseño #personalidad',
-                        esContenido: true,
-                        alcance: 0,
-                        interacciones: 0,
-                        mensajes: 0,
-                        citasGeneradas: 0,
-                        ingresoGenerado: 0,
-                        notas: 'Variedad de diseños',
-                        fechaCreacion: new Date().toLocaleDateString('es-CO')
-                    },
-                    {
-                        id: Date.now() + 6,
-                        tipoActividad: 'Historia',
-                        nombreCustom: '',
-                        fecha: '2026-09-22',
-                        categoria: 'Contenido/Redes',
-                        plataforma: 'Instagram',
-                        plataformasMultiples: ['Instagram', 'WhatsApp'],
-                        estado: 'Pendiente',
-                        copy: '¿Ya tienes cita para consentirte esta semana? 💅',
-                        hashtags: '#agenda #reserva',
-                        esContenido: true,
-                        alcance: 0,
-                        interacciones: 0,
-                        mensajes: 0,
-                        citasGeneradas: 0,
-                        ingresoGenerado: 0,
-                        notas: 'Solo historias - Generar mensajes',
-                        fechaCreacion: new Date().toLocaleDateString('es-CO')
-                    },
-                    {
-                        id: Date.now() + 7,
-                        tipoActividad: 'Publicación',
-                        nombreCustom: '',
-                        fecha: '2026-09-23',
-                        categoria: 'Contenido/Redes',
-                        plataforma: 'Instagram',
-                        plataformasMultiples: ['Instagram', 'WhatsApp'],
-                        estado: 'Pendiente',
-                        copy: 'Los detalles hablan por sí solos. ✨',
-                        hashtags: '#detalles #calidad',
-                        esContenido: true,
-                        alcance: 0,
-                        interacciones: 0,
-                        mensajes: 0,
-                        citasGeneradas: 0,
-                        ingresoGenerado: 0,
-                        notas: 'Foto de detalles',
-                        fechaCreacion: new Date().toLocaleDateString('es-CO')
-                    },
-                    {
-                        id: Date.now() + 8,
-                        tipoActividad: 'Historia',
-                        nombreCustom: '',
-                        fecha: '2026-09-24',
-                        categoria: 'Contenido/Redes',
-                        plataforma: 'Instagram',
-                        plataformasMultiples: ['Instagram', 'WhatsApp'],
-                        estado: 'Pendiente',
-                        copy: 'Yo: este mes no voy a gastar.\n\nTambién yo cuando veo un diseño de uñas bonito: 👀💅✨',
-                        hashtags: '#humor #relatable',
-                        esContenido: true,
-                        alcance: 0,
-                        interacciones: 0,
-                        mensajes: 0,
-                        citasGeneradas: 0,
-                        ingresoGenerado: 0,
-                        notas: 'Humor - Interacción',
-                        fechaCreacion: new Date().toLocaleDateString('es-CO')
-                    },
-                    {
-                        id: Date.now() + 9,
-                        tipoActividad: 'Reel',
-                        nombreCustom: '',
-                        fecha: '2026-09-25',
-                        categoria: 'Contenido/Redes',
-                        plataforma: 'Instagram',
-                        plataformasMultiples: ['Instagram', 'TikTok', 'Facebook', 'WhatsApp'],
-                        estado: 'Pendiente',
-                        copy: 'Aquí cada detalle está pensado para ti. 🤍',
-                        hashtags: '#experiencia #bienestar',
-                        esContenido: true,
-                        alcance: 0,
-                        interacciones: 0,
-                        mensajes: 0,
-                        citasGeneradas: 0,
-                        ingresoGenerado: 0,
-                        notas: 'Clips de experiencia',
-                        fechaCreacion: new Date().toLocaleDateString('es-CO')
-                    },
-                    {
-                        id: Date.now() + 10,
-                        tipoActividad: 'Historia',
-                        nombreCustom: '',
-                        fecha: '2026-09-26',
-                        categoria: 'Contenido/Redes',
-                        plataforma: 'Instagram',
-                        plataformasMultiples: ['Instagram'],
-                        estado: 'Pendiente',
-                        copy: '¿Uñas cortas o largas? ¿Colores claros o fuertes?',
-                        hashtags: '#encuesta #feedback',
-                        esContenido: true,
-                        alcance: 0,
-                        interacciones: 0,
-                        mensajes: 0,
-                        citasGeneradas: 0,
-                        ingresoGenerado: 0,
-                        notas: 'Encuestas',
-                        fechaCreacion: new Date().toLocaleDateString('es-CO')
-                    },
-                    {
-                        id: Date.now() + 11,
-                        tipoActividad: 'Publicación',
-                        nombreCustom: '',
-                        fecha: '2026-09-27',
-                        categoria: 'Contenido/Redes',
-                        plataforma: 'Instagram',
-                        plataformasMultiples: ['Instagram', 'Facebook', 'WhatsApp'],
-                        estado: 'Pendiente',
-                        copy: 'Elegancia en cada detalle. ✨',
-                        hashtags: '#elegancia #delicado',
-                        esContenido: true,
-                        alcance: 0,
-                        interacciones: 0,
-                        mensajes: 0,
-                        citasGeneradas: 0,
-                        ingresoGenerado: 0,
-                        notas: 'Post elegante',
-                        fechaCreacion: new Date().toLocaleDateString('es-CO')
-                    },
-                    {
-                        id: Date.now() + 12,
-                        tipoActividad: 'Reel',
-                        nombreCustom: '',
-                        fecha: '2026-09-28',
-                        categoria: 'Contenido/Redes',
-                        plataforma: 'Instagram',
-                        plataformasMultiples: ['Instagram', 'TikTok', 'Facebook', 'WhatsApp'],
-                        estado: 'Pendiente',
-                        copy: 'POV: Dijiste "solo voy a mirar diseños de uñas"…\n\n30 minutos después: ¿Cuál de estos 7 me hago? 😂💅',
-                        hashtags: '#pov #humor',
-                        esContenido: true,
-                        alcance: 0,
-                        interacciones: 0,
-                        mensajes: 0,
-                        citasGeneradas: 0,
-                        ingresoGenerado: 0,
-                        notas: 'POV video',
-                        fechaCreacion: new Date().toLocaleDateString('es-CO')
-                    },
-                    {
-                        id: Date.now() + 13,
-                        tipoActividad: 'Publicación',
-                        nombreCustom: '',
-                        fecha: '2026-09-29',
-                        categoria: 'Contenido/Redes',
-                        plataforma: 'Instagram',
-                        plataformasMultiples: ['Instagram', 'Facebook', 'WhatsApp'],
-                        estado: 'Pendiente',
-                        copy: 'Los pequeños detalles también cuentan. 🤍✨',
-                        hashtags: '#bienvenida #especial',
-                        esContenido: true,
-                        alcance: 0,
-                        interacciones: 0,
-                        mensajes: 0,
-                        citasGeneradas: 0,
-                        ingresoGenerado: 0,
-                        notas: 'Kit de bienvenida',
-                        fechaCreacion: new Date().toLocaleDateString('es-CO')
-                    },
-                    {
-                        id: Date.now() + 14,
-                        tipoActividad: 'Publicación',
-                        nombreCustom: '',
-                        fecha: '2026-09-30',
-                        categoria: 'Contenido/Redes',
-                        plataforma: 'Instagram',
-                        plataformasMultiples: ['Instagram', 'TikTok', 'Facebook', 'WhatsApp'],
-                        estado: 'Pendiente',
-                        copy: 'Septiembre fue solo el comienzo. ✨💅\n\nGracias por acompañarme. Seguimos creciendo y preparando cada detalle para recibirte.',
-                        hashtags: '#cierre #gracias #crecimiento',
-                        esContenido: true,
-                        alcance: 0,
-                        interacciones: 0,
-                        mensajes: 0,
-                        citasGeneradas: 0,
-                        ingresoGenerado: 0,
-                        notas: 'Cierre del mes',
-                        fechaCreacion: new Date().toLocaleDateString('es-CO')
-                    }
-                ];
-                
-                planMensual.push(...tareasNuevas);
-                guardarEnLocalStorage();
-                console.log('✅ 14 tareas de septiembre cargadas automáticamente');
-            }
-            
-            // PASO 2: SINCRONIZAR CON FIREBASE EN BACKGROUND
-            console.log('🔄 Sincronizando con Firebase en background...');
+
+            // PASO 2: FIREBASE ES LA FUENTE DE VERDAD — sincronizar al abrir
+            console.log('🔄 Consultando Firebase...');
             sincronizarConFirebase();
         }
 
-        // Sincronizar datos con Firebase (background)
+        // Sincronizar con Firebase — Firebase es la fuente de verdad compartida entre dispositivos.
         function sincronizarConFirebase() {
             const ref = database.ref('salon_data');
+            const diag = (id, msg) => { const el = document.getElementById(id); if(el) el.innerHTML = msg; };
             
-            // Cargar datos de Firebase
+            diag('diagEstado', '🔄 Conectando con Firebase...');
+            
             ref.once('value').then((snapshot) => {
                 const dataFirebase = snapshot.val();
                 
                 if (dataFirebase) {
-                    console.log('🔄 Datos encontrados en Firebase');
-                    
-                    // CAMBIO CRÍTICO: localStorage es la fuente principal
-                    // SOLO actualizar si localStorage está VACÍO
-                    const clientesLocal = localStorage.getItem('salon_clientes');
-                    
-                    // Si localStorage tiene datos, respetarlos (nunca sobrescribir)
-                    if (!clientesLocal && dataFirebase.clientes) {
-                        console.log('📥 Restaurando clientes desde Firebase (localStorage vacío)');
-                        clientes = dataFirebase.clientes;
-                    } else if (clientesLocal) {
-                        console.log('✅ Usando clientes de localStorage (respetando cambios locales)');
-                        // NO sobrescribir clientes locales
-                    }
-                    
-                    // Para otros datos, usar timestamp para determinar cuál es más reciente
-                    const timestampLocal = parseInt(localStorage.getItem('firebaseTimestamp') || '0');
                     const timestampFirebase = dataFirebase.timestamp || 0;
+                    const ultimaDescarga    = parseInt(localStorage.getItem('ultimaDescargaFirebase') || '0');
+                    const ultimoGuardadoLocal = parseInt(localStorage.getItem('ultimoGuardadoLocal') || '0');
+                    const clientesEnFirebase  = dataFirebase.clientes ? dataFirebase.clientes.length : 0;
+                    const clientesLocales     = clientes.length;
                     
-                    if (timestampFirebase > timestampLocal) {
-                        console.log('🔄 Actualizando otros datos desde Firebase (más recientes)');
+                    const fechaFB   = timestampFirebase ? new Date(timestampFirebase).toLocaleString('es-CO') : 'nunca';
+                    const fechaDesc = ultimaDescarga    ? new Date(ultimaDescarga).toLocaleString('es-CO')    : 'nunca';
+                    const fechaLocal= ultimoGuardadoLocal ? new Date(ultimoGuardadoLocal).toLocaleString('es-CO') : 'nunca';
+                    
+                    diag('diagEstado', '✅ Firebase conectado');
+                    diag('diagTimestamps',
+                        'Firebase guardado: ' + fechaFB + '<br>' +
+                        'Este dispositivo descargó: ' + fechaDesc + '<br>' +
+                        'Este dispositivo guardó local: ' + fechaLocal
+                    );
+                    diag('diagClientes',
+                        'Clientes en Firebase: ' + clientesEnFirebase + ' | Clientes locales: ' + clientesLocales
+                    );
+                    
+                    if (timestampFirebase > ultimaDescarga) {
+                        diag('diagResultado', '📥 Firebase tiene datos nuevos — DESCARGANDO...');
                         
-                        // Actualizar SOLO datos que NO sean clientes eliminados
-                        if (dataFirebase.transacciones) transacciones = dataFirebase.transacciones;
+                        if (dataFirebase.clientes)       clientes       = dataFirebase.clientes;
+                        if (dataFirebase.transacciones)  transacciones  = dataFirebase.transacciones;
                         if (dataFirebase.metasMensuales) metasMensuales = dataFirebase.metasMensuales;
                         if (dataFirebase.metasContenido) metasContenido = dataFirebase.metasContenido;
-                        if (dataFirebase.planMensual) planMensual = dataFirebase.planMensual;
+                        if (dataFirebase.planMensual)    planMensual    = dataFirebase.planMensual;
                         
-                        // Guardar en localStorage
                         guardarEnLocalStorage();
+                        localStorage.setItem('ultimaDescargaFirebase', timestampFirebase);
+                        localStorage.setItem('ultimoGuardadoLocal', timestampFirebase);
                         
-                        // Renderizar con datos nuevos
                         render();
+                        diag('diagResultado', '✅ Datos descargados desde Firebase y aplicados');
+                        diag('diagClientes',
+                            'Clientes en Firebase: ' + clientesEnFirebase + ' | Clientes locales ahora: ' + clientes.length
+                        );
+                        
+                    } else if (ultimoGuardadoLocal > ultimaDescarga) {
+                        diag('diagResultado', '☁️ Este dispositivo tiene datos nuevos — SUBIENDO a Firebase...');
+                        guardarEnFirebase();
+                        diag('diagResultado', '✅ Datos subidos a Firebase');
+                        
+                    } else {
+                        diag('diagResultado', '✅ Ya sincronizado — sin cambios pendientes');
                     }
+                    
                 } else {
-                    console.log('📝 Firebase vacío - Guardando datos de localStorage');
-                    // Guardar datos actuales en Firebase
+                    diag('diagEstado', '📝 Firebase vacío — subiendo datos locales...');
                     guardarEnFirebase();
+                    diag('diagResultado', '✅ Datos subidos a Firebase por primera vez');
                 }
             }).catch((error) => {
+                diag('diagEstado', '❌ Error Firebase: ' + error.message);
                 console.log('⚠️ Error al sincronizar con Firebase:', error.message);
-                console.log('✅ Continuando con localStorage');
             });
         }
 
-        // Guardar en localStorage (rápido)
+        // Guardar en localStorage (rápido) y registrar timestamp del guardado local
         function guardarEnLocalStorage() {
             localStorage.setItem('salon_clientes', JSON.stringify(clientes));
             localStorage.setItem('salon_transacciones', JSON.stringify(transacciones));
             localStorage.setItem('salon_metas_mensuales', JSON.stringify(metasMensuales));
-            localStorage.setItem('salon_metas_contenido', JSON.stringify(metasContenido)); // NUEVA
+            localStorage.setItem('salon_metas_contenido', JSON.stringify(metasContenido));
             localStorage.setItem('salon_plan_mensual', JSON.stringify(planMensual));
             localStorage.setItem('ultimo_guardado', new Date().toLocaleString('es-CO'));
+            // Registrar cuándo guardó localmente este dispositivo
+            // (usado por sincronizarConFirebase para saber si hay datos nuevos que subir)
+            const ahora = new Date().getTime();
+            localStorage.setItem('ultimoGuardadoLocal', ahora);
         }
 
-        // Guardar en Firebase (background)
+        // Guardar en Firebase — sube todos los datos y registra los timestamps de sincronización
         function guardarEnFirebase() {
             const timestamp = new Date().getTime();
             const dataToSave = {
-                clientes: clientes,
-                transacciones: transacciones,
+                clientes:       clientes,
+                transacciones:  transacciones,
                 metasMensuales: metasMensuales,
-                metasContenido: metasContenido, // NUEVA
-                planMensual: planMensual,
+                metasContenido: metasContenido,
+                planMensual:    planMensual,
                 ultimoGuardado: new Date().toLocaleString('es-CO'),
-                timestamp: timestamp
+                timestamp:      timestamp
             };
             
             database.ref('salon_data').set(dataToSave).then(() => {
-                console.log('✅ Guardado en Firebase');
-                localStorage.setItem('firebaseTimestamp', timestamp);
+                console.log('✅ Guardado en Firebase — timestamp:', timestamp);
+                // Registrar que este dispositivo descargó/subió en este timestamp
+                // Así en la próxima sincronización sabe que Firebase tiene estos datos
+                localStorage.setItem('ultimaDescargaFirebase', timestamp);
+                localStorage.setItem('ultimoGuardadoLocal', timestamp);
             }).catch((error) => {
                 console.log('⚠️ Error al guardar en Firebase:', error.message);
             });
