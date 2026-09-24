@@ -1196,17 +1196,19 @@
             // fechaContenidoNuevo eliminada - el Calendario ya no tiene formulario
 
             // Inicializar mes actual de consulta
-            mesActualConsulta = getMesActual();
+            // Restaurar el último mes seleccionado por el usuario, o usar el mes real si no hay guardado
+            const mesGuardado = localStorage.getItem('salon_mes_actual');
+            mesActualConsulta = mesGuardado || getMesActual();
             
-            // Inicializar mes para análisis financiero
+            // Inicializar mes para análisis financiero con el mismo mes restaurado
             const mesAnalisisInput = document.getElementById('mesAnalisis');
             if (mesAnalisisInput) {
-                mesAnalisisInput.value = getMesActual();
+                mesAnalisisInput.value = mesActualConsulta;
             }
             
             // Crear metas del mes actual si no existen
             crearMetasDefault(mesActualConsulta);
-            crearMetasContenidoDefault(mesActualConsulta); // NUEVA: Crear metas de contenido
+            crearMetasContenidoDefault(mesActualConsulta);
 
             // Configurar selector de mes
             const mesSelector = document.getElementById('mesSelector');
@@ -1221,6 +1223,9 @@
                 mesSelector.addEventListener('change', function(e) {
                     mesActualConsulta = e.target.value;
                     
+                    // Guardar el mes seleccionado para recordarlo al recargar
+                    localStorage.setItem('salon_mes_actual', mesActualConsulta);
+                    
                     // Crear metas si no existen
                     crearMetasDefault(mesActualConsulta);
                     crearMetasContenidoDefault(mesActualConsulta);
@@ -1231,8 +1236,8 @@
                     }
                     
                     // Actualizar todas las secciones
-                    renderCrecimiento();      // Metas + Plan Mensual
-                    generarCalendarioPerfecto(); // Calendario
+                    renderCrecimiento();
+                    generarCalendarioPerfecto();
                 });
             }
 
@@ -1295,6 +1300,7 @@
                             if (dataFirebase.metasMensuales) metasMensuales = dataFirebase.metasMensuales;
                             if (dataFirebase.metasContenido) metasContenido = dataFirebase.metasContenido;
                             if (dataFirebase.planMensual)    planMensual    = dataFirebase.planMensual;
+                            if (dataFirebase.mesActual)      localStorage.setItem('salon_mes_actual', dataFirebase.mesActual);
 
                             guardarEnLocalStorage();
                             localStorage.setItem('ultimaDescargaFirebase', timestampFirebase);
@@ -1368,6 +1374,7 @@
                 metasMensuales: metasMensuales,
                 metasContenido: metasContenido,
                 planMensual:    planMensual,
+                mesActual:      localStorage.getItem('salon_mes_actual') || getMesActual(),
                 ultimoGuardado: new Date().toLocaleString('es-CO'),
                 timestamp:      timestamp
             };
