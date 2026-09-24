@@ -1278,18 +1278,30 @@
                     
                     if (timestampFirebase > ultimaDescarga) {
                         // Firebase tiene datos más recientes — descargar
-                        console.log('📥 Descargando datos de Firebase...');
-                        if (dataFirebase.clientes)       clientes       = dataFirebase.clientes;
-                        if (dataFirebase.transacciones)  transacciones  = dataFirebase.transacciones;
-                        if (dataFirebase.metasMensuales) metasMensuales = dataFirebase.metasMensuales;
-                        if (dataFirebase.metasContenido) metasContenido = dataFirebase.metasContenido;
-                        if (dataFirebase.planMensual)    planMensual    = dataFirebase.planMensual;
-                        
-                        guardarEnLocalStorage();
-                        localStorage.setItem('ultimaDescargaFirebase', timestampFirebase);
-                        localStorage.setItem('ultimoGuardadoLocal', timestampFirebase);
-                        render();
-                        console.log('✅ Datos sincronizados desde Firebase');
+                        // PROTECCIÓN: solo sobreescribir si Firebase tiene igual o más datos que local
+                        const clientesFirebase     = dataFirebase.clientes     ? dataFirebase.clientes.length     : 0;
+                        const transacFirebase      = dataFirebase.transacciones ? dataFirebase.transacciones.length : 0;
+                        const clientesLocal        = clientes.length;
+                        const transacLocal         = transacciones.length;
+
+                        // Advertir si Firebase tiene menos datos (posible pérdida)
+                        if (clientesFirebase < clientesLocal || transacFirebase < transacLocal) {
+                            console.warn('⚠️ Firebase tiene menos datos que localStorage — se respetan los datos locales y se sube a Firebase.');
+                            guardarEnFirebase();
+                        } else {
+                            console.log('📥 Descargando datos de Firebase...');
+                            if (dataFirebase.clientes)       clientes       = dataFirebase.clientes;
+                            if (dataFirebase.transacciones)  transacciones  = dataFirebase.transacciones;
+                            if (dataFirebase.metasMensuales) metasMensuales = dataFirebase.metasMensuales;
+                            if (dataFirebase.metasContenido) metasContenido = dataFirebase.metasContenido;
+                            if (dataFirebase.planMensual)    planMensual    = dataFirebase.planMensual;
+
+                            guardarEnLocalStorage();
+                            localStorage.setItem('ultimaDescargaFirebase', timestampFirebase);
+                            localStorage.setItem('ultimoGuardadoLocal', timestampFirebase);
+                            render();
+                            console.log('✅ Datos sincronizados desde Firebase');
+                        }
                         
                     } else if (ultimoGuardadoLocal > ultimaDescarga) {
                         // Este dispositivo tiene datos nuevos — subir
@@ -1535,27 +1547,10 @@
             }
         }
 
+        // FUNCIÓN DESACTIVADA — eliminada para proteger los datos
+        // Era peligrosa: ejecutaba localStorage.clear() borrando todas las transacciones y plan mensual
         function limpiarYCargarSeptiembre() {
-            if (confirm('¿Limpiar datos locales y cargar el plan de septiembre? ¿Continuar?')) {
-                console.log('🧹 Limpiando datos...');
-                
-                // Guardar clientes
-                const clientesGuardados = localStorage.getItem('salon_clientes');
-                
-                // Limpiar todo
-                localStorage.clear();
-                
-                // Restaurar clientes si existían
-                if (clientesGuardados) localStorage.setItem('salon_clientes', clientesGuardados);
-                
-                console.log('✅ Limpieza completada');
-                console.log('🔄 Recargando página...');
-                
-                // Recargar
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            }
+            console.warn('⛔ limpiarYCargarSeptiembre() está desactivada para proteger los datos.');
         }
 
         function cargarTareasContenidoSeptiembre() {
