@@ -451,7 +451,11 @@
                 <div id="diagTimestamps" style="margin-top:6px;color:#a8d8ea;"></div>
                 <div id="diagResultado" style="margin-top:6px;"></div>
                 <div id="diagClientes" style="margin-top:6px;color:#ffd32a;"></div>
-                <button onclick="document.getElementById('panelDiagnostico').style.display='none'" style="margin-top:10px;background:#333;color:#fff;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;">X Cerrar panel</button>
+                <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+                    <button onclick="forzarSubidaAFirebase()" style="background:#e17055;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:bold;">⬆️ Subir MIS datos a Firebase</button>
+                    <button onclick="forzarDescargaDeFirebase()" style="background:#0984e3;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:bold;">⬇️ Descargar datos de Firebase</button>
+                    <button onclick="document.getElementById('panelDiagnostico').style.display='none'" style="background:#333;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:11px;">X Cerrar</button>
+                </div>
             </div>
 
             <!-- NAVEGACIÓN INTERNA DE CRECIMIENTO -->
@@ -1325,6 +1329,28 @@
             // (usado por sincronizarConFirebase para saber si hay datos nuevos que subir)
             const ahora = new Date().getTime();
             localStorage.setItem('ultimoGuardadoLocal', ahora);
+        }
+
+        // Forzar subida de datos locales a Firebase (botón manual del panel de diagnóstico)
+        function forzarSubidaAFirebase() {
+            const diag = (id, msg) => { const el = document.getElementById(id); if(el) el.innerHTML = msg; };
+            diag('diagResultado', '⬆️ Subiendo datos locales a Firebase...');
+            // Resetear timestamps para que Firebase acepte estos datos como los más recientes
+            localStorage.removeItem('ultimaDescargaFirebase');
+            localStorage.removeItem('ultimoGuardadoLocal');
+            guardarEnFirebase();
+            setTimeout(() => {
+                diag('diagResultado', '✅ Datos subidos. Recargue el celular para sincronizar.');
+                diag('diagClientes', 'Clientes subidos: ' + clientes.length + ' | Transacciones: ' + transacciones.length);
+            }, 2000);
+        }
+
+        // Forzar descarga de datos de Firebase (botón manual del panel de diagnóstico)
+        function forzarDescargaDeFirebase() {
+            const diag = (id, msg) => { const el = document.getElementById(id); if(el) el.innerHTML = msg; };
+            diag('diagResultado', '⬇️ Descargando datos de Firebase...');
+            localStorage.removeItem('ultimaDescargaFirebase');
+            sincronizarConFirebase();
         }
 
         // Guardar en Firebase — sube todos los datos y registra los timestamps de sincronización
