@@ -821,8 +821,7 @@
                         <option value="">Selecciona categoría</option>
                         <option value="Insumos/Materiales">Insumos/Materiales</option>
                         <option value="Kit Atención Clientas">Kit Atención Clientas</option>
-                        <option value="Mobiliario/Equipamiento">Mobiliario/Equipamiento</option>
-                        <option value="Inversión Inicial">Inversión Inicial</option>
+                        <option value="Gastos Mari">Gastos Mari</option>
                         <option value="Otros">Otros</option>
                     </select>
                     <select id="ubicacionGasto" style="padding: 8px; border: 1px solid #e0b0c0; border-radius: 6px; font-size: 13px;">
@@ -2326,6 +2325,57 @@
          * @param {string} mes - Formato: "YYYY-MM"
          * @returns {object} Objeto con todos los KPIs del mes
          */
+        // Calcula el saldo disponible al cierre del mes anterior al mes dado.
+        // Solo usa transacciones con fecha ANTERIOR al primer día del mes seleccionado.
+        // NO modifica ningún cálculo existente — es solo lectura.
+        function calcularSaldoAlCierreDeMes(mes) {
+            // Primer día del mes seleccionado como corte (ej: "2026-10-01")
+            const corte = mes + '-01';
+
+            // Solo transacciones anteriores al corte
+            const anteriores = transacciones.filter(t => t.fecha < corte);
+
+            // SALDO EFECTIVO al cierre del mes anterior
+            const saldoInicialEfectivo = Math.max(0, anteriores.reduce((saldo, t) => {
+                if (t.tipo === 'ingreso' && t.ubicacion === 'efectivo')       return saldo + t.monto;
+                if (t.tipo === 'transferencia' && t.hacia === 'efectivo')     return saldo + t.monto;
+                if (t.tipo === 'transferencia' && t.desde === 'efectivo')     return saldo - t.monto;
+                if (t.tipo === 'gasto')                                        return saldo - t.monto;
+                return saldo;
+            }, 0));
+
+            // SALDO NEQUI al cierre del mes anterior
+            const saldoInicialNequi = Math.max(0, anteriores.reduce((saldo, t) => {
+                if (t.tipo === 'ingreso' && t.ubicacion === 'nequi')          return saldo + t.monto;
+                if (t.tipo === 'transferencia' && t.hacia === 'nequi')        return saldo + t.monto;
+                if (t.tipo === 'transferencia' && t.desde === 'nequi')        return saldo - t.monto;
+                return saldo;
+            }, 0));
+
+            // FONDO DE INSUMOS acumulado hasta el cierre del mes anterior
+            // (suma de reservas_fondo anteriores al corte, sin contar gastos del mes actual)
+            const fondoAcumuladoAnterior = anteriores
+                .filter(t => t.tipo === 'reserva_fondo')
+                .reduce((suma, t) => suma + t.monto, 0);
+
+            // Mes anterior en español para mostrar en la tarjeta
+            const meses = ['enero','febrero','marzo','abril','mayo','junio',
+                           'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+            const [anio, numMes] = mes.split('-');
+            let mesAnteriorIdx = parseInt(numMes) - 2; // -1 para index, -1 para anterior
+            let anioAnterior = parseInt(anio);
+            if (mesAnteriorIdx < 0) { mesAnteriorIdx = 11; anioAnterior--; }
+            const nombreMesAnterior = meses[mesAnteriorIdx] + ' de ' + anioAnterior;
+
+            return {
+                saldoInicialEfectivo,
+                saldoInicialNequi,
+                saldoInicialTotal: saldoInicialEfectivo + saldoInicialNequi,
+                fondoAcumuladoAnterior,
+                nombreMesAnterior
+            };
+        }
+
         function calcularResumenFinanzasMes(mes) {
             // Filtrar transacciones del mes
             const ingresosMes = transacciones.filter(t => 
@@ -2360,22 +2410,21 @@
                 .filter(g => g.categoriaGasto === 'Kit Atención Clientas')
                 .reduce((suma, g) => suma + g.monto, 0);
             
-            const gastosMobiliario = gastosMes
-                .filter(g => g.categoriaGasto === 'Mobiliario/Equipamiento')
+            // Gastos Mari — gastos personales, no restan del Fondo de Insumos
+            const gastosMari = gastosMes
+                .filter(g => g.categoriaGasto === 'Gastos Mari')
                 .reduce((suma, g) => suma + g.monto, 0);
             
-            const gastosInversion = gastosMes
-                .filter(g => g.categoriaGasto === 'Inversión Inicial')
-                .reduce((suma, g) => suma + g.monto, 0);
-            
+            // Otros — cualquier categoría no reconocida, incluyendo Mobiliario e Inversión Inicial legacy
             const gastosOtros = gastosMes
-                .filter(g => !g.categoriaGasto || (g.categoriaGasto !== 'Insumos/Materiales' && 
-                                                      g.categoriaGasto !== 'Kit Atención Clientas' &&
-                                                      g.categoriaGasto !== 'Mobiliario/Equipamiento' &&
-                                                      g.categoriaGasto !== 'Inversión Inicial'))
+                .filter(g => !g.categoriaGasto || (
+                    g.categoriaGasto !== 'Insumos/Materiales' && 
+                    g.categoriaGasto !== 'Kit Atención Clientas' &&
+                    g.categoriaGasto !== 'Gastos Mari'
+                ))
                 .reduce((suma, g) => suma + g.monto, 0);
             
-            const gastosTotal = gastosInsumos + gastosKitAtención + gastosMobiliario + gastosInversion + gastosOtros;
+            const gastosTotal = gastosInsumos + gastosKitAtención + gastosMari + gastosOtros;
 
             // FONDO DE INSUMOS DISPONIBLE
             const fondoDisponible = fondoInsumosAcumulado - gastosInsumos;
@@ -2398,8 +2447,7 @@
                 // GASTOS DESGLOSADOS
                 gastosInsumos: gastosInsumos,
                 gastosKitAtención: gastosKitAtención,
-                gastosMobiliario: gastosMobiliario,
-                gastosInversion: gastosInversion,
+                gastosMari: gastosMari,
                 gastosOtros: gastosOtros,
                 gastosTotal: gastosTotal,
                 // FONDO DISPONIBLE
@@ -3253,7 +3301,8 @@
                 if (t.tipo === 'transferencia' && t.desde === 'efectivo') {
                     return saldo - t.monto;
                 }
-                if (t.tipo === 'gasto') {
+                // Gastos solo se descuentan del método donde se pagaron
+                if (t.tipo === 'gasto' && (t.ubicacion === 'efectivo' || !t.ubicacion)) {
                     return saldo - t.monto;
                 }
                 return saldo;
@@ -3268,6 +3317,10 @@
                     return saldo + t.monto;
                 }
                 if (t.tipo === 'transferencia' && t.desde === 'nequi') {
+                    return saldo - t.monto;
+                }
+                // Gastos solo se descuentan del método donde se pagaron
+                if (t.tipo === 'gasto' && t.ubicacion === 'nequi') {
                     return saldo - t.monto;
                 }
                 return saldo;
@@ -3300,23 +3353,27 @@
             const ingresosEfectivo = transacciones.filter(t => t.tipo === 'ingreso' && t.ubicacion === 'efectivo').reduce((s, t) => s + t.monto, 0);
             const ingresosNequi = transacciones.filter(t => t.tipo === 'ingreso' && t.ubicacion === 'nequi').reduce((s, t) => s + t.monto, 0);
             
+            // Calcular gastos por método correctamente
+            const gastosEfectivo = transacciones.filter(t => t.tipo === 'gasto' && (t.ubicacion === 'efectivo' || !t.ubicacion)).reduce((s, t) => s + t.monto, 0);
+            const gastosNequi    = transacciones.filter(t => t.tipo === 'gasto' && t.ubicacion === 'nequi').reduce((s, t) => s + t.monto, 0);
+
             resumenTbody.innerHTML = `
                 <tr>
                     <td><strong>💵 Efectivo</strong></td>
                     <td style="color: #27ae60; font-weight: 600;">${formatMoney(ingresosEfectivo)}</td>
-                    <td style="color: #e64980; font-weight: 600;">${formatMoney(gastos)}</td>
+                    <td style="color: #e64980; font-weight: 600;">${formatMoney(gastosEfectivo)}</td>
                     <td style="font-weight: bold; font-size: 16px;">${formatMoney(saldoEfectivo)}</td>
                 </tr>
                 <tr>
                     <td><strong>📱 Nequi</strong></td>
                     <td style="color: #27ae60; font-weight: 600;">${formatMoney(ingresosNequi)}</td>
-                    <td style="color: #e64980; font-weight: 600;">$ 0 COP</td>
+                    <td style="color: #e64980; font-weight: 600;">${formatMoney(gastosNequi)}</td>
                     <td style="font-weight: bold; font-size: 16px;">${formatMoney(saldoNequi)}</td>
                 </tr>
                 <tr style="background: #fffafc; border-top: 2px solid #f5d4e6;">
                     <td><strong>TOTAL</strong></td>
                     <td style="color: #27ae60; font-weight: 600;">${formatMoney(ingresosEfectivo + ingresosNequi)}</td>
-                    <td style="color: #e64980; font-weight: 600;">${formatMoney(gastos)}</td>
+                    <td style="color: #e64980; font-weight: 600;">${formatMoney(gastosEfectivo + gastosNequi)}</td>
                     <td style="font-weight: bold; font-size: 16px; color: #d4547e;">${formatMoney(saldoTotal)}</td>
                 </tr>
             `;
@@ -3341,7 +3398,7 @@
                         tipo: 'Gasto',
                         descripcion: t.descripcion,
                         monto: -t.monto,
-                        metodo: 'Ambos'
+                        metodo: t.ubicacion === 'nequi' ? '📱 Nequi' : '💵 Efectivo'
                     });
                 } else if (t.tipo === 'transferencia') {
                     const desde = t.desde === 'efectivo' ? '💵 Efectivo' : '📱 Nequi';
@@ -3729,21 +3786,12 @@
                 return;
             }
 
+            // KPIs del mes — calculados exclusivamente con transacciones del mes seleccionado
             const resumen = calcularResumenFinanzasMes(mes);
-            
-            // Renderizar KPIs
             renderFinanzasKpis(resumen);
-            
-            // Renderizar tabla de ingresos
             renderFinanzasIngresos(mes);
-            
-            // Renderizar tabla de gastos
             renderFinanzasGastos(mes);
-            
-            // Actualizar fondo de insumos
             actualizarFondoInsumos(resumen);
-            
-            // Dibujar gráficos
             dibujarGraficoIngresosGastos(resumen);
             dibujarGraficoGastosPorCategoria(resumen);
         }
@@ -3977,8 +4025,7 @@
             // Categorías con valores
             const categorias = [
                 { nombre: 'Insumos', valor: resumen.gastosInsumos, color: '#d4547e' },
-                { nombre: 'Mobiliario', valor: resumen.gastosMobiliario, color: '#3498db' },
-                { nombre: 'Inversión', valor: resumen.gastosInversion, color: '#f39c12' },
+                { nombre: 'Gastos Mari', valor: resumen.gastosMari, color: '#3498db' },
                 { nombre: 'Kit Atención', valor: resumen.gastosKitAtención, color: '#9b59b6' },
                 { nombre: 'Otros', valor: resumen.gastosOtros, color: '#bdc3c7' }
             ].filter(c => c.valor > 0);
@@ -4424,7 +4471,10 @@
             let tareasVencidas = 0;
             let tareasCompletadas = 0;
             
-            for (let t of planMensual) {
+            // Filtrar solo las tareas del mes actualmente seleccionado
+            const tareasDelMes = planMensual.filter(t => t.fecha && t.fecha.startsWith(mesActualConsulta));
+            
+            for (let t of tareasDelMes) {
                 totalTareas++;
                 
                 if (t.estado === 'Completada') {
@@ -5197,11 +5247,12 @@
             const container = document.getElementById('tareasContainer');
             if (!container) return;
 
-            // Filtrar tareas según filtros actuales
+            // Filtrar tareas según filtros actuales Y el mes seleccionado
             let tareasFiltradas = planMensual.filter(t => {
+                let cumpleMes = t.fecha && t.fecha.startsWith(mesActualConsulta);
                 let cumpleEstado = filtroEstadoActual === 'todas' || t.estado === filtroEstadoActual;
                 let cumplePlataforma = filtroPlataformaActual === 'todas' || t.plataforma === filtroPlataformaActual;
-                return cumpleEstado && cumplePlataforma;
+                return cumpleMes && cumpleEstado && cumplePlataforma;
             });
 
             // Ordenar: Vencidas primero, luego Hoy, luego Pendientes, luego Programadas, luego Completadas
