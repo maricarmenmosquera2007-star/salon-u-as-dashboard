@@ -1209,6 +1209,9 @@
             crearMetasDefault(mesActualConsulta);
             crearMetasContenidoDefault(mesActualConsulta);
 
+            // Cargar tareas de octubre 2026 si no existen todavía
+            cargarTareasContenidoOctubre();
+
             // Configurar selector de mes
             const mesSelector = document.getElementById('mesSelector');
             if (mesSelector) {
@@ -1854,6 +1857,344 @@
             // Actualizar visualización
             renderCrecimiento();
         }
+        // Cargar tareas de contenido de octubre 2026
+        // Se ejecuta una sola vez — no duplica si ya existen tareas de octubre
+        function cargarTareasContenidoOctubre() {
+            const yaExisten = planMensual.some(t => t.fecha && t.fecha.startsWith('2026-10'));
+            if (yaExisten) {
+                console.log('✅ Tareas de octubre ya existen — no se duplican');
+                return;
+            }
+
+            const base = Date.now();
+            const tareas = [
+                {
+                    id: base + 1, tipoActividad: 'Historia', nombreCustom: 'Bienvenido octubre 💅',
+                    fecha: '2026-10-01', categoria: 'Contenido/Redes', plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram', 'WhatsApp'], estado: 'Pendiente', esContenido: true,
+                    copy: 'Hola, octubre 💕 Un nuevo mes para consentir tus uñas.',
+                    hashtags: '', notas: '¿Qué estilo te gustaría llevar este mes? | Imagen/video bonito de uñas',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 2, tipoActividad: 'Reel', nombreCustom: '3 hábitos que afectan tus uñas',
+                    fecha: '2026-10-02', categoria: 'Contenido/Redes', plataforma: 'TikTok',
+                    plataformasMultiples: ['TikTok', 'Instagram'], estado: 'Pendiente', esContenido: true,
+                    copy: 'Tus uñas también necesitan cuidados 💅 Pequeños hábitos pueden hacer una gran diferencia.
+
+¿Cuál de estos hábitos haces sin darte cuenta?',
+                    hashtags: '#CuidadoDeUñas #UñasSanas #MariNails',
+                    notas: 'Mostrar: arrancar esmalte, usar uñas como herramienta, descuidar cutícula',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 3, tipoActividad: 'Historia', nombreCustom: 'Servicios disponibles',
+                    fecha: '2026-10-03', categoria: 'Contenido/Redes', plataforma: 'WhatsApp',
+                    plataformasMultiples: ['WhatsApp', 'Facebook'], estado: 'Pendiente', esContenido: true,
+                    copy: '¿Qué servicio te gustaría probar? 💅 Escríbeme y te ayudo a elegir.
+
+Agenda tu cita por WhatsApp.',
+                    hashtags: '',
+                    notas: 'Mostrar visualmente: Manicure, Semipermanente, Soft Gel, Poly Gel, Baño de Poly Gel, Rubber Base',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 4, tipoActividad: 'Historia', nombreCustom: 'Elige tu próximo estilo',
+                    fecha: '2026-10-04', categoria: 'Contenido/Redes', plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram'], estado: 'Pendiente', esContenido: true,
+                    copy: 'Domingo de elegir 💅 ¿Cuál llevarías?
+
+Opción A / Opción B',
+                    hashtags: '', notas: 'Encuesta con dos estilos de uñas',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 5, tipoActividad: 'Publicación', nombreCustom: '¿Qué es Rubber Base?',
+                    fecha: '2026-10-05', categoria: 'Contenido/Redes', plataforma: 'TikTok',
+                    plataformasMultiples: ['TikTok', 'Instagram', 'Facebook'], estado: 'Pendiente', esContenido: true,
+                    copy: '¿Has escuchado hablar de Rubber Base? Te cuento para qué sirve y cuándo puede ser una buena opción para tus uñas.',
+                    hashtags: '#RubberBase #CuidadoDeUñas #MariNails',
+                    notas: 'Explicar qué es, para qué sirve y para quién es ideal',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 6, tipoActividad: 'Historia', nombreCustom: '¿Cortas o largas?',
+                    fecha: '2026-10-06', categoria: 'Contenido/Redes', plataforma: 'WhatsApp',
+                    plataformasMultiples: ['WhatsApp', 'Instagram'], estado: 'Pendiente', esContenido: true,
+                    copy: '¿Qué prefieres?
+💅 Uñas cortas
+💅 Uñas largas',
+                    hashtags: '', notas: 'Encuesta de interacción',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 7, tipoActividad: 'Reel', nombreCustom: 'Resultado de unas uñas',
+                    fecha: '2026-10-07', categoria: 'Contenido/Redes', plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram', 'TikTok'], estado: 'Pendiente', esContenido: true,
+                    copy: 'Un pequeño cambio puede hacer una gran diferencia 💅✨
+
+¿Te harías este estilo?',
+                    hashtags: '#NailArt #Uñas #MariNails #UñasColombia',
+                    notas: 'Transición antes/después de trabajo real',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 8, tipoActividad: 'Historia', nombreCustom: '¿Por qué no arrancar el esmalte?',
+                    fecha: '2026-10-08', categoria: 'Contenido/Redes', plataforma: 'WhatsApp',
+                    plataformasMultiples: ['WhatsApp'], estado: 'Pendiente', esContenido: true,
+                    copy: 'Tip de hoy 💅 No arranques el esmalte cuando empiece a levantarse. Mejor retíralo correctamente.',
+                    hashtags: '', notas: 'Tip educativo breve',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 9, tipoActividad: 'Historia', nombreCustom: 'Así preparo tu cita',
+                    fecha: '2026-10-09', categoria: 'Contenido/Redes', plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram', 'Facebook'], estado: 'Pendiente', esContenido: true,
+                    copy: 'Cada detalle cuenta para que tu cita sea un momento bonito y cuidado 💕',
+                    hashtags: '', notas: 'Mostrar herramientas, preparación, limpieza y organización del espacio',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 10, tipoActividad: 'Historia', nombreCustom: 'Elige el próximo diseño',
+                    fecha: '2026-10-10', categoria: 'Contenido/Redes', plataforma: 'TikTok',
+                    plataformasMultiples: ['TikTok', 'Instagram'], estado: 'Pendiente', esContenido: true,
+                    copy: 'Si tuvieras cita esta semana, ¿cuál elegirías?',
+                    hashtags: '', notas: 'Mostrar 2-3 referencias de estilos con encuesta',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 11, tipoActividad: 'Reel', nombreCustom: '3 señales de que necesitas cuidar tus uñas',
+                    fecha: '2026-10-11', categoria: 'Contenido/Redes', plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram', 'TikTok', 'Facebook'], estado: 'Pendiente', esContenido: true,
+                    copy: 'Antes de pensar en el próximo diseño, también es importante mirar cómo están tus uñas 💅',
+                    hashtags: '#CuidadoDeUñas #UñasSanas #MariNails',
+                    notas: 'Uñas quebradizas, cutículas resecas, descamación',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 12, tipoActividad: 'Historia', nombreCustom: 'Tu momento de cuidado',
+                    fecha: '2026-10-12', categoria: 'Contenido/Redes', plataforma: 'WhatsApp',
+                    plataformasMultiples: ['WhatsApp', 'Instagram'], estado: 'Pendiente', esContenido: true,
+                    copy: 'Una pausa, un momento para ti y unas uñas que te hagan sentir bonita 💕',
+                    hashtags: '', notas: 'Historia tranquila mostrando un resultado bonito',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 13, tipoActividad: 'Publicación', nombreCustom: 'Soft Gel vs Poly Gel vs Rubber Base',
+                    fecha: '2026-10-13', categoria: 'Contenido/Redes', plataforma: 'TikTok',
+                    plataformasMultiples: ['TikTok', 'Instagram'], estado: 'Pendiente', esContenido: true,
+                    copy: 'Si no sabes cuál elegir, escríbeme y te orientaré según tus uñas.',
+                    hashtags: '#SoftGel #PolyGel #RubberBase #MariNails',
+                    notas: 'Comparación sencilla entre los tres servicios',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 14, tipoActividad: 'Historia', nombreCustom: '¿Qué estilo eres?',
+                    fecha: '2026-10-14', categoria: 'Contenido/Redes', plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram'], estado: 'Pendiente', esContenido: true,
+                    copy: '¿Qué estilo eres?
+✨ Minimalista
+✨ Clásica
+✨ Creativa
+✨ Me gusta probar de todo',
+                    hashtags: '', notas: 'Encuesta de interacción',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 15, tipoActividad: 'Reel', nombreCustom: 'Antes y después',
+                    fecha: '2026-10-15', categoria: 'Contenido/Redes', plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram', 'TikTok', 'Facebook'], estado: 'Pendiente', esContenido: true,
+                    copy: 'Antes ✨ Después. La diferencia está en los detalles.
+
+¿Te gustaría un cambio así?',
+                    hashtags: '#AntesYDespués #UñasBonitas #MariNails',
+                    notas: 'Transformación real de una manicura',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 16, tipoActividad: 'Historia', nombreCustom: '¿Cada cuánto hacer mantenimiento?',
+                    fecha: '2026-10-16', categoria: 'Contenido/Redes', plataforma: 'WhatsApp',
+                    plataformasMultiples: ['WhatsApp'], estado: 'Pendiente', esContenido: true,
+                    copy: 'El mantenimiento depende de tu servicio y del crecimiento de tus uñas. 💅 Si tienes dudas, pregúntame.',
+                    hashtags: '', notas: 'Tip educativo — tiempo depende del servicio y estado de uñas',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 17, tipoActividad: 'Historia', nombreCustom: '¿Hace cuánto no consientes tus uñas?',
+                    fecha: '2026-10-17', categoria: 'Contenido/Redes', plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram', 'WhatsApp'], estado: 'Pendiente', esContenido: true,
+                    copy: 'Si llevas días pensando en arreglarte las uñas... quizá este sea tu recordatorio 💕
+
+Escríbeme para consultar disponibilidad.',
+                    hashtags: '', notas: 'Historia de captación dirigida a potenciales clientas',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 18, tipoActividad: 'Historia', nombreCustom: 'Tu diseño ideal',
+                    fecha: '2026-10-18', categoria: 'Contenido/Redes', plataforma: 'TikTok',
+                    plataformasMultiples: ['TikTok', 'Instagram'], estado: 'Pendiente', esContenido: true,
+                    copy: 'Descríbeme tu diseño ideal y vemos cómo hacerlo realidad 💅',
+                    hashtags: '', notas: 'Caja de preguntas — interacción',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 19, tipoActividad: 'Reel', nombreCustom: 'Lo que NO deberías hacer con tus uñas',
+                    fecha: '2026-10-19', categoria: 'Contenido/Redes', plataforma: 'TikTok',
+                    plataformasMultiples: ['TikTok', 'Instagram', 'WhatsApp'], estado: 'Pendiente', esContenido: true,
+                    copy: 'Cuida tus uñas también entre citas 💅',
+                    hashtags: '#CuidadoDeUñas #TipsDeUñas #MariNails',
+                    notas: 'Errores comunes: morder, usar como herramienta, arrancar producto, descuidar mantenimiento',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 20, tipoActividad: 'Historia', nombreCustom: 'Detalles de un trabajo',
+                    fecha: '2026-10-20', categoria: 'Contenido/Redes', plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram', 'Facebook'], estado: 'Pendiente', esContenido: true,
+                    copy: 'Los pequeños detalles también hacen la diferencia ✨',
+                    hashtags: '', notas: 'Fotos o clips de trabajo terminado enfocando los detalles',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 21, tipoActividad: 'Historia', nombreCustom: 'Agenda tu próxima cita',
+                    fecha: '2026-10-21', categoria: 'Contenido/Redes', plataforma: 'WhatsApp',
+                    plataformasMultiples: ['WhatsApp', 'Instagram'], estado: 'Pendiente', esContenido: true,
+                    copy: '¿Ya tienes pensada tu próxima cita? 💅 Escríbeme para consultar disponibilidad.',
+                    hashtags: '', notas: 'Recordatorio de agenda sin descuentos agresivos',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 22, tipoActividad: 'Publicación', nombreCustom: '¿Por qué preparar bien la uña?',
+                    fecha: '2026-10-22', categoria: 'Contenido/Redes', plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram', 'TikTok'], estado: 'Pendiente', esContenido: true,
+                    copy: 'Una buena preparación es parte del resultado. 💅 No todo empieza con el color.',
+                    hashtags: '#CuidadoDeUñas #MariNails #TipsDeUñas',
+                    notas: 'Explicar importancia de la preparación antes de aplicar producto',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 23, tipoActividad: 'Historia', nombreCustom: '¿Qué color elegirías?',
+                    fecha: '2026-10-23', categoria: 'Contenido/Redes', plataforma: 'TikTok',
+                    plataformasMultiples: ['TikTok', 'Instagram'], estado: 'Pendiente', esContenido: true,
+                    copy: 'Solo puedes elegir uno 👀 ¿Cuál sería?',
+                    hashtags: '', notas: 'Mostrar 3-4 colores con encuesta',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 24, tipoActividad: 'Reel', nombreCustom: 'Un diseño sencillo que combina con todo',
+                    fecha: '2026-10-24', categoria: 'Contenido/Redes', plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram', 'TikTok', 'Facebook'], estado: 'Pendiente', esContenido: true,
+                    copy: 'Menos también puede ser más 💅✨
+
+¿Usarías este diseño?',
+                    hashtags: '#UñasElegantes #UñasMinimalistas #MariNails',
+                    notas: 'Diseño elegante y sencillo — portafolio',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 25, tipoActividad: 'Historia', nombreCustom: 'Halloween se acerca 🎃',
+                    fecha: '2026-10-25', categoria: 'Contenido/Redes', plataforma: 'WhatsApp',
+                    plataformasMultiples: ['WhatsApp', 'Instagram'], estado: 'Pendiente', esContenido: true,
+                    copy: 'Se acerca Halloween 🎃 ¿Te harías unas uñas temáticas?
+🖤 Sí
+🤍 Prefiero algo sutil',
+                    hashtags: '', notas: 'Encuesta Halloween — interacción',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 26, tipoActividad: 'Reel', nombreCustom: 'Ideas de uñas para Halloween 🎃',
+                    fecha: '2026-10-26', categoria: 'Contenido/Redes', plataforma: 'TikTok',
+                    plataformasMultiples: ['TikTok', 'Instagram', 'WhatsApp'], estado: 'Pendiente', esContenido: true,
+                    copy: '¿Halloween sí o no en tus uñas? 🎃💅
+
+Guarda esta idea para tu próxima cita.',
+                    hashtags: '#HalloweenNails #Halloween #UñasHalloween #MariNails',
+                    notas: 'Ideas de diseños sutiles a llamativos — guardar',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 27, tipoActividad: 'Historia', nombreCustom: '¿Cuál diseño de Halloween?',
+                    fecha: '2026-10-27', categoria: 'Contenido/Redes', plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram'], estado: 'Pendiente', esContenido: true,
+                    copy: 'Si tuvieras que elegir uno para Halloween... ¿cuál?',
+                    hashtags: '', notas: 'Mostrar 2-3 estilos con encuesta',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 28, tipoActividad: 'Publicación', nombreCustom: '¿Qué servicio elegir?',
+                    fecha: '2026-10-28', categoria: 'Contenido/Redes', plataforma: 'Facebook',
+                    plataformasMultiples: ['Facebook', 'Instagram', 'WhatsApp'], estado: 'Pendiente', esContenido: true,
+                    copy: 'Si no sabes cuál elegir, escríbeme.',
+                    hashtags: '#MariNails #ServiciosDeUñas',
+                    notas: 'Recordatorio visual de servicios y orientación según necesidad',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 29, tipoActividad: 'Historia', nombreCustom: 'Últimas ideas para Halloween 🖤',
+                    fecha: '2026-10-29', categoria: 'Contenido/Redes', plataforma: 'WhatsApp',
+                    plataformasMultiples: ['WhatsApp', 'Instagram'], estado: 'Pendiente', esContenido: true,
+                    copy: 'Halloween también puede ser sutil 🖤🎃',
+                    hashtags: '', notas: 'Diseños sutiles y elegantes para Halloween',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 30, tipoActividad: 'Reel', nombreCustom: 'Diseño de Halloween 🖤🎃',
+                    fecha: '2026-10-30', categoria: 'Contenido/Redes', plataforma: 'Instagram',
+                    plataformasMultiples: ['Instagram', 'TikTok', 'WhatsApp'], estado: 'Pendiente', esContenido: true,
+                    copy: 'Un toque de Halloween en tus uñas 🖤🎃
+
+¿Te lo harías?',
+                    hashtags: '#HalloweenNails #NailArt #MariNails',
+                    notas: 'Mostrar diseño terminado de Halloween',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                },
+                {
+                    id: base + 31, tipoActividad: 'Historia', nombreCustom: 'Feliz Halloween 🎃',
+                    fecha: '2026-10-31', categoria: 'Contenido/Redes', plataforma: 'TikTok',
+                    plataformasMultiples: ['TikTok', 'Instagram', 'WhatsApp', 'Facebook'], estado: 'Pendiente', esContenido: true,
+                    copy: 'Feliz Halloween 🎃🖤 ¿Qué diseño llevas hoy?',
+                    hashtags: '#Halloween #HalloweenNails #MariNails',
+                    notas: 'Si hay trabajo de Halloween ese día, mostrarlo',
+                    alcance:0, interacciones:0, mensajes:0, citasGeneradas:0, ingresoGenerado:0,
+                    fechaCreacion: new Date().toLocaleDateString('es-CO')
+                }
+            ];
+
+            planMensual.push(...tareas);
+            guardarEnLocalStorage();
+            guardarEnFirebase();
+            console.log('✅ 31 tareas de octubre 2026 cargadas correctamente');
+        }
+
         function crearMetasDefault(mes) {
             if (!metasMensuales[mes]) {
                 // METAS SEPTIEMBRE 2026 (Basadas en plan de contenido)
