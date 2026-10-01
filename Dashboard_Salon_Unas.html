@@ -2222,13 +2222,17 @@
                     };
                 } else if (mes === '2026-10') {
                     // Metas octubre 2026 — basadas en las 31 tareas planificadas
-                    // 7 Reels, 16 Historias, 5 Publicaciones + 3 contenidos
+                    // Instagram: 13 tareas | TikTok: 9 tareas | WhatsApp: 8 tareas | Facebook: 1 tarea
                     metasContenido[mes] = {
                         meta_publicaciones: 8,
                         meta_historias: 16,
                         meta_reels_tiktoks: 7,
-                        meta_facebook: 3,
+                        meta_facebook: 1,
                         meta_whatsapp: 8,
+                        // Metas por plataforma (usadas en las tarjetas de Metas del Mes)
+                        meta_instagram_publicaciones: 13,
+                        meta_tiktok: 9,
+                        meta_whatsapp_estados: 8,
                         
                         completadas_publicaciones: 0,
                         completadas_historias: 0,
@@ -2303,15 +2307,11 @@
 
         // Contar Instagram – Publicaciones (Publicación, Reel, Video en Instagram)
         function contarInstagramPublicacionesDelMes(mes) {
-            const tiposInstagram = ['Publicación', 'Reel', 'Video'];
-            
+            // Contar TODAS las tareas completadas de Instagram (Publicación, Reel, Historia, Video)
             return planMensual.filter(t => {
-                const estaCompletada = t.estado === 'Completada';
-                const esDelMes = t.fecha.startsWith(mes);
-                const esInstagram = t.plataforma === 'Instagram';
-                const esPublicable = tiposInstagram.includes(t.tipoActividad);
-                
-                return estaCompletada && esDelMes && esInstagram && esPublicable;
+                return t.estado === 'Completada' &&
+                       t.fecha.startsWith(mes) &&
+                       t.plataforma === 'Instagram';
             }).length;
         }
 
@@ -2327,24 +2327,12 @@
             }).length;
         }
 
-        // Contar TikTok (TikTok directo, Video en TikTok, Historia en TikTok)
+        // Contar TikTok — todas las tareas completadas con plataforma TikTok
         function contarTikToksDelMes(mes) {
             return planMensual.filter(t => {
-                const estaCompletada = t.estado === 'Completada';
-                const esDelMes = t.fecha.startsWith(mes);
-                
-                // TikTok directo (cualquier plataforma)
-                const esTikTokDirecto = t.tipoActividad === 'TikTok';
-                
-                // Video en TikTok
-                const esVideoTikTok = t.tipoActividad === 'Video' && t.plataforma === 'TikTok';
-                
-                // Historia en TikTok
-                const esHistoriaTikTok = t.tipoActividad === 'Historia' && t.plataforma === 'TikTok';
-                
-                const esValidoParaTikTok = esTikTokDirecto || esVideoTikTok || esHistoriaTikTok;
-                
-                return estaCompletada && esDelMes && esValidoParaTikTok;
+                return t.estado === 'Completada' &&
+                       t.fecha.startsWith(mes) &&
+                       t.plataforma === 'TikTok';
             }).length;
         }
 
@@ -5907,8 +5895,23 @@
             saveData();
         }
 
+        // Migración: asegurar que metas de octubre tengan los campos de plataforma
+        function migrarMetasOctubre() {
+            if (metasContenido['2026-10']) {
+                const m = metasContenido['2026-10'];
+                let cambio = false;
+                if (!m.meta_instagram_publicaciones) { m.meta_instagram_publicaciones = 13; cambio = true; }
+                if (!m.meta_tiktok)                   { m.meta_tiktok = 9;                   cambio = true; }
+                if (!m.meta_whatsapp_estados)          { m.meta_whatsapp_estados = 8;          cambio = true; }
+                if (cambio) { saveData(); console.log('✅ Metas de octubre migradas'); }
+            }
+        }
+
         // Inicializar
         loadData();
+        
+        // Migrar metas de octubre si ya existían sin los campos de plataforma
+        migrarMetasOctubre();
         
         // PASO 5.5: Migrar datos antiguos si es necesario
         const huboMigracion = migrarDatosAntiguos();
