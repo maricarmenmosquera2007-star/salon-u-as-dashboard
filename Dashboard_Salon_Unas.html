@@ -1308,6 +1308,8 @@
                             localStorage.setItem('ultimaDescargaFirebase', timestampFirebase);
                             localStorage.setItem('ultimoGuardadoLocal', timestampFirebase);
                             render();
+                            // Re-generar calendario para que muestre las tareas recién descargadas
+                            generarCalendarioPerfecto();
                             console.log('✅ Datos sincronizados desde Firebase');
                         }
                         
@@ -2213,6 +2215,21 @@
                         meta_whatsapp: 8,             // 8 estados en WhatsApp
                         
                         // Contadores automáticos (se actualizarán según tareas completadas)
+                        completadas_publicaciones: 0,
+                        completadas_historias: 0,
+                        completadas_reels_tiktoks: 0,
+                        completadas_videos: 0
+                    };
+                } else if (mes === '2026-10') {
+                    // Metas octubre 2026 — basadas en las 31 tareas planificadas
+                    // 7 Reels, 16 Historias, 5 Publicaciones + 3 contenidos
+                    metasContenido[mes] = {
+                        meta_publicaciones: 8,
+                        meta_historias: 16,
+                        meta_reels_tiktoks: 7,
+                        meta_facebook: 3,
+                        meta_whatsapp: 8,
+                        
                         completadas_publicaciones: 0,
                         completadas_historias: 0,
                         completadas_reels_tiktoks: 0,
@@ -3798,6 +3815,8 @@
             try {
                 renderMetasMensual();
                 renderPlanMensual();
+                // Actualizar contadores de metas de contenido en tiempo real
+                actualizarVisualizacionMetaContenido();
                 console.log('✅ renderCrecimiento() ejecutado correctamente');
             } catch(e) {
                 console.error('❌ Error en renderCrecimiento():', e);
