@@ -1058,6 +1058,20 @@
                     <label style="font-weight: 600; color: #d4547e; font-size: 13px; margin-bottom: 8px; display: block;">🎂 Fecha de Cumpleaños (opcional)</label>
                     <input type="date" id="fechaCumpleañosCliente" style="padding: 10px; border: 1px solid #f0e0e8; border-radius: 6px; font-size: 14px; width: 100%;">
                 </div>
+                <div class="form-group" style="margin-top: 10px;">
+                    <label style="font-weight: 600; color: #d4547e; font-size: 13px; margin-bottom: 8px; display: block;">📣 ¿Cómo nos conoció?</label>
+                    <select id="origenClienteInput" style="padding: 10px; border: 1px solid #f0e0e8; border-radius: 6px; font-size: 14px; width: 100%;">
+                        <option value="">Sin especificar</option>
+                        <option value="Instagram">📷 Instagram</option>
+                        <option value="WhatsApp">💬 WhatsApp</option>
+                        <option value="TikTok">🎵 TikTok</option>
+                        <option value="Recomendación">🤝 Recomendación</option>
+                        <option value="Pendón">🪧 Pendón</option>
+                        <option value="Conocida">👯 Conocida / Amiga</option>
+                        <option value="Facebook">👥 Facebook</option>
+                        <option value="Otro">🔍 Otro</option>
+                    </select>
+                </div>
                 <button class="btn" onclick="addCliente()">➕ Agregar Cliente</button>
             </div>
 
@@ -1068,7 +1082,7 @@
                         <tr>
                             <th>Nombre</th>
                             <th>Teléfono</th>
-                            <th>Email</th>
+                            <th>📣 Origen</th>
                             <th>Registro</th>
                             <th>🎂 Cumpleaños</th>
                             <th>👣 Visitas</th>
@@ -1080,6 +1094,12 @@
                 </table>
                 <div id="clientesEmpty" class="empty">No hay clientes registrados aún</div>
                 
+                <!-- Resumen de fuentes de captación -->
+                <div id="resumenOrigenClientas" style="margin-top: 16px; padding-top: 14px; border-top: 1px solid #f0e0e8;">
+                    <h4 style="color: #d4547e; font-size: 13px; margin-bottom: 10px;">📣 ¿De dónde vienen mis clientas?</h4>
+                    <div id="origenesGrid" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                </div>
+
                 <!-- Botones de Exportación - Clientes -->
                 <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid #ddd;">
                     <h4 style="color: #d4547e; font-size: 13px; margin-bottom: 10px;">📥 Exportar Clientes</h4>
@@ -1344,6 +1364,44 @@
             // (usado por sincronizarConFirebase para saber si hay datos nuevos que subir)
             const ahora = new Date().getTime();
             localStorage.setItem('ultimoGuardadoLocal', ahora);
+        }
+
+        // Renderizar resumen de fuentes de captación de clientas
+        function renderResumenOrigenes() {
+            const grid = document.getElementById('origenesGrid');
+            if (!grid) return;
+
+            // Contar por origen
+            const conteo = {};
+            clientes.forEach(c => {
+                const origen = c.origenClienta || 'Sin especificar';
+                conteo[origen] = (conteo[origen] || 0) + 1;
+            });
+
+            if (Object.keys(conteo).length === 0) {
+                grid.innerHTML = '<span style="color:#ccc;font-size:12px;">Sin datos aún</span>';
+                return;
+            }
+
+            const emojis = {
+                'Instagram': '📷', 'WhatsApp': '💬', 'TikTok': '🎵',
+                'Recomendación': '🤝', 'Pendón': '🪧', 'Conocida': '👯',
+                'Facebook': '👥', 'Otro': '🔍', 'Sin especificar': '❓'
+            };
+
+            const total = clientes.length;
+            grid.innerHTML = Object.entries(conteo)
+                .sort((a, b) => b[1] - a[1])
+                .map(([origen, count]) => {
+                    const pct = Math.round((count / total) * 100);
+                    const emoji = emojis[origen] || '🔍';
+                    return `<div style="background:#fce4ec;border-radius:10px;padding:8px 12px;text-align:center;min-width:90px;">
+                        <div style="font-size:18px;">${emoji}</div>
+                        <div style="font-size:11px;font-weight:bold;color:#d4547e;">${origen}</div>
+                        <div style="font-size:16px;font-weight:900;color:#333;">${count}</div>
+                        <div style="font-size:10px;color:#999;">${pct}%</div>
+                    </div>`;
+                }).join('');
         }
 
         // Forzar subida de datos locales a Firebase
@@ -2374,6 +2432,8 @@
                 fechaCumpleaños = `${partes[1]}/${partes[2]}`; // MM/DD
             }
 
+            const origenClienta = document.getElementById('origenClienteInput').value;
+
             clientes.push({
                 id: Date.now(),
                 nombre,
@@ -2399,13 +2459,14 @@
                 fechaDetalleEntregado: null,              // Fecha entrega
                 
                 // NUEVOS CAMPOS PARA CAPTACIÓN
-                origenClienta: ''                         // Instagram, TikTok, WhatsApp, Recomendación, Tarjeta, Otra
+                origenClienta: origenClienta              // Instagram, TikTok, WhatsApp, Recomendación, Pendón, Otra
             });
 
             document.getElementById('nombreCliente').value = '';
             document.getElementById('telefonoCliente').value = '';
             document.getElementById('emailCliente').value = '';
             document.getElementById('fechaCumpleañosCliente').value = '';
+            document.getElementById('origenClienteInput').value = '';
 
             saveData();
             render();
@@ -3538,6 +3599,7 @@
                 clientesEmpty.style.display = 'block';
                 document.getElementById('clientesTitle').textContent = '📋 Mis Clientes';
             } else {
+                renderResumenOrigenes();
                 clientesTbody.innerHTML = clientes.map(c => {
                     // Determinar estado del beneficio
                     let estadoBeneficio = '';
@@ -3564,7 +3626,7 @@
                         <tr>
                             <td><strong>${c.nombre}</strong></td>
                             <td>${c.numero}</td>
-                            <td>${c.email || '-'}</td>
+                            <td>${c.origenClienta ? '<span style="font-size:11px;background:#fce4ec;color:#d4547e;padding:2px 7px;border-radius:10px;">' + c.origenClienta + '</span>' : '<span style="color:#ccc;font-size:11px;">-</span>'}</td>
                             <td>${c.fechaRegistro}</td>
                             <td>${c.fechaCumpleaños || '-'}</td>
                             <td style="font-weight: 600; color: ${c.visitasRealizadas >= 5 ? '#27ae60' : '#e64980'};">${c.visitasRealizadas}</td>
