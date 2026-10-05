@@ -5796,38 +5796,41 @@
             metas.completadas_historias = historiasCompletadas;
             metas.completadas_reels_tiktoks = reelsCompletados;
 
-            // Actualizar elementos en HTML
-            document.getElementById('pubRealizadas').textContent = publicacionesCompletadas;
-            document.getElementById('pubMeta').textContent = metas.meta_publicaciones;
+            // Actualizar elementos en HTML — solo si existen en el DOM
+            const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+            const setStyle = (id, prop, val) => { const el = document.getElementById(id); if (el) el.style[prop] = val; };
 
-            document.getElementById('histRealizadas').textContent = historiasCompletadas;
-            document.getElementById('histMeta').textContent = metas.meta_historias;
-
-            document.getElementById('reelRealizadas').textContent = reelsCompletados;
-            document.getElementById('reelMeta').textContent = metas.meta_reels_tiktoks;
+            setEl('pubRealizadas', publicacionesCompletadas);
+            setEl('pubMeta', metas.meta_publicaciones);
+            setEl('histRealizadas', historiasCompletadas);
+            setEl('histMeta', metas.meta_historias);
+            setEl('reelRealizadas', reelsCompletados);
+            setEl('reelMeta', metas.meta_reels_tiktoks);
 
             // Calcular progreso total
             const totalRealizado = publicacionesCompletadas + historiasCompletadas + reelsCompletados;
-            const totalMeta = metas.meta_publicaciones + metas.meta_historias + metas.meta_reels_tiktoks;
+            const totalMeta = (metas.meta_publicaciones || 0) + (metas.meta_historias || 0) + (metas.meta_reels_tiktoks || 0);
             const porcentaje = totalMeta > 0 ? Math.round((totalRealizado / totalMeta) * 100) : 0;
 
             // Actualizar porcentaje y barra
-            document.getElementById('porcentajeContenido').textContent = porcentaje;
-            document.getElementById('textoProgreso').textContent = `${totalRealizado} de ${totalMeta}`;
-            document.getElementById('barraProgreso').style.width = porcentaje + '%';
+            setEl('porcentajeContenido', porcentaje);
+            setEl('textoProgreso', `${totalRealizado} de ${totalMeta}`);
+            setStyle('barraProgreso', 'width', porcentaje + '%');
 
             // Cambiar color de barra según cumplimiento
             const barraElement = document.getElementById('barraProgreso');
-            if (porcentaje >= 80) {
-                barraElement.style.background = 'linear-gradient(90deg, #4caf50 0%, #66bb6a 100%)'; // Verde
-            } else if (porcentaje >= 60) {
-                barraElement.style.background = 'linear-gradient(90deg, #ffc107 0%, #ffb300 100%)'; // Amarillo
-            } else {
-                barraElement.style.background = 'linear-gradient(90deg, #ff6b9d 0%, #ff5177 100%)'; // Rosa/Rojo
+            if (barraElement) {
+                if (porcentaje >= 80) {
+                    barraElement.style.background = 'linear-gradient(90deg, #4caf50 0%, #66bb6a 100%)';
+                } else if (porcentaje >= 60) {
+                    barraElement.style.background = 'linear-gradient(90deg, #ffc107 0%, #ffb300 100%)';
+                } else {
+                    barraElement.style.background = 'linear-gradient(90deg, #ff6b9d 0%, #ff5177 100%)';
+                }
             }
 
             // Actualizar mes en el título
-            document.getElementById('mesMetaContenido').textContent = obtenerNombreMes(mesActualConsulta);
+            setEl('mesMetaContenido', obtenerNombreMes(mesActualConsulta));
 
             // NUEVA: Actualizar resumen de contenido
             actualizarResumenContenido();
