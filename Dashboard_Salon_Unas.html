@@ -953,6 +953,11 @@
             </div>
 
             <div class="card">
+                <!-- Botón diagnóstico temporal -->
+                <div style="text-align:right; margin-bottom: 10px;">
+                    <button onclick="diagnosticarFondo()" style="background:none; border:1px solid #ddd; color:#999; font-size:11px; padding:4px 10px; border-radius:6px; cursor:pointer;">🔍 Diagnóstico fondo</button>
+                </div>
+
                 <h3>🔄 Transferir Dinero Entre Cuentas</h3>
                 <div class="form-group">
                     <select id="transferFrom">
@@ -1609,6 +1614,28 @@
             embudoSemanas = embudoSemanas.filter(s => s.fecha !== fecha);
             localStorage.setItem('salon_embudo', JSON.stringify(embudoSemanas));
             renderEmbudo();
+        }
+
+        // DIAGNÓSTICO TEMPORAL — ver qué transacciones de reserva_fondo tienen y no tienen ubicacion
+        function diagnosticarFondo() {
+            const reservas = transacciones.filter(t => t.tipo === 'reserva_fondo');
+            const sinUbicacion = reservas.filter(t => !t.ubicacion);
+            const conEfectivo = reservas.filter(t => t.ubicacion === 'efectivo');
+            const conNequi = reservas.filter(t => t.ubicacion === 'nequi');
+            
+            const totalSinUbicacion = sinUbicacion.reduce((s, t) => s + t.monto, 0);
+            const totalEfectivo = conEfectivo.reduce((s, t) => s + t.monto, 0);
+            const totalNequi = conNequi.reduce((s, t) => s + t.monto, 0);
+
+            alert(
+                '📊 DIAGNÓSTICO FONDO DE INSUMOS\n\n' +
+                'Reservas SIN ubicación: ' + sinUbicacion.length + ' → $' + totalSinUbicacion.toLocaleString('es-CO') + '\n' +
+                'Reservas EFECTIVO: ' + conEfectivo.length + ' → $' + totalEfectivo.toLocaleString('es-CO') + '\n' +
+                'Reservas NEQUI: ' + conNequi.length + ' → $' + totalNequi.toLocaleString('es-CO') + '\n\n' +
+                'Total reservas: ' + reservas.length + '\n\n' +
+                'DETALLE SIN UBICACIÓN:\n' +
+                sinUbicacion.map(t => t.fecha + ' $' + t.monto + ' | ' + (t.descripcion || '')).join('\n')
+            );
         }
 
         // Forzar subida de datos locales a Firebase
