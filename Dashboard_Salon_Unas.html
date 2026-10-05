@@ -3923,20 +3923,31 @@
             document.getElementById('saldoTotal').textContent = formatMoney(saldoTotal);
 
             // PASO 3C: Calcular Disponible y Fondo Reservado por método
-            // Usar mes actual para calcular fondo
-            const mesActual = new Date().toISOString().slice(0, 7); // YYYY-MM
+            // El fondo se calcula sobre TODO el historial (igual que el saldo), no solo el mes actual
             
-            // EFECTIVO
-            const fondoGeneradoEfectivo = calcularFondoGeneradoEfectivo(mesActual);
-            const gananciaDisponibleEfectivo = Math.max(0, saldoEfectivo - fondoGeneradoEfectivo);
+            // EFECTIVO — fondo acumulado histórico total
+            const fondoGeneradoEfectivo = transacciones
+                .filter(t => t.tipo === 'reserva_fondo' && t.ubicacion === 'efectivo')
+                .reduce((s, t) => s + t.monto, 0);
+            const gastosInsumoEfectivo = transacciones
+                .filter(t => t.tipo === 'gasto' && t.categoriaGasto === 'Insumos/Materiales' && (t.ubicacion === 'efectivo' || !t.ubicacion))
+                .reduce((s, t) => s + t.monto, 0);
+            const fondoReservadoEfectivo = Math.max(0, fondoGeneradoEfectivo - gastosInsumoEfectivo);
+            const gananciaDisponibleEfectivo = Math.max(0, saldoEfectivo - fondoReservadoEfectivo);
             document.getElementById('gananciaEfectivo').textContent = formatMoney(gananciaDisponibleEfectivo);
-            document.getElementById('fondoEfectivo').textContent = formatMoney(fondoGeneradoEfectivo);
+            document.getElementById('fondoEfectivo').textContent = formatMoney(fondoReservadoEfectivo);
             
-            // NEQUI
-            const fondoGeneradoNequi = calcularFondoGeneradoNequi(mesActual);
-            const gananciaDisponibleNequi = Math.max(0, saldoNequi - fondoGeneradoNequi);
+            // NEQUI — fondo acumulado histórico total
+            const fondoGeneradoNequi = transacciones
+                .filter(t => t.tipo === 'reserva_fondo' && t.ubicacion === 'nequi')
+                .reduce((s, t) => s + t.monto, 0);
+            const gastosInsumoNequi = transacciones
+                .filter(t => t.tipo === 'gasto' && t.categoriaGasto === 'Insumos/Materiales' && t.ubicacion === 'nequi')
+                .reduce((s, t) => s + t.monto, 0);
+            const fondoReservadoNequi = Math.max(0, fondoGeneradoNequi - gastosInsumoNequi);
+            const gananciaDisponibleNequi = Math.max(0, saldoNequi - fondoReservadoNequi);
             document.getElementById('gananciaNequi').textContent = formatMoney(gananciaDisponibleNequi);
-            document.getElementById('fondoNequi').textContent = formatMoney(fondoGeneradoNequi);
+            document.getElementById('fondoNequi').textContent = formatMoney(fondoReservadoNequi);
 
             // Actualizar tabla de resumen por método
             const resumenTbody = document.getElementById('resumenDineroTable').querySelector('tbody');
