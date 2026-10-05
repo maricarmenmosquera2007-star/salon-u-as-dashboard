@@ -451,6 +451,7 @@
                 <button id="btnSeccionMetas" class="btn" style="flex: 1; background: #d4547e; font-weight: bold;" onclick="cambiarSeccionCrecimiento('metas')">📊 Metas del Mes</button>
                 <button id="btnSeccionPlan" class="btn" style="flex: 1; background: #f4a6c1;" onclick="cambiarSeccionCrecimiento('plan')">📅 Plan Mensual</button>
                 <button id="btnSeccionCalendario" class="btn" style="flex: 1; background: #e8b4d4;" onclick="cambiarSeccionCrecimiento('calendario')">📆 Calendario Contenido</button>
+                <button id="btnSeccionEmbudo" class="btn" style="flex: 1; background: #e8b4d4;" onclick="cambiarSeccionCrecimiento('embudo')">📈 Embudo Semanal</button>
             </div>
 
             <!-- MÓDULO 1: METAS DEL MES -->
@@ -660,6 +661,79 @@
             </div>
 
         </div>
+
+            <!-- EMBUDO DE CONVERSIÓN SEMANAL -->
+            <div id="seccionEmbudo" style="display: none;">
+                <div class="card">
+                    <h3 style="color: #d4547e; margin-bottom: 4px;">📈 Embudo de Conversión Semanal</h3>
+                    <p style="font-size: 12px; color: #999; margin-bottom: 16px;">Registra cada semana cuántas personas llegaron y cuántas se convirtieron en citas reales.</p>
+
+                    <!-- Formulario de registro semanal -->
+                    <div style="background: #fdf0f5; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+                        <h4 style="color: #d4547e; font-size: 13px; margin-bottom: 12px;">➕ Registrar semana</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                            <div>
+                                <label style="font-size: 11px; color: #888; display: block; margin-bottom: 4px;">📅 Semana (fecha inicio)</label>
+                                <input type="date" id="embudoFecha" style="width: 100%; padding: 8px; border: 1px solid #f0e0e8; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; color: #888; display: block; margin-bottom: 4px;">👁️ Personas que vieron contenido</label>
+                                <input type="number" id="embudoVieron" min="0" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #f0e0e8; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; color: #888; display: block; margin-bottom: 4px;">💬 Preguntaron / Consultaron</label>
+                                <input type="number" id="embudoPreguntaron" min="0" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #f0e0e8; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; color: #888; display: block; margin-bottom: 4px;">📅 Agendaron cita</label>
+                                <input type="number" id="embudoAgendaron" min="0" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #f0e0e8; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; color: #888; display: block; margin-bottom: 4px;">✅ Asistieron</label>
+                                <input type="number" id="embudoAsistieron" min="0" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #f0e0e8; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; color: #888; display: block; margin-bottom: 4px;">🆕 Fueron nuevas clientas</label>
+                                <input type="number" id="embudoNuevas" min="0" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #f0e0e8; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; color: #888; display: block; margin-bottom: 4px;">🔁 Fueron clientas recurrentes</label>
+                                <input type="number" id="embudoRecurrentes" min="0" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #f0e0e8; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; color: #888; display: block; margin-bottom: 4px;">💰 Ingresos generados</label>
+                                <input type="number" id="embudoIngresos" min="0" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #f0e0e8; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <label style="font-size: 11px; color: #888; display: block; margin-bottom: 4px;">📣 Canal que generó más citas esta semana</label>
+                            <select id="embudoCanalPrincipal" style="width: 100%; padding: 8px; border: 1px solid #f0e0e8; border-radius: 6px; font-size: 13px;">
+                                <option value="">Sin especificar</option>
+                                <option value="Instagram">📷 Instagram</option>
+                                <option value="WhatsApp">💬 WhatsApp</option>
+                                <option value="TikTok">🎵 TikTok</option>
+                                <option value="Recomendación">🤝 Recomendación</option>
+                                <option value="Pendón">🪧 Pendón</option>
+                                <option value="Conocida">👯 Conocida / Amiga</option>
+                                <option value="Facebook">👥 Facebook</option>
+                                <option value="Otro">🔍 Otro</option>
+                            </select>
+                        </div>
+                        <button onclick="guardarSemanaEmbudo()" class="btn" style="background: #d4547e; width: 100%;">💾 Guardar semana</button>
+                    </div>
+
+                    <!-- Resumen acumulado del mes -->
+                    <div id="embudoResumenMes" style="background: #f0fff4; border-radius: 10px; padding: 14px; margin-bottom: 20px; display: none;">
+                        <h4 style="color: #27ae60; font-size: 13px; margin-bottom: 10px;">📊 Resumen del mes actual</h4>
+                        <div id="embudoResumenGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px;"></div>
+                        <div id="embudoTasaConversion" style="margin-top: 10px; font-size: 12px; color: #555;"></div>
+                    </div>
+
+                    <!-- Historial de semanas -->
+                    <h4 style="color: #d4547e; font-size: 13px; margin-bottom: 10px;">📋 Historial de semanas</h4>
+                    <div id="embudoHistorial"></div>
+                </div>
+            </div>
 
         <!-- MODAL: Detalles de Actividad del Calendario -->
         <div id="modalDetalleActividad" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
@@ -1323,6 +1397,7 @@
                             if (dataFirebase.metasContenido) metasContenido = dataFirebase.metasContenido;
                             if (dataFirebase.planMensual)    planMensual    = dataFirebase.planMensual;
                             if (dataFirebase.mesActual)      localStorage.setItem('salon_mes_actual', dataFirebase.mesActual);
+                            if (dataFirebase.embudoSemanas)  localStorage.setItem('salon_embudo', JSON.stringify(dataFirebase.embudoSemanas));
 
                             guardarEnLocalStorage();
                             localStorage.setItem('ultimaDescargaFirebase', timestampFirebase);
@@ -1404,6 +1479,138 @@
                 }).join('');
         }
 
+        // ===== EMBUDO DE CONVERSIÓN SEMANAL =====
+
+        // Variable global para almacenar las semanas del embudo
+        // Se guarda en localStorage como 'salon_embudo'
+        let embudoSemanas = JSON.parse(localStorage.getItem('salon_embudo') || '[]');
+
+        function guardarSemanaEmbudo() {
+            const fecha    = document.getElementById('embudoFecha').value;
+            const vieron   = parseInt(document.getElementById('embudoVieron').value) || 0;
+            const preguntaron = parseInt(document.getElementById('embudoPreguntaron').value) || 0;
+            const agendaron   = parseInt(document.getElementById('embudoAgendaron').value) || 0;
+            const asistieron  = parseInt(document.getElementById('embudoAsistieron').value) || 0;
+            const nuevas      = parseInt(document.getElementById('embudoNuevas').value) || 0;
+            const recurrentes = parseInt(document.getElementById('embudoRecurrentes').value) || 0;
+            const ingresos    = parseInt(document.getElementById('embudoIngresos').value) || 0;
+            const canal       = document.getElementById('embudoCanalPrincipal').value;
+
+            if (!fecha) { alert('Selecciona la fecha de inicio de la semana'); return; }
+
+            // Verificar si ya existe esa semana y reemplazar
+            const idx = embudoSemanas.findIndex(s => s.fecha === fecha);
+            const semana = { fecha, vieron, preguntaron, agendaron, asistieron, nuevas, recurrentes, ingresos, canal };
+
+            if (idx >= 0) {
+                embudoSemanas[idx] = semana;
+            } else {
+                embudoSemanas.push(semana);
+            }
+
+            // Ordenar por fecha descendente
+            embudoSemanas.sort((a, b) => b.fecha.localeCompare(a.fecha));
+
+            localStorage.setItem('salon_embudo', JSON.stringify(embudoSemanas));
+            guardarEnFirebase();
+
+            // Limpiar formulario
+            ['embudoFecha','embudoVieron','embudoPreguntaron','embudoAgendaron',
+             'embudoAsistieron','embudoNuevas','embudoRecurrentes','embudoIngresos'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            document.getElementById('embudoCanalPrincipal').value = '';
+
+            renderEmbudo();
+        }
+
+        function renderEmbudo() {
+            embudoSemanas = JSON.parse(localStorage.getItem('salon_embudo') || '[]');
+            const historial = document.getElementById('embudoHistorial');
+            const resumenDiv = document.getElementById('embudoResumenMes');
+
+            if (!historial) return;
+
+            if (embudoSemanas.length === 0) {
+                historial.innerHTML = '<p style="color:#ccc;font-size:13px;text-align:center;padding:20px;">Aún no hay semanas registradas. Comienza registrando esta semana.</p>';
+                resumenDiv.style.display = 'none';
+                return;
+            }
+
+            // Calcular resumen del mes actual
+            const mesActual = mesActualConsulta;
+            const semanasDelMes = embudoSemanas.filter(s => s.fecha.startsWith(mesActual));
+
+            if (semanasDelMes.length > 0) {
+                resumenDiv.style.display = 'block';
+                const totales = semanasDelMes.reduce((acc, s) => ({
+                    vieron:      acc.vieron      + s.vieron,
+                    preguntaron: acc.preguntaron + s.preguntaron,
+                    agendaron:   acc.agendaron   + s.agendaron,
+                    asistieron:  acc.asistieron  + s.asistieron,
+                    nuevas:      acc.nuevas      + s.nuevas,
+                    recurrentes: acc.recurrentes + s.recurrentes,
+                    ingresos:    acc.ingresos    + s.ingresos
+                }), { vieron:0, preguntaron:0, agendaron:0, asistieron:0, nuevas:0, recurrentes:0, ingresos:0 });
+
+                const tasaConsulta   = totales.vieron > 0 ? Math.round((totales.preguntaron / totales.vieron) * 100) : 0;
+                const tasaAgendado   = totales.preguntaron > 0 ? Math.round((totales.agendaron / totales.preguntaron) * 100) : 0;
+                const tasaAsistencia = totales.agendaron > 0 ? Math.round((totales.asistieron / totales.agendaron) * 100) : 0;
+
+                document.getElementById('embudoResumenGrid').innerHTML = [
+                    { emoji: '👁️', label: 'Vieron', valor: totales.vieron },
+                    { emoji: '💬', label: 'Preguntaron', valor: totales.preguntaron },
+                    { emoji: '📅', label: 'Agendaron', valor: totales.agendaron },
+                    { emoji: '✅', label: 'Asistieron', valor: totales.asistieron },
+                    { emoji: '🆕', label: 'Nuevas', valor: totales.nuevas },
+                    { emoji: '🔁', label: 'Recurrentes', valor: totales.recurrentes },
+                    { emoji: '💰', label: 'Ingresos', valor: '$' + totales.ingresos.toLocaleString('es-CO') }
+                ].map(item => `
+                    <div style="background:#fff;border-radius:8px;padding:10px;text-align:center;border:1px solid #c8f0d8;">
+                        <div style="font-size:18px;">${item.emoji}</div>
+                        <div style="font-size:10px;color:#888;font-weight:bold;">${item.label}</div>
+                        <div style="font-size:16px;font-weight:900;color:#27ae60;">${item.valor}</div>
+                    </div>`).join('');
+
+                document.getElementById('embudoTasaConversion').innerHTML =
+                    `📊 Tasas de conversión: Vieron→Preguntaron <strong>${tasaConsulta}%</strong> | Preguntaron→Agendaron <strong>${tasaAgendado}%</strong> | Agendaron→Asistieron <strong>${tasaAsistencia}%</strong>`;
+            } else {
+                resumenDiv.style.display = 'none';
+            }
+
+            // Renderizar historial
+            historial.innerHTML = embudoSemanas.map(s => {
+                const tasa = s.preguntaron > 0 ? Math.round((s.agendaron / s.preguntaron) * 100) : 0;
+                return `
+                <div style="background:#fdf0f5;border-radius:10px;padding:12px;margin-bottom:10px;border-left:4px solid #d4547e;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <strong style="color:#d4547e;font-size:13px;">📅 Semana del ${s.fecha}</strong>
+                        <div style="display:flex;gap:6px;">
+                            ${s.canal ? '<span style="font-size:11px;background:#fce4ec;color:#d4547e;padding:2px 8px;border-radius:10px;">'+s.canal+'</span>' : ''}
+                            <button onclick="eliminarSemanaEmbudo('${s.fecha}')" style="background:none;border:none;cursor:pointer;font-size:14px;color:#ccc;">🗑️</button>
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;font-size:12px;">
+                        <div style="text-align:center;"><div style="color:#888;">👁️ Vieron</div><strong>${s.vieron}</strong></div>
+                        <div style="text-align:center;"><div style="color:#888;">💬 Consultaron</div><strong>${s.preguntaron}</strong></div>
+                        <div style="text-align:center;"><div style="color:#888;">📅 Agendaron</div><strong>${s.agendaron}</strong></div>
+                        <div style="text-align:center;"><div style="color:#888;">✅ Asistieron</div><strong>${s.asistieron}</strong></div>
+                        <div style="text-align:center;"><div style="color:#888;">🆕 Nuevas</div><strong>${s.nuevas}</strong></div>
+                        <div style="text-align:center;"><div style="color:#888;">🔁 Recurrentes</div><strong>${s.recurrentes}</strong></div>
+                        <div style="text-align:center;"><div style="color:#888;">💰 Ingresos</div><strong>$${s.ingresos.toLocaleString('es-CO')}</strong></div>
+                        <div style="text-align:center;"><div style="color:#888;">📈 Conversión</div><strong style="color:#27ae60;">${tasa}%</strong></div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function eliminarSemanaEmbudo(fecha) {
+            if (!confirm('¿Eliminar el registro de la semana del ' + fecha + '?')) return;
+            embudoSemanas = embudoSemanas.filter(s => s.fecha !== fecha);
+            localStorage.setItem('salon_embudo', JSON.stringify(embudoSemanas));
+            renderEmbudo();
+        }
+
         // Forzar subida de datos locales a Firebase
         function forzarSubidaAFirebase() {
             const msg = document.getElementById('sincMensaje');
@@ -1436,6 +1643,7 @@
                 metasMensuales: metasMensuales,
                 metasContenido: metasContenido,
                 planMensual:    planMensual,
+                embudoSemanas:  JSON.parse(localStorage.getItem('salon_embudo') || '[]'),
                 mesActual:      localStorage.getItem('salon_mes_actual') || getMesActual(),
                 ultimoGuardado: new Date().toLocaleString('es-CO'),
                 timestamp:      timestamp
@@ -4911,34 +5119,33 @@
             document.getElementById('seccionMetas').style.display = 'none';
             document.getElementById('seccionPlanMensual').style.display = 'none';
             document.getElementById('seccionCalendarioContenido').style.display = 'none';
+            document.getElementById('seccionEmbudo').style.display = 'none';
             
-            // Mostrar la sección seleccionada
+            // Resetear todos los botones
+            ['btnSeccionMetas','btnSeccionPlan','btnSeccionCalendario','btnSeccionEmbudo'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) { btn.style.background = '#f4a6c1'; btn.style.fontWeight = 'normal'; }
+            });
+
+            // Mostrar la sección seleccionada y resaltar su botón
             if (seccion === 'metas') {
                 document.getElementById('seccionMetas').style.display = 'block';
                 document.getElementById('btnSeccionMetas').style.background = '#d4547e';
                 document.getElementById('btnSeccionMetas').style.fontWeight = 'bold';
-                document.getElementById('btnSeccionPlan').style.background = '#f4a6c1';
-                document.getElementById('btnSeccionPlan').style.fontWeight = 'normal';
-                document.getElementById('btnSeccionCalendario').style.background = '#e8b4d4';
-                document.getElementById('btnSeccionCalendario').style.fontWeight = 'normal';
             } else if (seccion === 'plan') {
                 document.getElementById('seccionPlanMensual').style.display = 'block';
                 document.getElementById('btnSeccionPlan').style.background = '#d4547e';
                 document.getElementById('btnSeccionPlan').style.fontWeight = 'bold';
-                document.getElementById('btnSeccionMetas').style.background = '#f4a6c1';
-                document.getElementById('btnSeccionMetas').style.fontWeight = 'normal';
-                document.getElementById('btnSeccionCalendario').style.background = '#e8b4d4';
-                document.getElementById('btnSeccionCalendario').style.fontWeight = 'normal';
             } else if (seccion === 'calendario') {
                 document.getElementById('seccionCalendarioContenido').style.display = 'block';
                 document.getElementById('btnSeccionCalendario').style.background = '#d4547e';
                 document.getElementById('btnSeccionCalendario').style.fontWeight = 'bold';
-                document.getElementById('btnSeccionMetas').style.background = '#f4a6c1';
-                document.getElementById('btnSeccionMetas').style.fontWeight = 'normal';
-                document.getElementById('btnSeccionPlan').style.background = '#f4a6c1';
-                document.getElementById('btnSeccionPlan').style.fontWeight = 'normal';
-                // Generar calendario cuando se abre
                 generarCalendarioPerfecto();
+            } else if (seccion === 'embudo') {
+                document.getElementById('seccionEmbudo').style.display = 'block';
+                document.getElementById('btnSeccionEmbudo').style.background = '#d4547e';
+                document.getElementById('btnSeccionEmbudo').style.fontWeight = 'bold';
+                renderEmbudo();
             }
         }
 
