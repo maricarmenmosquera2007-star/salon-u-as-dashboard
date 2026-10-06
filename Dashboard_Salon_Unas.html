@@ -915,40 +915,33 @@
                 <div class="kpi-card">
                     <div class="kpi-label">💵 Efectivo</div>
                     <div class="kpi-number" style="color: #27ae60;" id="saldoEfectivo">$ 0 COP</div>
-                    <!-- DESGLOSE COMPACTO -->
-                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e0b0c0; font-size: 11px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                            <span style="color: #666;">💗 Disponible:</span>
-                            <span style="color: #27ae60; font-weight: bold;" id="gananciaEfectivo">$0</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="color: #666;">🧴 Reservado:</span>
-                            <span style="color: #e64980; font-weight: bold;" id="fondoEfectivo">$0</span>
-                        </div>
+                    <div style="margin-top: 8px; font-size: 11px; color: #aaa; text-align: center;">
+                        Dinero físico disponible
                     </div>
+                    <!-- IDs ocultos para compatibilidad con el JS -->
+                    <span id="gananciaEfectivo" style="display:none;"></span>
+                    <span id="fondoEfectivo" style="display:none;"></span>
                 </div>
 
                 <!-- TARJETA NEQUI -->
                 <div class="kpi-card">
                     <div class="kpi-label">📱 Nequi</div>
                     <div class="kpi-number" style="color: #3498db;" id="saldoNequi">$ 0 COP</div>
-                    <!-- DESGLOSE COMPACTO -->
-                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e0b0c0; font-size: 11px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                            <span style="color: #666;">💗 Disponible:</span>
-                            <span style="color: #27ae60; font-weight: bold;" id="gananciaNequi">$0</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="color: #666;">🧴 Reservado:</span>
-                            <span style="color: #e64980; font-weight: bold;" id="fondoNequi">$0</span>
-                        </div>
+                    <div style="margin-top: 8px; font-size: 11px; color: #aaa; text-align: center;">
+                        Dinero en Nequi disponible
                     </div>
+                    <!-- IDs ocultos para compatibilidad con el JS -->
+                    <span id="gananciaNequi" style="display:none;"></span>
+                    <span id="fondoNequi" style="display:none;"></span>
                 </div>
 
                 <!-- TARJETA TOTAL -->
                 <div class="kpi-card">
                     <div class="kpi-label">💰 Total Disponible</div>
                     <div class="kpi-number" style="color: #d4547e;" id="saldoTotal">$ 0 COP</div>
+                    <div style="margin-top: 8px; font-size: 11px; color: #aaa; text-align: center;">
+                        El 18% de ingresos va al Fondo de Insumos (ver Análisis Financiero)
+                    </div>
                 </div>
             </div>
 
@@ -1044,7 +1037,7 @@
                         <tbody></tbody>
                     </table>
                     <div id="finanzasIngresosEmpty" class="empty">No hay ingresos registrados para este mes</div>
-                    <p style="font-size: 12px; color: #666; margin-top: 10px;">* Pagos por Nequi: se reserva automáticamente el 18% para el Fondo de Insumos. Pagos en efectivo: quedan 100% disponibles.</p>
+                    <p style="font-size: 12px; color: #666; margin-top: 10px;">* El 18% de cada ingreso se registra contablemente en el Fondo de Insumos. El dinero permanece en Efectivo o Nequi según el método de pago.</p>
                 </div>
 
                 <!-- Tabla de Gastos del Mes -->
@@ -1067,21 +1060,19 @@
                 <!-- Resumen del Fondo de Insumos -->
                 <div class="card">
                     <h3>🎯 Fondo de Insumos (18%)</h3>
-                    <p style="font-size:12px;color:#999;margin-bottom:14px;">El 18% de cada ingreso se reserva automáticamente para recuperar la inversión en insumos.</p>
+                    <p style="font-size:12px;color:#999;margin-bottom:14px;">El 18% de cada ingreso se registra contablemente en este fondo. El dinero permanece en Efectivo o Nequi según el método de pago.</p>
 
                     <!-- Fila principal: acumulado + invertido -->
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
                         <div style="background:#f0fff4;border-radius:10px;padding:14px;border-left:4px solid #27ae60;">
-                            <div style="font-size:11px;color:#888;font-weight:bold;margin-bottom:4px;">💰 Fondo acumulado</div>
+                            <div style="font-size:11px;color:#888;font-weight:bold;margin-bottom:4px;">🎯 Total destinado al Fondo</div>
                             <div style="font-size:22px;font-weight:900;color:#27ae60;" id="fondoAcumuladoTotal">$0</div>
-                            <div style="font-size:10px;color:#aaa;margin-top:4px;">
-                                💵 Efectivo: <span id="fondoAcumuladoEfectivo">$0</span> &nbsp;|&nbsp; 📱 Nequi: <span id="fondoAcumuladoNequi">$0</span>
-                            </div>
+                            <div style="font-size:10px;color:#aaa;margin-top:4px;">18% de todos los ingresos (contable)</div>
                         </div>
                         <div style="background:#fff5f5;border-radius:10px;padding:14px;border-left:4px solid #e64980;">
-                            <div style="font-size:11px;color:#888;font-weight:bold;margin-bottom:4px;">🛒 Invertido en insumos</div>
+                            <div style="font-size:11px;color:#888;font-weight:bold;margin-bottom:4px;">💰 Total invertido en insumos</div>
                             <div style="font-size:22px;font-weight:900;color:#e64980;" id="fondoGastado">$0</div>
-                            <div style="font-size:10px;color:#aaa;margin-top:4px;">Total gastado en Insumos/Materiales y Kit Atención</div>
+                            <div style="font-size:10px;color:#aaa;margin-top:4px;">Insumos/Materiales + Kit Atención</div>
                         </div>
                     </div>
 
@@ -3496,24 +3487,20 @@
                 ubicacion: ubicacion
             });
 
-            // RESERVA AUTOMÁTICA DEL 18% — SOLO para ingresos por Nequi
-            // Los ingresos en efectivo NO generan reserva automática
-            if (ubicacion === 'nequi') {
-                const fondoInsumos = monto * 0.18;
-                transacciones.push({
-                    id: idIngreso + 1,
-                    tipo: 'reserva_fondo',
-                    monto: fondoInsumos,
-                    descripcion: `Fondo 18% - ${servicio}`,
-                    servicio: servicio,
-                    fecha,
-                    ubicacion: 'nequi',
-                    ingreso_vinculado: idIngreso
-                });
-                nequiFondoInsumos_Nequi += fondoInsumos;
-                nequiFondoInsumos += fondoInsumos;
-            }
-            // Efectivo: el ingreso queda 100% disponible, sin reserva automática
+            // RESERVA CONTABLE DEL 18% — aplica a TODOS los ingresos (efectivo y Nequi)
+            // Es un registro contable, no mueve dinero entre cuentas
+            const fondoInsumos = monto * 0.18;
+            transacciones.push({
+                id: idIngreso + 1,
+                tipo: 'reserva_fondo',
+                monto: fondoInsumos,
+                descripcion: `Fondo 18% - ${servicio}`,
+                servicio: servicio,
+                fecha,
+                ubicacion: ubicacion,
+                ingreso_vinculado: idIngreso
+            });
+            nequiFondoInsumos += fondoInsumos;
 
             document.getElementById('montoIngreso').value = '';
             document.getElementById('servicio').value = '';
@@ -4005,27 +3992,20 @@
             // PASO 3C: Calcular Disponible y Fondo Reservado por método
             // El fondo se calcula sobre TODO el historial (igual que el saldo), no solo el mes actual
             
-            // EFECTIVO — Reservado es lo que realmente está separado del saldo actual
-            const fondoAcumEfectivo = transacciones
-                .filter(t => t.tipo === 'reserva_fondo' && t.ubicacion === 'efectivo')
+            // EFECTIVO y NEQUI — el fondo es contable, no se reserva físicamente por cuenta
+            // El disponible es el saldo real de cada cuenta
+            // El "reservado" en el panel se elimina — el fondo se ve en Análisis Financiero
+            const fondoTotalContable = transacciones
+                .filter(t => t.tipo === 'reserva_fondo')
                 .reduce((s, t) => s + t.monto, 0);
-            const fondoSinUbicacion = transacciones
-                .filter(t => t.tipo === 'reserva_fondo' && !t.ubicacion)
-                .reduce((s, t) => s + t.monto, 0);
-            // El reservado real no puede ser mayor que el saldo disponible
-            const fondoEfectivoReal = Math.min(fondoAcumEfectivo + fondoSinUbicacion, saldoEfectivo);
-            const gananciaDisponibleEfectivo = Math.max(0, saldoEfectivo - fondoEfectivoReal);
-            document.getElementById('gananciaEfectivo').textContent = formatMoney(gananciaDisponibleEfectivo);
-            document.getElementById('fondoEfectivo').textContent = formatMoney(fondoEfectivoReal);
-            
-            // NEQUI — Reservado real no puede ser mayor que el saldo de Nequi
-            const fondoAcumNequi = transacciones
-                .filter(t => t.tipo === 'reserva_fondo' && t.ubicacion === 'nequi')
-                .reduce((s, t) => s + t.monto, 0);
-            const fondoNequiReal = Math.min(fondoAcumNequi, saldoNequi);
-            const gananciaDisponibleNequi = Math.max(0, saldoNequi - fondoNequiReal);
-            document.getElementById('gananciaNequi').textContent = formatMoney(gananciaDisponibleNequi);
-            document.getElementById('fondoNequi').textContent = formatMoney(fondoNequiReal);
+
+            // Efectivo: mostrar saldo completo como disponible (el 18% es contable, no físico)
+            document.getElementById('gananciaEfectivo').textContent = formatMoney(saldoEfectivo);
+            document.getElementById('fondoEfectivo').textContent = formatMoney(0);
+
+            // Nequi: mostrar saldo completo como disponible
+            document.getElementById('gananciaNequi').textContent = formatMoney(saldoNequi);
+            document.getElementById('fondoNequi').textContent = formatMoney(0);
 
             // Actualizar tabla de resumen por método
             const resumenTbody = document.getElementById('resumenDineroTable').querySelector('tbody');
@@ -4571,37 +4551,28 @@
         function actualizarFondoInsumos(resumen) {
             const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
 
-            // FONDO ACUMULADO: suma de todas las reservas_fondo de todos los tiempos
-            const fondoEfectivo = transacciones
-                .filter(t => t.tipo === 'reserva_fondo' && t.ubicacion === 'efectivo')
+            // FONDO ACUMULADO CONTABLE: 18% de TODOS los ingresos, sin importar método de pago
+            // Es un indicador contable — no mueve dinero físicamente entre cuentas
+            const fondoTotal = transacciones
+                .filter(t => t.tipo === 'reserva_fondo')
                 .reduce((s, t) => s + t.monto, 0);
-            const fondoNequi = transacciones
-                .filter(t => t.tipo === 'reserva_fondo' && t.ubicacion === 'nequi')
-                .reduce((s, t) => s + t.monto, 0);
-            // También incluir reservas sin ubicación (datos históricos)
-            const fondoSinUbicacion = transacciones
-                .filter(t => t.tipo === 'reserva_fondo' && !t.ubicacion)
-                .reduce((s, t) => s + t.monto, 0);
-            const fondoTotal = fondoEfectivo + fondoNequi + fondoSinUbicacion;
 
             // TOTAL INVERTIDO EN INSUMOS: todos los gastos de Insumos/Materiales y Kit Atención
             const totalInvertido = transacciones
-                .filter(t => t.tipo === 'gasto' && 
+                .filter(t => t.tipo === 'gasto' &&
                     (t.categoriaGasto === 'Insumos/Materiales' || t.categoriaGasto === 'Kit Atención Clientas'))
                 .reduce((s, t) => s + t.monto, 0);
 
-            // PENDIENTE: cuánto falta para recuperar la inversión
+            // PENDIENTE: cuánto falta para recuperar la inversión inicial
             const pendiente = Math.max(0, totalInvertido - fondoTotal);
 
-            // PROGRESO: qué porcentaje del total invertido ya se ha recuperado con el fondo
+            // PROGRESO: porcentaje de la inversión inicial ya recuperado con el fondo
             const porcentaje = totalInvertido > 0
                 ? Math.min(100, Math.round((fondoTotal / totalInvertido) * 100))
                 : (fondoTotal > 0 ? 100 : 0);
 
             // Actualizar pantalla
             set('fondoAcumuladoTotal', formatMoney(fondoTotal));
-            set('fondoAcumuladoEfectivo', formatMoney(fondoEfectivo + fondoSinUbicacion));
-            set('fondoAcumuladoNequi', formatMoney(fondoNequi));
             set('fondoGastado', formatMoney(totalInvertido));
             set('fondoPendiente', formatMoney(pendiente));
             set('fondoPorcentaje', porcentaje + '%');
@@ -4622,13 +4593,17 @@
             // Mensaje según estado
             const el = document.getElementById('fondoMensaje');
             if (el) {
-                if (totalInvertido === 0) {
+                if (totalInvertido === 0 && fondoTotal > 0) {
+                    el.textContent = `Fondo acumulado listo para futuras compras de insumos. Total disponible: ${formatMoney(fondoTotal)}`;
+                    el.style.color = '#27ae60';
+                } else if (totalInvertido === 0) {
                     el.textContent = 'Aún no hay inversiones en insumos registradas.';
+                    el.style.color = '#aaa';
                 } else if (porcentaje >= 100) {
-                    el.textContent = '✅ ¡Inversión en insumos completamente recuperada!';
+                    el.textContent = `🟢 ¡Inversión inicial recuperada! El fondo sigue acumulándose para futuras compras.`;
                     el.style.color = '#27ae60';
                 } else {
-                    el.textContent = `Con el 18% de cada ingreso, vas recuperando la inversión progresivamente. Llevas ${porcentaje}% recuperado.`;
+                    el.textContent = `El 18% de cada ingreso se destina contablemente al fondo. Llevas ${porcentaje}% de la inversión inicial recuperado.`;
                     el.style.color = '#888';
                 }
             }
