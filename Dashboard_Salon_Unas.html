@@ -1044,7 +1044,7 @@
                         <tbody></tbody>
                     </table>
                     <div id="finanzasIngresosEmpty" class="empty">No hay ingresos registrados para este mes</div>
-                    <p style="font-size: 12px; color: #666; margin-top: 10px;">* Ganancia Personal = Ingreso - 18% (Fondo de Insumos)</p>
+                    <p style="font-size: 12px; color: #666; margin-top: 10px;">* Pagos por Nequi: se reserva automáticamente el 18% para el Fondo de Insumos. Pagos en efectivo: quedan 100% disponibles.</p>
                 </div>
 
                 <!-- Tabla de Gastos del Mes -->
@@ -1101,6 +1101,20 @@
                         <div id="fondoProgresoBarra" style="height:100%;width:0%;background:linear-gradient(90deg,#27ae60,#2ecc71);border-radius:10px;transition:width 0.5s;"></div>
                     </div>
                     <div style="font-size:11px;color:#999;margin-top:6px;" id="fondoMensaje"></div>
+
+                    <!-- Aporte manual al fondo desde efectivo -->
+                    <div style="margin-top:16px;padding-top:14px;border-top:1px solid #f0e0e8;">
+                        <p style="font-size:12px;color:#888;margin-bottom:10px;">💵 ¿Quieres aportar dinero en efectivo al Fondo de Insumos manualmente?</p>
+                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                            <input type="number" id="aporteManualFondo" placeholder="Monto a aportar" min="0"
+                                style="flex:1;min-width:140px;padding:8px;border:1px solid #f0e0e8;border-radius:6px;font-size:13px;">
+                            <input type="date" id="aporteManualFecha"
+                                style="flex:1;min-width:140px;padding:8px;border:1px solid #f0e0e8;border-radius:6px;font-size:13px;">
+                            <button onclick="aportarManualAlFondo()" class="btn" style="background:#f39c12;white-space:nowrap;">
+                                ➕ Aportar al fondo
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Gráficos Sencillos -->
@@ -1647,6 +1661,40 @@
                 'DETALLE SIN UBICACIÓN:\n' +
                 sinUbicacion.map(t => t.fecha + ' $' + t.monto + ' | ' + (t.descripcion || '')).join('\n')
             );
+        }
+
+        // Aporte manual al Fondo de Insumos desde efectivo
+        function aportarManualAlFondo() {
+            const montoInput = document.getElementById('aporteManualFondo');
+            const fechaInput = document.getElementById('aporteManualFecha');
+            const monto = parseFloat(montoInput.value);
+            const fecha = fechaInput.value;
+
+            if (!monto || monto <= 0) {
+                alert('Ingresa un monto válido para aportar al fondo');
+                return;
+            }
+            if (!fecha) {
+                alert('Selecciona la fecha del aporte');
+                return;
+            }
+
+            transacciones.push({
+                id: Date.now(),
+                tipo: 'reserva_fondo',
+                monto: monto,
+                descripcion: 'Aporte manual al Fondo de Insumos',
+                fecha,
+                ubicacion: 'efectivo',
+                manual: true
+            });
+
+            montoInput.value = '';
+            fechaInput.value = '';
+
+            saveData();
+            actualizarAnalisisFinanzas();
+            alert(`✅ Aporte de ${formatMoney(monto)} registrado en el Fondo de Insumos.`);
         }
 
         // Forzar subida de datos locales a Firebase
@@ -3436,9 +3484,6 @@
                 return;
             }
 
-            // CALCULAR FONDO DE INSUMOS AUTOMÁTICAMENTE (18%)
-            const fondoInsumos = monto * 0.18;
-            
             // REGISTRAR INGRESO COMPLETO
             const idIngreso = Date.now();
             transacciones.push({
@@ -3451,27 +3496,24 @@
                 ubicacion: ubicacion
             });
 
-            // REGISTRAR RESERVA DE FONDO AUTOMÁTICAMENTE
-            transacciones.push({
-                id: idIngreso + 1,
-                tipo: 'reserva_fondo',
-                monto: fondoInsumos,
-                descripcion: `Fondo 18% - ${servicio}`,
-                servicio: servicio,
-                fecha,
-                ubicacion: ubicacion,
-                ingreso_vinculado: idIngreso
-            });
-            
-            // ACTUALIZAR BOLSILLO DE FONDO AUTOMÁTICAMENTE (SEPARADO POR MÉTODO)
-            nequiFondoInsumos += fondoInsumos;  // Total (para compatibilidad)
-            
-            // Separar fondo según método de pago
-            if (ubicacion === 'efectivo') {
-                nequiFondoInsumos_Efectivo += fondoInsumos;
-            } else if (ubicacion === 'nequi') {
+            // RESERVA AUTOMÁTICA DEL 18% — SOLO para ingresos por Nequi
+            // Los ingresos en efectivo NO generan reserva automática
+            if (ubicacion === 'nequi') {
+                const fondoInsumos = monto * 0.18;
+                transacciones.push({
+                    id: idIngreso + 1,
+                    tipo: 'reserva_fondo',
+                    monto: fondoInsumos,
+                    descripcion: `Fondo 18% - ${servicio}`,
+                    servicio: servicio,
+                    fecha,
+                    ubicacion: 'nequi',
+                    ingreso_vinculado: idIngreso
+                });
                 nequiFondoInsumos_Nequi += fondoInsumos;
+                nequiFondoInsumos += fondoInsumos;
             }
+            // Efectivo: el ingreso queda 100% disponible, sin reserva automática
 
             document.getElementById('montoIngreso').value = '';
             document.getElementById('servicio').value = '';
