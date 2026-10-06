@@ -3963,26 +3963,27 @@
             // PASO 3C: Calcular Disponible y Fondo Reservado por método
             // El fondo se calcula sobre TODO el historial (igual que el saldo), no solo el mes actual
             
-            // EFECTIVO — el "Reservado" es el fondo del 18% acumulado de ingresos en efectivo
-            const fondoReservadoEfectivo = transacciones
+            // EFECTIVO — Reservado es lo que realmente está separado del saldo actual
+            const fondoAcumEfectivo = transacciones
                 .filter(t => t.tipo === 'reserva_fondo' && t.ubicacion === 'efectivo')
                 .reduce((s, t) => s + t.monto, 0);
-            // También incluir reservas históricas sin ubicación en efectivo
             const fondoSinUbicacion = transacciones
                 .filter(t => t.tipo === 'reserva_fondo' && !t.ubicacion)
                 .reduce((s, t) => s + t.monto, 0);
-            const fondoEfectivoTotal = fondoReservadoEfectivo + fondoSinUbicacion;
-            const gananciaDisponibleEfectivo = Math.max(0, saldoEfectivo - fondoEfectivoTotal);
+            // El reservado real no puede ser mayor que el saldo disponible
+            const fondoEfectivoReal = Math.min(fondoAcumEfectivo + fondoSinUbicacion, saldoEfectivo);
+            const gananciaDisponibleEfectivo = Math.max(0, saldoEfectivo - fondoEfectivoReal);
             document.getElementById('gananciaEfectivo').textContent = formatMoney(gananciaDisponibleEfectivo);
-            document.getElementById('fondoEfectivo').textContent = formatMoney(fondoEfectivoTotal);
+            document.getElementById('fondoEfectivo').textContent = formatMoney(fondoEfectivoReal);
             
-            // NEQUI — el "Reservado" es el fondo del 18% acumulado de ingresos en Nequi
-            const fondoReservadoNequi = transacciones
+            // NEQUI — Reservado real no puede ser mayor que el saldo de Nequi
+            const fondoAcumNequi = transacciones
                 .filter(t => t.tipo === 'reserva_fondo' && t.ubicacion === 'nequi')
                 .reduce((s, t) => s + t.monto, 0);
-            const gananciaDisponibleNequi = Math.max(0, saldoNequi - fondoReservadoNequi);
+            const fondoNequiReal = Math.min(fondoAcumNequi, saldoNequi);
+            const gananciaDisponibleNequi = Math.max(0, saldoNequi - fondoNequiReal);
             document.getElementById('gananciaNequi').textContent = formatMoney(gananciaDisponibleNequi);
-            document.getElementById('fondoNequi').textContent = formatMoney(fondoReservadoNequi);
+            document.getElementById('fondoNequi').textContent = formatMoney(fondoNequiReal);
 
             // Actualizar tabla de resumen por método
             const resumenTbody = document.getElementById('resumenDineroTable').querySelector('tbody');
