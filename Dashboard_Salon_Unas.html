@@ -1067,29 +1067,40 @@
                 <!-- Resumen del Fondo de Insumos -->
                 <div class="card">
                     <h3>🎯 Fondo de Insumos (18%)</h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                        <!-- Fondo Efectivo -->
-                        <div style="background: #f9f3f6; padding: 12px; border-radius: 8px;">
-                            <div style="font-size: 11px; color: #666; margin-bottom: 3px; font-weight: bold;">💵 Efectivo</div>
-                            <div style="font-size: 16px; font-weight: bold; color: #27ae60;" id="fondoAcumuladoEfectivo">$0</div>
+                    <p style="font-size:12px;color:#999;margin-bottom:14px;">El 18% de cada ingreso se reserva automáticamente para recuperar la inversión en insumos.</p>
+
+                    <!-- Fila principal: acumulado + invertido -->
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+                        <div style="background:#f0fff4;border-radius:10px;padding:14px;border-left:4px solid #27ae60;">
+                            <div style="font-size:11px;color:#888;font-weight:bold;margin-bottom:4px;">💰 Fondo acumulado</div>
+                            <div style="font-size:22px;font-weight:900;color:#27ae60;" id="fondoAcumuladoTotal">$0</div>
+                            <div style="font-size:10px;color:#aaa;margin-top:4px;">
+                                💵 Efectivo: <span id="fondoAcumuladoEfectivo">$0</span> &nbsp;|&nbsp; 📱 Nequi: <span id="fondoAcumuladoNequi">$0</span>
+                            </div>
                         </div>
-                        <!-- Fondo Nequi -->
-                        <div style="background: #f9f3f6; padding: 12px; border-radius: 8px;">
-                            <div style="font-size: 11px; color: #666; margin-bottom: 3px; font-weight: bold;">📱 Nequi</div>
-                            <div style="font-size: 16px; font-weight: bold; color: #3498db;" id="fondoAcumuladoNequi">$0</div>
-                        </div>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                        <div style="background: #f9f3f6; padding: 15px; border-radius: 8px;">
-                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Gastado en Insumos</div>
-                            <div style="font-size: 20px; font-weight: bold; color: #e64980;" id="fondoGastado">$0</div>
-                        </div>
-                        <div style="background: #e8f8f5; padding: 15px; border-radius: 8px;">
-                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Disponible Total</div>
-                            <div style="font-size: 20px; font-weight: bold; color: #27ae60;" id="fondoDisponible">$0</div>
+                        <div style="background:#fff5f5;border-radius:10px;padding:14px;border-left:4px solid #e64980;">
+                            <div style="font-size:11px;color:#888;font-weight:bold;margin-bottom:4px;">🛒 Invertido en insumos</div>
+                            <div style="font-size:22px;font-weight:900;color:#e64980;" id="fondoGastado">$0</div>
+                            <div style="font-size:10px;color:#aaa;margin-top:4px;">Total gastado en Insumos/Materiales y Kit Atención</div>
                         </div>
                     </div>
+
+                    <!-- Pendiente por recuperar -->
+                    <div style="background:#fff8e1;border-radius:10px;padding:14px;margin-bottom:12px;border-left:4px solid #f39c12;">
+                        <div style="font-size:11px;color:#888;font-weight:bold;margin-bottom:4px;">⏳ Pendiente por recuperar</div>
+                        <div style="font-size:22px;font-weight:900;color:#f39c12;" id="fondoPendiente">$0</div>
+                        <div style="font-size:10px;color:#aaa;margin-top:4px;">Cuánto falta para recuperar la inversión total en insumos</div>
+                    </div>
+
+                    <!-- Barra de progreso -->
+                    <div style="margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:12px;color:#666;font-weight:bold;">📈 Progreso de recuperación</span>
+                        <span style="font-size:14px;font-weight:900;color:#27ae60;" id="fondoPorcentaje">0%</span>
+                    </div>
+                    <div style="background:#f0f0f0;border-radius:10px;height:14px;overflow:hidden;">
+                        <div id="fondoProgresoBarra" style="height:100%;width:0%;background:linear-gradient(90deg,#27ae60,#2ecc71);border-radius:10px;transition:width 0.5s;"></div>
+                    </div>
+                    <div style="font-size:11px;color:#999;margin-top:6px;" id="fondoMensaje"></div>
                 </div>
 
                 <!-- Gráficos Sencillos -->
@@ -3952,26 +3963,23 @@
             // PASO 3C: Calcular Disponible y Fondo Reservado por método
             // El fondo se calcula sobre TODO el historial (igual que el saldo), no solo el mes actual
             
-            // EFECTIVO — fondo acumulado histórico total
-            const fondoGeneradoEfectivo = transacciones
+            // EFECTIVO — el "Reservado" es el fondo del 18% acumulado de ingresos en efectivo
+            const fondoReservadoEfectivo = transacciones
                 .filter(t => t.tipo === 'reserva_fondo' && t.ubicacion === 'efectivo')
                 .reduce((s, t) => s + t.monto, 0);
-            const gastosInsumoEfectivo = transacciones
-                .filter(t => t.tipo === 'gasto' && t.categoriaGasto === 'Insumos/Materiales' && (t.ubicacion === 'efectivo' || !t.ubicacion))
+            // También incluir reservas históricas sin ubicación en efectivo
+            const fondoSinUbicacion = transacciones
+                .filter(t => t.tipo === 'reserva_fondo' && !t.ubicacion)
                 .reduce((s, t) => s + t.monto, 0);
-            const fondoReservadoEfectivo = Math.max(0, fondoGeneradoEfectivo - gastosInsumoEfectivo);
-            const gananciaDisponibleEfectivo = Math.max(0, saldoEfectivo - fondoReservadoEfectivo);
+            const fondoEfectivoTotal = fondoReservadoEfectivo + fondoSinUbicacion;
+            const gananciaDisponibleEfectivo = Math.max(0, saldoEfectivo - fondoEfectivoTotal);
             document.getElementById('gananciaEfectivo').textContent = formatMoney(gananciaDisponibleEfectivo);
-            document.getElementById('fondoEfectivo').textContent = formatMoney(fondoReservadoEfectivo);
+            document.getElementById('fondoEfectivo').textContent = formatMoney(fondoEfectivoTotal);
             
-            // NEQUI — fondo acumulado histórico total
-            const fondoGeneradoNequi = transacciones
+            // NEQUI — el "Reservado" es el fondo del 18% acumulado de ingresos en Nequi
+            const fondoReservadoNequi = transacciones
                 .filter(t => t.tipo === 'reserva_fondo' && t.ubicacion === 'nequi')
                 .reduce((s, t) => s + t.monto, 0);
-            const gastosInsumoNequi = transacciones
-                .filter(t => t.tipo === 'gasto' && t.categoriaGasto === 'Insumos/Materiales' && t.ubicacion === 'nequi')
-                .reduce((s, t) => s + t.monto, 0);
-            const fondoReservadoNequi = Math.max(0, fondoGeneradoNequi - gastosInsumoNequi);
             const gananciaDisponibleNequi = Math.max(0, saldoNequi - fondoReservadoNequi);
             document.getElementById('gananciaNequi').textContent = formatMoney(gananciaDisponibleNequi);
             document.getElementById('fondoNequi').textContent = formatMoney(fondoReservadoNequi);
@@ -4518,35 +4526,68 @@
          * Actualizar información del fondo de insumos
          */
         function actualizarFondoInsumos(resumen) {
-            // Calcular fondos acumulados separados por método
-            const ingresosEfectivo = transacciones
-                .filter(t => t.tipo === 'ingreso' && t.ubicacion === 'efectivo')
+            const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
+            // FONDO ACUMULADO: suma de todas las reservas_fondo de todos los tiempos
+            const fondoEfectivo = transacciones
+                .filter(t => t.tipo === 'reserva_fondo' && t.ubicacion === 'efectivo')
                 .reduce((s, t) => s + t.monto, 0);
-            const fondoEfectivo = ingresosEfectivo * 0.18;
-            
-            const ingresosNequi = transacciones
-                .filter(t => t.tipo === 'ingreso' && t.ubicacion === 'nequi')
+            const fondoNequi = transacciones
+                .filter(t => t.tipo === 'reserva_fondo' && t.ubicacion === 'nequi')
                 .reduce((s, t) => s + t.monto, 0);
-            const fondoNequi = ingresosNequi * 0.18;
-            
-            // Mostrar fondos separados
-            document.getElementById('fondoAcumuladoEfectivo').textContent = formatMoney(fondoEfectivo);
-            document.getElementById('fondoAcumuladoNequi').textContent = formatMoney(fondoNequi);
-            
-            // Mostrar totales
-            document.getElementById('fondoGastado').textContent = formatMoney(resumen.gastosInsumos);
-            document.getElementById('fondoDisponible').textContent = formatMoney(resumen.fondoDisponible);
-            
-            // Calcular porcentaje para la barra de progreso
-            const fondoTotal = fondoEfectivo + fondoNequi;
-            const porcentajeUsado = fondoTotal > 0 
-                ? (resumen.gastosInsumos / fondoTotal * 100)
-                : 0;
-            
-            // Actualizar barra si existe
-            const barra = document.querySelector('#fondoProgresoBarra div');
+            // También incluir reservas sin ubicación (datos históricos)
+            const fondoSinUbicacion = transacciones
+                .filter(t => t.tipo === 'reserva_fondo' && !t.ubicacion)
+                .reduce((s, t) => s + t.monto, 0);
+            const fondoTotal = fondoEfectivo + fondoNequi + fondoSinUbicacion;
+
+            // TOTAL INVERTIDO EN INSUMOS: todos los gastos de Insumos/Materiales y Kit Atención
+            const totalInvertido = transacciones
+                .filter(t => t.tipo === 'gasto' && 
+                    (t.categoriaGasto === 'Insumos/Materiales' || t.categoriaGasto === 'Kit Atención Clientas'))
+                .reduce((s, t) => s + t.monto, 0);
+
+            // PENDIENTE: cuánto falta para recuperar la inversión
+            const pendiente = Math.max(0, totalInvertido - fondoTotal);
+
+            // PROGRESO: qué porcentaje del total invertido ya se ha recuperado con el fondo
+            const porcentaje = totalInvertido > 0
+                ? Math.min(100, Math.round((fondoTotal / totalInvertido) * 100))
+                : (fondoTotal > 0 ? 100 : 0);
+
+            // Actualizar pantalla
+            set('fondoAcumuladoTotal', formatMoney(fondoTotal));
+            set('fondoAcumuladoEfectivo', formatMoney(fondoEfectivo + fondoSinUbicacion));
+            set('fondoAcumuladoNequi', formatMoney(fondoNequi));
+            set('fondoGastado', formatMoney(totalInvertido));
+            set('fondoPendiente', formatMoney(pendiente));
+            set('fondoPorcentaje', porcentaje + '%');
+
+            // Barra de progreso
+            const barra = document.getElementById('fondoProgresoBarra');
             if (barra) {
-                barra.style.width = Math.min(porcentajeUsado, 100) + '%';
+                barra.style.width = porcentaje + '%';
+                if (porcentaje >= 100) {
+                    barra.style.background = 'linear-gradient(90deg, #27ae60, #2ecc71)';
+                } else if (porcentaje >= 50) {
+                    barra.style.background = 'linear-gradient(90deg, #f39c12, #f1c40f)';
+                } else {
+                    barra.style.background = 'linear-gradient(90deg, #e64980, #ff6b9d)';
+                }
+            }
+
+            // Mensaje según estado
+            const el = document.getElementById('fondoMensaje');
+            if (el) {
+                if (totalInvertido === 0) {
+                    el.textContent = 'Aún no hay inversiones en insumos registradas.';
+                } else if (porcentaje >= 100) {
+                    el.textContent = '✅ ¡Inversión en insumos completamente recuperada!';
+                    el.style.color = '#27ae60';
+                } else {
+                    el.textContent = `Con el 18% de cada ingreso, vas recuperando la inversión progresivamente. Llevas ${porcentaje}% recuperado.`;
+                    el.style.color = '#888';
+                }
             }
         }
 
