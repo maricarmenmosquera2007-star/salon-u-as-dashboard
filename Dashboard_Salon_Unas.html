@@ -7,6 +7,7 @@
     
     <!-- Firebase SDK - COMPAT VERSION (compatible con HTML puro) -->
     <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-database-compat.js"></script>
     
     <style>
@@ -347,7 +348,28 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- ETAPA 0D: PANTALLA DE INICIO DE SESIÓN -->
+    <div id="loginOverlay" style="position:fixed;inset:0;z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#fff5f9 0%,#ffffff 100%);">
+        <div style="width:100%;max-width:360px;background:#fff;border:1px solid #f0e0e8;border-radius:16px;padding:28px 24px;box-shadow:0 4px 20px rgba(230,100,150,0.15);text-align:center;">
+            <div style="font-size:40px;line-height:1;">💅</div>
+            <h1 style="margin:8px 0 4px;font-size:24px;color:#d4547e;">Mari Nails</h1>
+            <p style="margin:0 0 20px;font-size:13px;color:#999;">Dashboard privado</p>
+            <div id="loginCargando" style="font-size:13px;color:#d4547e;padding:10px 0;">Cargando…</div>
+            <form id="loginForm" style="display:none;text-align:left;" onsubmit="iniciarSesion(event)">
+                <label for="loginEmail" style="font-size:12px;font-weight:600;color:#d4547e;">Correo electrónico</label>
+                <input type="email" id="loginEmail" autocomplete="username" required style="width:100%;margin:4px 0 12px;">
+                <label for="loginPassword" style="font-size:12px;font-weight:600;color:#d4547e;">Contraseña</label>
+                <input type="password" id="loginPassword" autocomplete="current-password" required style="width:100%;margin:4px 0 16px;">
+                <button type="submit" id="loginBoton" class="btn" style="width:100%;">Iniciar sesión</button>
+                <div style="text-align:center;margin-top:12px;">
+                    <span onclick="recuperarContrasena()" style="font-size:12px;color:#999;cursor:pointer;text-decoration:underline;">¿Olvidaste tu contraseña?</span>
+                </div>
+            </form>
+            <div id="loginMensaje" style="font-size:12px;color:#e64980;margin-top:12px;min-height:16px;"></div>
+        </div>
+    </div>
+
+    <div class="container" id="appContainer" style="display:none;">
         <h1>💅 Dashboard Mari Nails</h1>
 
         <!-- Indicador de Guardado -->
@@ -1212,6 +1234,13 @@
                         <button onclick="forzarSubidaAFirebase()" style="background:#e17055;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:11px;">⬆️ Subir mis datos</button>
                         <button onclick="forzarDescargaDeFirebase()" style="background:#0984e3;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:11px;">⬇️ Descargar de Firebase</button>
                     </div>
+                    <!-- ETAPA 0B/0C: Respaldo y restauración -->
+                    <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-top:10px; padding-top:10px; border-top:1px dashed #f0e0e8;">
+                        <button onclick="descargarRespaldoJSON('respaldo')" style="background:#27ae60;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:11px;">💾 Descargar respaldo JSON</button>
+                        <button onclick="document.getElementById('archivoRestaurar').click()" style="background:#8e44ad;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:11px;">♻️ Restaurar respaldo</button>
+                        <input type="file" id="archivoRestaurar" accept=".json,application/json" style="display:none;" onchange="restaurarRespaldoJSON(this)">
+                        <button onclick="cerrarSesion()" style="background:#95a5a6;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:11px;">🚪 Cerrar sesión</button>
+                    </div>
                     <div id="sincMensaje" style="font-size:11px;color:#27ae60;margin-top:6px;"></div>
                 </div>
             </div>
@@ -1688,6 +1717,157 @@
             alert(`✅ Aporte de ${formatMoney(monto)} registrado en el Fondo de Insumos.`);
         }
 
+        // ===== ETAPA 0B: RESPALDO COMPLETO EN JSON (solo lee, no modifica datos) =====
+        function _pad2(n) { return String(n).padStart(2, '0'); }
+
+        function construirRespaldo() {
+            const d = new Date();
+            const claves = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k && (k.startsWith('salon_') || k.startsWith('ultim'))) claves[k] = localStorage.getItem(k);
+            }
+            return {
+                _meta: {
+                    app: 'Mari Nails Dashboard',
+                    formato: 1,
+                    creado: d.toISOString(),
+                    creadoLocal: d.toLocaleString('es-CO'),
+                    resumen: {
+                        clientes: clientes.length,
+                        transacciones: transacciones.length,
+                        tareasPlan: planMensual.length,
+                        semanasEmbudo: JSON.parse(localStorage.getItem('salon_embudo') || '[]').length
+                    }
+                },
+                datos: {
+                    clientes: clientes,
+                    transacciones: transacciones,
+                    metasMensuales: metasMensuales,
+                    metasContenido: metasContenido,
+                    planMensual: planMensual,
+                    embudoSemanas: JSON.parse(localStorage.getItem('salon_embudo') || '[]'),
+                    mesActual: localStorage.getItem('salon_mes_actual') || ''
+                },
+                localStorage: claves
+            };
+        }
+
+        function descargarRespaldoJSON(prefijo) {
+            try {
+                const d = new Date();
+                const sello = d.getFullYear() + '-' + _pad2(d.getMonth() + 1) + '-' + _pad2(d.getDate()) + '_' + _pad2(d.getHours()) + _pad2(d.getMinutes());
+                const nombre = (prefijo || 'respaldo') + '_mari_nails_' + sello + '.json';
+                const blob = new Blob([JSON.stringify(construirRespaldo(), null, 2)], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = nombre;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                const msg = document.getElementById('sincMensaje');
+                if (msg) msg.innerHTML = '✅ Respaldo descargado: ' + nombre;
+                return true;
+            } catch (e) {
+                alert('No se pudo crear el respaldo: ' + e.message);
+                return false;
+            }
+        }
+
+        // ===== ETAPA 0C: RESTAURAR RESPALDO (valida, respalda lo actual y pide confirmación) =====
+        function _normalizarRespaldo(obj) {
+            // Formato del botón (datos + _meta)
+            if (obj && obj.datos && Array.isArray(obj.datos.clientes)) {
+                const d = obj.datos;
+                return {
+                    clientes: d.clientes,
+                    transacciones: Array.isArray(d.transacciones) ? d.transacciones : [],
+                    metasMensuales: d.metasMensuales || {},
+                    metasContenido: d.metasContenido || {},
+                    planMensual: Array.isArray(d.planMensual) ? d.planMensual : [],
+                    embudoSemanas: Array.isArray(d.embudoSemanas) ? d.embudoSemanas : [],
+                    mesActual: d.mesActual || ''
+                };
+            }
+            // Formato del respaldo hecho desde la consola (claves de localStorage como texto)
+            if (obj && typeof obj.salon_clientes === 'string') {
+                const leer = (k, def) => { try { return obj[k] ? JSON.parse(obj[k]) : def; } catch (e) { return null; } };
+                return {
+                    clientes: leer('salon_clientes', []),
+                    transacciones: leer('salon_transacciones', []),
+                    metasMensuales: leer('salon_metas_mensuales', {}),
+                    metasContenido: leer('salon_metas_contenido', {}),
+                    planMensual: leer('salon_plan_mensual', []),
+                    embudoSemanas: leer('salon_embudo', []),
+                    mesActual: obj.salon_mes_actual || ''
+                };
+            }
+            return null;
+        }
+
+        function restaurarRespaldoJSON(input) {
+            const archivo = input.files && input.files[0];
+            input.value = '';
+            if (!archivo) return;
+            const msg = document.getElementById('sincMensaje');
+            const lector = new FileReader();
+            lector.onload = function () {
+                let datos = null;
+                try { datos = _normalizarRespaldo(JSON.parse(lector.result)); } catch (e) { datos = null; }
+
+                const valido = datos &&
+                    Array.isArray(datos.clientes) && Array.isArray(datos.transacciones) &&
+                    Array.isArray(datos.planMensual) && Array.isArray(datos.embudoSemanas) &&
+                    datos.metasMensuales && typeof datos.metasMensuales === 'object' &&
+                    datos.metasContenido && typeof datos.metasContenido === 'object';
+                if (!valido) {
+                    alert('❌ Este archivo no parece un respaldo válido de Mari Nails. No se cambió nada.');
+                    if (msg) msg.innerHTML = '❌ Archivo no válido. No se cambió nada.';
+                    return;
+                }
+                if (datos.clientes.length === 0 && datos.transacciones.length === 0) {
+                    alert('❌ Este respaldo no tiene clientas ni transacciones. Por seguridad no se restaura. No se cambió nada.');
+                    return;
+                }
+
+                const resumen =
+                    'Respaldo: ' + datos.clientes.length + ' clientas, ' + datos.transacciones.length + ' transacciones, ' +
+                    datos.planMensual.length + ' tareas del plan, ' + datos.embudoSemanas.length + ' semanas de embudo.\n\n' +
+                    'Ahora mismo: ' + clientes.length + ' clientas, ' + transacciones.length + ' transacciones, ' +
+                    planMensual.length + ' tareas del plan.\n\n' +
+                    'Esto REEMPLAZA los datos de este dispositivo y también los subirá a Firebase.\n' +
+                    'Antes de reemplazar se descargará automáticamente un respaldo de lo actual.\n\n¿Continuar?';
+                if (!confirm(resumen)) {
+                    if (msg) msg.innerHTML = 'Restauración cancelada. No se cambió nada.';
+                    return;
+                }
+
+                // Seguro: respaldo automático del estado actual antes de reemplazar
+                if (!descargarRespaldoJSON('antes_de_restaurar')) {
+                    alert('No se pudo guardar el respaldo previo. Se cancela la restauración.');
+                    return;
+                }
+
+                clientes = datos.clientes;
+                transacciones = datos.transacciones;
+                metasMensuales = datos.metasMensuales;
+                metasContenido = datos.metasContenido;
+                planMensual = datos.planMensual;
+                embudoSemanas = datos.embudoSemanas;
+                localStorage.setItem('salon_embudo', JSON.stringify(datos.embudoSemanas));
+                if (datos.mesActual) localStorage.setItem('salon_mes_actual', datos.mesActual);
+
+                saveData();                      // guarda en localStorage y Firebase
+                calcularElegibilidadBeneficio();
+                render();
+                generarCalendarioPerfecto();
+                if (msg) msg.innerHTML = '✅ Restauración completada (' + datos.clientes.length + ' clientas, ' + datos.transacciones.length + ' transacciones).';
+                alert('✅ Respaldo restaurado.');
+            };
+            lector.onerror = function () { alert('No se pudo leer el archivo.'); };
+            lector.readAsText(archivo);
+        }
+
         // Forzar subida de datos locales a Firebase
         function forzarSubidaAFirebase() {
             const msg = document.getElementById('sincMensaje');
@@ -1713,6 +1893,13 @@
 
         // Guardar en Firebase — sube todos los datos y registra los timestamps de sincronización
         function guardarEnFirebase() {
+            // PROTECCIÓN (Etapa 0): nunca subir una base vacía. Si este dispositivo aún no tiene
+            // clientas ni transacciones (p. ej. almacenamiento recién creado o limpiado), subir
+            // reemplazaría los datos reales de Firebase por datos vacíos.
+            if (clientes.length === 0 && transacciones.length === 0) {
+                console.warn('🛡️ Subida a Firebase bloqueada: este dispositivo no tiene clientas ni transacciones. Se protege la copia de Firebase.');
+                return;
+            }
             const timestamp = new Date().getTime();
             const dataToSave = {
                 clientes:       clientes,
@@ -6276,31 +6463,121 @@
             }
         }
 
-        // Inicializar
-        loadData();
-        
-        // Migrar metas de octubre si ya existían sin los campos de plataforma
-        migrarMetasOctubre();
-        
-        // PASO 5.5: Migrar datos antiguos si es necesario
-        const huboMigracion = migrarDatosAntiguos();
-        
-        // Renderizar interfaz PRIMERO (y aplicar cambios si hubo migración)
-        render();
-        
-        // Inicializar subpestaña de Finanzas por defecto
-        cambiarSeccionFinanzas('ingreso');
-        
-        // Iniciar sistema de recordatorios y notificaciones
-        iniciarVerificadorRecordatorios();
-        
-        // Configurar evento para cerrar modal haciendo click afuera
-        document.addEventListener('click', function(event) {
-            const modal = document.getElementById('modalDetalleActividad');
-            if (event.target === modal) {
-                cerrarModalActividad();
+        // ===== ETAPA 0D: INICIO DE SESIÓN (Firebase Authentication) =====
+        // UID de la cuenta propietaria (Firebase → Authentication → Usuarios). No es una contraseña.
+        const UID_PROPIETARIA = 'E8n779SuNvS3wjbC44mBuoPr2XX2';
+        let appIniciada = false;
+
+        // Arranque original de la aplicación — ahora solo se ejecuta después de iniciar sesión
+        function iniciarApp() {
+            if (appIniciada) return;
+            appIniciada = true;
+
+            // Inicializar
+            loadData();
+
+            // Migrar metas de octubre si ya existían sin los campos de plataforma
+            migrarMetasOctubre();
+
+            // PASO 5.5: Migrar datos antiguos si es necesario
+            const huboMigracion = migrarDatosAntiguos();
+
+            // Renderizar interfaz PRIMERO (y aplicar cambios si hubo migración)
+            render();
+
+            // Inicializar subpestaña de Finanzas por defecto
+            cambiarSeccionFinanzas('ingreso');
+
+            // Iniciar sistema de recordatorios y notificaciones
+            iniciarVerificadorRecordatorios();
+
+            // Configurar evento para cerrar modal haciendo click afuera
+            document.addEventListener('click', function(event) {
+                const modal = document.getElementById('modalDetalleActividad');
+                if (event.target === modal) {
+                    cerrarModalActividad();
+                }
+            });
+        }
+
+        function _loginMostrar(estado, mensaje) {
+            // estado: 'cargando' | 'formulario' | 'app'
+            const overlay = document.getElementById('loginOverlay');
+            const app = document.getElementById('appContainer');
+            if (estado === 'app') {
+                overlay.style.display = 'none';
+                app.style.display = 'block';
+                return;
             }
-        });
+            overlay.style.display = 'flex';
+            app.style.display = 'none';
+            document.getElementById('loginCargando').style.display = estado === 'cargando' ? 'block' : 'none';
+            document.getElementById('loginForm').style.display = estado === 'formulario' ? 'block' : 'none';
+            document.getElementById('loginMensaje').textContent = mensaje || '';
+        }
+
+        function _mensajeErrorLogin(error) {
+            const c = error && error.code;
+            if (c === 'auth/invalid-credential' || c === 'auth/wrong-password' || c === 'auth/user-not-found' || c === 'auth/invalid-login-credentials') return 'Correo o contraseña incorrectos.';
+            if (c === 'auth/invalid-email') return 'El correo no tiene un formato válido.';
+            if (c === 'auth/too-many-requests') return 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.';
+            if (c === 'auth/network-request-failed') return 'Sin conexión. Revisa tu internet e inténtalo de nuevo.';
+            if (c === 'auth/operation-not-supported-in-this-environment') return 'El inicio de sesión no funciona abriendo el archivo directamente. Ábrelo desde su dirección web (https).';
+            if (c === 'auth/unauthorized-domain') return 'Esta dirección web no está autorizada en Firebase (Authentication → Configuración → Dominios autorizados).';
+            return 'No se pudo iniciar sesión (' + (c || 'error desconocido') + ').';
+        }
+
+        function iniciarSesion(event) {
+            if (event) event.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const pass = document.getElementById('loginPassword').value;
+            const boton = document.getElementById('loginBoton');
+            const msg = document.getElementById('loginMensaje');
+            if (!email || !pass) { msg.textContent = 'Escribe tu correo y tu contraseña.'; return; }
+            boton.disabled = true;
+            msg.style.color = '#d4547e';
+            msg.textContent = 'Entrando…';
+            firebase.auth().signInWithEmailAndPassword(email, pass)
+                .then(() => { document.getElementById('loginPassword').value = ''; })
+                .catch((error) => {
+                    msg.style.color = '#e64980';
+                    msg.textContent = _mensajeErrorLogin(error);
+                })
+                .finally(() => { boton.disabled = false; });
+        }
+
+        function recuperarContrasena() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const msg = document.getElementById('loginMensaje');
+            if (!email) { msg.style.color = '#e64980'; msg.textContent = 'Escribe primero tu correo arriba y vuelve a pulsar esta opción.'; return; }
+            firebase.auth().sendPasswordResetEmail(email)
+                .then(() => { msg.style.color = '#27ae60'; msg.textContent = 'Si el correo está registrado, te enviamos un enlace para cambiar la contraseña.'; })
+                .catch((error) => { msg.style.color = '#e64980'; msg.textContent = _mensajeErrorLogin(error); });
+        }
+
+        function cerrarSesion() {
+            if (!confirm('¿Cerrar sesión en este dispositivo?')) return;
+            firebase.auth().signOut().then(() => location.reload());
+        }
+
+        (function vigilarSesion() {
+            if (typeof firebase.auth !== 'function') {
+                _loginMostrar('cargando', 'No se pudo cargar el inicio de sesión. Revisa tu conexión y recarga la página.');
+                return;
+            }
+            _loginMostrar('cargando');
+            firebase.auth().onAuthStateChanged((user) => {
+                if (!user) {
+                    _loginMostrar('formulario');
+                } else if (user.uid !== UID_PROPIETARIA) {
+                    // Cuenta distinta a la propietaria: se cierra la sesión sin mostrar datos
+                    firebase.auth().signOut().then(() => _loginMostrar('formulario', 'Esta cuenta no tiene acceso al dashboard.'));
+                } else {
+                    _loginMostrar('app');
+                    iniciarApp();
+                }
+            });
+        })();
     </script>
 </body>
 </html>
