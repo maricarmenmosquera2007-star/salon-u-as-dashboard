@@ -1238,6 +1238,7 @@
 
             <!-- ===== DISPONIBILIDAD ===== -->
             <div id="agSecDisp">
+                <div id="agSolicitudes"><div id="agSolicLista"></div><div id="agMsgSolic" style="font-size:13px;margin:0 0 10px;"></div></div>
                 <div class="card">
                     <h3>📋 Citas</h3>
                     <p style="font-size:12px;color:#999;margin:4px 0 10px;">Las citas confirmadas. Cuando atiendas a una clienta, márcala como “Atendida” y se registra el ingreso en Finanzas.</p>
@@ -6681,7 +6682,7 @@
         function agConfigVacia() {
             return {
                 version: 1, updatedAt: 0, servicios: [], adicionales: [],
-                reglas: { retencionHoras: null, anticipo: { activo: false, tipo: 'monto', valor: null, instrucciones: '' }, whatsapp: '', instagram: '', mostrarPrecios: true }
+                reglas: { retencionHoras: null, anticipo: { activo: false, tipo: 'monto', valor: null, instrucciones: '' }, whatsapp: '', instagram: '', mostrarPrecios: true, portalActivo: false }
             };
         }
         // Firebase elimina arrays vacíos y puede devolver arrays como objetos: se normaliza al leer
@@ -6703,7 +6704,7 @@
             c.reglas = {
                 retencionHoras: agNum(r.retencionHoras),
                 anticipo: { activo: !!a.activo, tipo: a.tipo === 'porcentaje' ? 'porcentaje' : 'monto', valor: agNum(a.valor), instrucciones: String(a.instrucciones || '') },
-                whatsapp: String(r.whatsapp || ''), instagram: String(r.instagram || ''), mostrarPrecios: r.mostrarPrecios !== false
+                whatsapp: String(r.whatsapp || ''), instagram: String(r.instagram || ''), mostrarPrecios: r.mostrarPrecios !== false, portalActivo: !!r.portalActivo
             };
             return c;
         }
@@ -6777,7 +6778,7 @@
                 return database.ref('config_privada').set({ direccion: agPrivada.direccion || null, updatedAt: datos.updatedAt }).then(() => {
                     agPrivada.updatedAt = datos.updatedAt;
                     try { localStorage.setItem('salon_agenda_privada', JSON.stringify(agPrivada)); } catch (e) { }
-                    agSucia = false; agRenderSucia(); agLimpiarAviso(); agMsg('agMsgConfig', '✅ Guardado y sincronizado.');
+                    agSucia = false; agRenderSucia(); agLimpiarAviso(); agMsg('agMsgConfig', '✅ Guardado y sincronizado.'); agPubProgramar();
                 }, err => { agErrorEscritura(err, 'agMsgConfig'); agMsg('agMsgConfig', 'Servicios y reglas guardados, pero la dirección no: faltan las reglas de “config_privada”.', '#e64980'); });
             }).catch(err => agErrorEscritura(err, 'agMsgConfig'));
         }
@@ -6799,6 +6800,7 @@
                 if (agSucia) return;
                 const v = snap.val();
                 if (v) { agConfig = agNormConfig(v); agGuardarCache(); }
+                agListoCfg = true; agPubProgramar();
                 agPoblarIngresos();
                 if (agSubActual === 'serv') agRenderServ();
             }).catch(err => agAvisoFirebase(err));
@@ -6929,9 +6931,14 @@
                 (ayuda ? '<div style="font-size:11px;color:#aaa;margin-top:2px;">' + ayuda + '</div>' : '') + '</div>';
             el.innerHTML =
                 '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;">' +
-                input('retencionHoras', 'Horas que una solicitud pendiente retiene el espacio', 'En blanco = sin vencimiento automático (tú decides cuándo liberar). Lo definimos juntas antes del portal.', 'number', 'min="1" step="1" placeholder="Sin definir"') +
+                input('retencionHoras', 'Horas que una solicitud pendiente aparta el espacio', 'En blanco = 24 horas. Pasado ese tiempo sin que la confirmes, el espacio se libera solo para otra clienta.', 'number', 'min="1" step="1" placeholder="24"') +
                 input('whatsapp', 'Tu WhatsApp', 'Para los mensajes de confirmación.', 'tel', 'placeholder="3001234567"') +
                 input('instagram', 'Instagram (sin @)', '', 'text', '') + '</div>' +
+                '<div style="margin:14px 0;padding:12px;border:1px solid #f4a6c1;border-radius:10px;background:#fff5f9;">' +
+                '<label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#d4547e;"><input type="checkbox" ' + (r.portalActivo ? 'checked' : '') + ' onchange="agRegla(\'portalActivo\',this.checked,\'bool\')"> 🌸 Portal de clientas activo</label>' +
+                '<div style="font-size:12px;color:#888;margin:4px 0 8px;">Si lo activas (y guardas), las clientas ven solo los espacios libres que tú abriste y pueden pedir cita. Si lo desactivas, el portal queda vacío.</div>' +
+                '<div style="font-size:12px;color:#555;">🔗 Enlace del portal: <b id="agPortalUrl" style="word-break:break-all;"></b> <button class="btn btn-small" onclick="agCopiarPortal()" style="margin-left:4px;">Copiar</button></div>' +
+                '<div id="agPubEstado" style="font-size:12px;margin-top:8px;color:#888;"></div></div>' +
                 '<label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:14px 0 6px;"><input type="checkbox" ' + (r.mostrarPrecios ? 'checked' : '') + ' onchange="agRegla(\'mostrarPrecios\',this.checked,\'bool\')"> Mostrar los precios en el portal de clientas</label>' +
                 '<div style="font-size:12px;color:#999;margin-bottom:12px;">📍 La dirección no se publica: la envías tú por WhatsApp cuando confirmes la cita.</div>' +
                 '<div style="padding:12px;border:1px solid #f0e0e8;border-radius:10px;background:#fffafc;">' +
@@ -6941,6 +6948,12 @@
                     '<div>' + agLbl('Tipo') + '<select style="width:100%;" onchange="agAnticipo(\'tipo\',this.value)"><option value="monto" ' + (an.tipo === 'monto' ? 'selected' : '') + '>Monto fijo (COP)</option><option value="porcentaje" ' + (an.tipo === 'porcentaje' ? 'selected' : '') + '>Porcentaje del servicio</option></select></div>' +
                     '<div>' + agLbl('Valor') + '<input type="number" style="width:100%;" min="0" value="' + (an.valor == null ? '' : an.valor) + '" onchange="agAnticipo(\'valor\',this.value)"></div>' +
                     '<div style="grid-column:1/-1;">' + agLbl('Instrucciones de pago (opcional)') + '<input type="text" style="width:100%;" value="' + agEsc(an.instrucciones) + '" onchange="agAnticipo(\'instrucciones\',this.value)"></div></div>' : '') + '</div>';
+            const u = document.getElementById('agPortalUrl'); if (u) u.textContent = agUrlPortal();
+        }
+        function agUrlPortal() { try { return new URL('reservar.html', location.href).href; } catch (e) { return 'reservar.html'; } }
+        function agCopiarPortal() {
+            const u = agUrlPortal();
+            try { navigator.clipboard.writeText(u).then(() => agPubMsg('📋 Enlace copiado.', '#27ae60'), () => prompt('Copia el enlace:', u)); } catch (e) { prompt('Copia el enlace:', u); }
         }
         function agRenderMensaje() {
             const el = document.getElementById('agMensaje'); if (!el) return;
@@ -6984,7 +6997,7 @@
         function agIniciarListener() {
             try { agAgenda = agNormAgenda(JSON.parse(localStorage.getItem('salon_agenda_cache') || 'null')); } catch (e) { agAgenda = {}; }
             database.ref('agenda').on('value', snap => {
-                agAgenda = agNormAgenda(snap.val());
+                agAgenda = agNormAgenda(snap.val()); agListoAg = true;
                 try { localStorage.setItem('salon_agenda_cache', JSON.stringify(snap.val() || {})); } catch (e) { }
                 agLimpiarAviso();
                 agRenderDisp();
@@ -7001,7 +7014,7 @@
             return { bloqueado: !!(d && d.bloqueado), total: esp.length, abiertos: esp.filter(e => e.estado === 'abierto' && !e.reservaId).length };
         }
 
-        function agRenderDisp() { agRenderCitas(); agRenderProximos(); agRenderCalendario(); agRenderDia(); }
+        function agRenderDisp() { agRenderCitas(); agRenderProximos(); agRenderCalendario(); agRenderDia(); agPubProgramar(); }
 
         function agRenderProximos() {
             const el = document.getElementById('agProximos'); if (!el) return;
@@ -7085,7 +7098,7 @@
                     acciones = '<button class="btn btn-small" onclick="agDeshacerCierre(\'' + r.id + '\')" style="background:#fff3e0;color:#b45309;">↩️ Deshacer (' + (est === 'atendida' ? 'atendida' : 'no asistió') + ')</button>';
                 }
             } else {
-                etiqueta = bloq ? '<span class="badge" style="background:#ede7f6;color:#4a3a7a;">Bloqueado</span>' : '<span class="badge" style="background:#fff0f6;color:#d4547e;">Abierto</span>';
+                etiqueta = bloq ? '<span class="badge" style="background:#ede7f6;color:#4a3a7a;">Bloqueado</span>' : (agSolicVigente(agSolic[e.id]) ? '<span class="badge" style="background:#ffe8cc;color:#b45309;">⏳ Solicitud pendiente</span>' : '<span class="badge" style="background:#fff0f6;color:#d4547e;">Abierto</span>');
                 acciones = (!bloq && !diaBloq && agFecha >= hoy ? '<button class="btn btn-small" onclick="agAbrirCita(\'' + e.id + '\')" style="background:linear-gradient(135deg,#e64980,#d4547e);color:#fff;">➕ Crear cita</button>' : '') +
                     '<button class="btn btn-small" onclick="agEditarEspacio(\'' + e.id + '\')" aria-label="Editar espacio">✏️</button>' +
                     '<button class="btn btn-small" onclick="agToggleEspacio(\'' + e.id + '\')" aria-label="' + (bloq ? 'Abrir' : 'Bloquear') + ' espacio" style="background:#d7ccf0;color:#4a3a7a;">' + (bloq ? '✅ Abrir' : '🚫 Bloquear') + '</button>' +
@@ -7215,7 +7228,7 @@
         function agIniciarListenerReservas() {
             try { agReservas = agNormReservas(JSON.parse(localStorage.getItem('salon_reservas_cache') || 'null')); } catch (e) { agReservas = {}; }
             database.ref('reservas').on('value', snap => {
-                agReservas = agNormReservas(snap.val());
+                agReservas = agNormReservas(snap.val()); agListoRes = true;
                 try { localStorage.setItem('salon_reservas_cache', JSON.stringify(snap.val() || {})); } catch (e) { }
                 agRenderDisp();
             }, err => agAvisoFirebase(err));
@@ -7351,6 +7364,8 @@
             if (c.sinDur && !confirm('Este servicio no tiene duración configurada, no puedo comprobar que cabe en el espacio. ¿Crear la cita de todos modos?')) return;
 
             const id = agId('r'), refRes = database.ref('agenda/' + ctx.fecha + '/espacios/' + ctx.slotId + '/reservaId');
+            const sp = agSolic[ctx.slotId];
+            if (agSolicVigente(sp) && !confirm('Hay una solicitud pendiente de ' + sp.nombre + ' para este espacio. Si creas esta cita, esa solicitud se quita. ¿Continuar?')) return;
             agMsg('agCitaMsg', 'Reservando…', '#d4547e');
             document.getElementById('agBtnCrearCita').disabled = true;
             const fin = () => { document.getElementById('agBtnCrearCita').disabled = false; };
@@ -7368,6 +7383,7 @@
                     estado: 'confirmada', origen: 'manual', creado: Date.now(), ingresoId: null
                 };
                 return database.ref('reservas/' + id).set(JSON.parse(JSON.stringify(reserva))).then(() => {
+                    if (sp) database.ref('solicitudes/' + ctx.slotId).remove().catch(() => { });
                     fin(); agCerrarModal('agModalCita'); agMsg('agMsgEspacio', '✅ Cita creada.');
                 }, er => { refRes.set(null); agErrorEscritura(er, 'agCitaMsg'); fin(); });
             }).catch(er => { agErrorEscritura(er, 'agCitaMsg'); fin(); });
@@ -7482,6 +7498,148 @@
             });
         }
 
+        // ================= ETAPA 4: PORTAL DE CLIENTAS =================
+        // El portal NUNCA lee tus datos privados. Esta pantalla publica una copia mínima en el nodo 'publico'
+        // (solo espacios libres, servicios y precios) y recibe las solicitudes en el nodo 'solicitudes'.
+        let agSolic = {}, agSolicErr = null, agListoAg = false, agListoRes = false, agListoCfg = false;
+        let agPubUlt = null, agPubTimer = null, agPubOcupado = false;
+        function agPubMsg(t, c) { agMsg('agPubEstado', t, c || '#888'); }
+        function agPubConstruir() {
+            const r = agConfig.reglas, hoy = hoyLocalISO(), ahora = agAhoraHHMM(), esp = {};
+            Object.keys(agAgenda).forEach(f => {
+                const d = agAgenda[f]; if (f < hoy || d.bloqueado) return;
+                Object.keys(d.espacios).forEach(id => {
+                    const e = d.espacios[id];
+                    if (e.estado !== 'abierto' || e.reservaId) return;
+                    if (f === hoy && e.inicio <= ahora) return;
+                    (esp[f] = esp[f] || {})[id] = { inicio: e.inicio, fin: e.fin };
+                });
+            });
+            const pr = v => (r.mostrarPrecios && v != null) ? v : null;
+            return {
+                apartadoMin: Math.round((r.retencionHoras > 0 ? r.retencionHoras : 24) * 60),
+                mostrarPrecios: !!r.mostrarPrecios,
+                whatsapp: agSoloDigitos(r.whatsapp), instagram: r.instagram || '',
+                servicios: agConfig.servicios.filter(s => s.activo && s.nombre.trim() && s.variantes.some(v => v.nombre.trim())).map(s => ({
+                    nombre: s.nombre.trim(),
+                    variantes: s.variantes.filter(v => v.nombre.trim()).map(v => ({ nombre: v.nombre.trim(), precio: pr(v.precio), precioVariable: !!v.precioVariable, duracionMin: v.duracionMin }))
+                })),
+                adicionales: agConfig.adicionales.filter(a => a.activo && a.nombre.trim()).map(a => ({ nombre: a.nombre.trim(), precio: pr(a.precio), porUnidad: !!a.porUnidad, duracionMin: a.duracionMin, nota: a.nota || '' })),
+                espacios: esp
+            };
+        }
+        function agPubProgramar() {
+            if (agPubTimer) clearTimeout(agPubTimer);
+            agPubTimer = setTimeout(agPublicar, 1500);
+        }
+        function agPublicar() {
+            agPubTimer = null;
+            if (!agConfig || !agListoAg || !agListoRes || !agListoCfg || agPubOcupado) return;
+            if (!agConfig.reglas.portalActivo) {
+                if (agPubUlt !== 'off') { agPubOcupado = true; database.ref('publico').remove().then(() => { agPubUlt = 'off'; agPubOcupado = false; agPubMsg('⏸️ Portal desactivado: las clientas no ven nada.'); }, er => { agPubOcupado = false; agPubError(er); }); }
+                else agPubMsg('⏸️ Portal desactivado: las clientas no ven nada.');
+                return;
+            }
+            const p = agPubConstruir(), clave = JSON.stringify(p);
+            if (clave === agPubUlt) return;
+            agPubOcupado = true;
+            const n = Object.keys(p.espacios).reduce((s, f) => s + Object.keys(p.espacios[f]).length, 0);
+            database.ref('publico').set(JSON.parse(clave.replace(/^\{/, '{"updatedAt":' + Date.now() + ','))).then(() => {
+                agPubUlt = clave; agPubOcupado = false;
+                agPubMsg('✅ Portal al día: ' + n + ' espacio' + (n === 1 ? '' : 's') + ' libre' + (n === 1 ? '' : 's') + ' visible' + (n === 1 ? '' : 's') + ' para las clientas.', '#27ae60');
+            }, er => { agPubOcupado = false; agPubError(er); });
+        }
+        function agPubError(er) {
+            const perm = er && (er.code === 'PERMISSION_DENIED' || /permission/i.test(er.message || ''));
+            agPubMsg(perm ? '⚠️ Falta publicar en Firebase las reglas del portal (nodos “publico” y “solicitudes”). Tus datos no se ven afectados.' : '⚠️ No se pudo actualizar el portal (' + ((er && er.message) || 'sin conexión') + ').', '#e64980');
+        }
+
+        // ----- Solicitudes de clientas -----
+        function agNormSolic(raw) {
+            const out = {}; if (!raw || typeof raw !== 'object') return out;
+            Object.keys(raw).forEach(id => {
+                const s = raw[id]; if (!s || typeof s !== 'object' || !/^\d{4}-\d{2}-\d{2}$/.test(s.fecha || '')) return;
+                out[id] = { id: id, fecha: s.fecha, inicio: String(s.inicio || ''), fin: String(s.fin || ''), nombre: String(s.nombre || ''), telefono: String(s.telefono || ''),
+                    servicioNombre: String(s.servicioNombre || ''), varianteNombre: String(s.varianteNombre || ''),
+                    adicionales: agToArr(s.adicionales).filter(a => a && a.nombre).map(a => ({ nombre: String(a.nombre), cantidad: agNum(a.cantidad) || 1 })),
+                    precioEstimado: agNum(s.precioEstimado), duracionMin: agNum(s.duracionMin), creadoEn: Number(s.creadoEn) || 0, expira: Number(s.expira) || 0 };
+            });
+            return out;
+        }
+        function agSolicVigente(s) { return s && s.expira > Date.now(); }
+        function agIniciarListenerSolic() {
+            database.ref('solicitudes').on('value', snap => { agSolic = agNormSolic(snap.val()); agSolicErr = null; agRenderSolic(); agRenderDisp(); },
+                err => { agSolic = {}; agSolicErr = err; agRenderSolic(); });
+            setInterval(agRenderSolic, 60000);
+        }
+        function agTiempoRestante(ms) { const m = Math.max(0, Math.round(ms / 60000)); return m >= 60 ? Math.floor(m / 60) + ' h ' + (m % 60) + ' min' : m + ' min'; }
+        function agRenderSolic() {
+            const el = document.getElementById('agSolicLista'); if (!el) return;
+            const lista = Object.keys(agSolic).map(k => agSolic[k]).sort((a, b) => a.creadoEn - b.creadoEn);
+            if (agSolicErr && !lista.length) {
+                const perm = agSolicErr.code === 'PERMISSION_DENIED' || /permission/i.test(agSolicErr.message || '');
+                el.innerHTML = perm && !(agConfig && agConfig.reglas.portalActivo) ? '' : '<div class="card" style="border-color:#cfc3ee;background:#f7f3ff;font-size:13px;color:#4a3a7a;">📥 No pude leer las solicitudes de clientas' + (perm ? ': faltan las reglas del portal en Firebase.' : '.') + '</div>';
+                return;
+            }
+            if (!lista.length) { el.innerHTML = ''; return; }
+            const ahora = Date.now();
+            el.innerHTML = '<div class="card" style="border-color:#f4a6c1;background:#fff8fb;">' +
+                '<h3>📥 Solicitudes de clientas <span class="badge" style="background:#e64980;color:#fff;">' + lista.length + '</span></h3>' +
+                '<p style="font-size:12px;color:#999;margin:4px 0 10px;">Estas citas NO están confirmadas hasta que tú las aceptes. El espacio queda apartado para ellas mientras no venza.</p>' +
+                lista.map(s => {
+                    const vig = s.expira > ahora, adic = s.adicionales.length ? ' + ' + s.adicionales.map(agTxtAdic).join(', ') : '';
+                    return '<div style="padding:10px 12px;margin-bottom:8px;border:1px solid ' + (vig ? '#f4a6c1' : '#e0e0e0') + ';border-radius:10px;background:#fff;">' +
+                        '<div style="font-size:14px;"><b>' + agEsc(s.nombre) + '</b> · ' + agEsc(s.telefono) + '</div>' +
+                        '<div style="font-size:13px;margin-top:4px;">🗓️ ' + agFechaLarga(s.fecha) + ' · ' + agHora12(s.inicio) + ' – ' + agHora12(s.fin) + '</div>' +
+                        '<div style="font-size:13px;">💎 ' + agEsc(s.servicioNombre) + (s.varianteNombre ? ' — ' + agEsc(s.varianteNombre) : '') + adic + (s.precioEstimado != null ? ' · ' + agMoneda(s.precioEstimado) : '') + (s.duracionMin ? ' · ' + agDur(s.duracionMin) : '') + '</div>' +
+                        '<div style="font-size:12px;margin-top:4px;color:' + (vig ? '#d4547e' : '#999') + ';">' + (vig ? '⏳ Espacio apartado: vence en ' + agTiempoRestante(s.expira - ahora) : '⌛ El apartado venció (el espacio quedó libre para otras clientas)') + '</div>' +
+                        '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">' +
+                        '<button class="btn btn-small" onclick="agConfirmarSolic(\'' + s.id + '\')">✅ Confirmar cita</button>' +
+                        '<button class="btn btn-small" onclick="agRechazarSolic(\'' + s.id + '\')" style="background:#d7ccf0;color:#4a3a7a;">✖ Rechazar / liberar</button></div></div>';
+                }).join('') + '</div>';
+        }
+        function agRechazarSolic(id) {
+            const s = agSolic[id]; if (!s) return;
+            if (!confirm('¿Rechazar la solicitud de ' + s.nombre + '? El espacio queda libre otra vez y ella no recibe aviso automático (puedes escribirle por WhatsApp).')) return;
+            database.ref('solicitudes/' + id).remove().catch(er => agErrorEscritura(er, 'agMsgSolic'));
+        }
+        function agConfirmarSolic(id) {
+            const s = agSolic[id]; if (!s) return;
+            const err = t => agMsg('agMsgSolic', t, '#e64980');
+            const dia = agAgenda[s.fecha], e = dia && dia.espacios[id];
+            if (!e || e.estado !== 'abierto' || dia.bloqueado) return err('Ese espacio ya no está abierto (lo borraste, lo bloqueaste o el día está bloqueado). Rechaza la solicitud y avísale a la clienta.');
+            if (e.reservaId) return err('Ese espacio ya tiene una cita. Rechaza la solicitud y avísale a la clienta.');
+            if (e.inicio !== s.inicio || e.fin !== s.fin) return err('El horario del espacio cambió después de la solicitud. Rechaza la solicitud y ofrécele otro.');
+            const dur = agMin(e.fin) - agMin(e.inicio);
+            if (s.duracionMin && s.duracionMin > dur && !confirm('El servicio dura ' + agDur(s.duracionMin) + ' y el espacio es de ' + agDur(dur) + '. No cabe. ¿Confirmar de todos modos?')) return;
+            if (!confirm('¿Confirmar la cita de ' + s.nombre + ' el ' + agFechaLarga(s.fecha) + ' a las ' + agHora12(s.inicio) + '?')) return;
+            const rid = agId('r'), refRes = database.ref('agenda/' + s.fecha + '/espacios/' + id + '/reservaId');
+            agMsg('agMsgSolic', 'Confirmando…', '#d4547e');
+            refRes.transaction(cur => cur ? undefined : rid).then(res => {
+                if (!res || !res.committed) { err('Ese espacio acaba de ser tomado por otra cita. Rechaza la solicitud.'); return; }
+                const d10 = agSoloDigitos(s.telefono).slice(-10);
+                let cli = clientes.find(c => agSoloDigitos(c.numero).length >= 7 && agSoloDigitos(c.numero).slice(-10) === d10);
+                if (!cli) cli = agCrearClienta({ nombre: s.nombre, tel: s.telefono, origen: 'Otro' });
+                if (!cli) { refRes.set(null); err('No se pudo crear la clienta. El espacio no se reservó.'); return; }
+                const precioAd = n => { const a = agConfig.adicionales.find(x => x.nombre.trim() === n); return a ? a.precio : null; };
+                const reserva = {
+                    id: rid, fecha: s.fecha, slotId: id, inicio: e.inicio, fin: e.fin, clienteId: cli.id, clienteNombre: cli.nombre, clienteTelefono: cli.numero || s.telefono,
+                    servicioNombre: s.servicioNombre, varianteNombre: s.varianteNombre,
+                    adicionales: s.adicionales.map(a => ({ nombre: a.nombre, precio: precioAd(a.nombre), cantidad: a.cantidad })),
+                    duracionMin: s.duracionMin, precio: s.precioEstimado, notas: 'Pedida desde el portal',
+                    estado: 'confirmada', origen: 'portal', creado: Date.now(), ingresoId: null
+                };
+                return database.ref('reservas/' + rid).set(JSON.parse(JSON.stringify(reserva))).then(() => {
+                    agReservas[rid] = agNormReservas({ [rid]: reserva })[rid];
+                    return database.ref('solicitudes/' + id).remove().catch(() => { });
+                }).then(() => {
+                    const m = document.getElementById('agMsgSolic');
+                    if (m) { m.style.color = '#27ae60'; m.innerHTML = '✅ Cita confirmada. <button class="btn btn-small" onclick="agWhatsApp(\'' + rid + '\')" style="background:#d9f2e0;color:#1f6b3a;">💬 Avisarle por WhatsApp</button>'; }
+                }, er => { refRes.set(null); agErrorEscritura(er, 'agMsgSolic'); });
+            }).catch(er => agErrorEscritura(er, 'agMsgSolic'));
+        }
+        // ================= FIN ETAPA 4 =================
+
         function inicializarAgenda() {
             try { agConfig = agNormConfig(JSON.parse(localStorage.getItem('salon_agenda_config') || 'null')); } catch (e) { agConfig = agConfigVacia(); }
             try { const p = JSON.parse(localStorage.getItem('salon_agenda_privada') || 'null'); if (p) agPrivada = { direccion: String(p.direccion || ''), updatedAt: Number(p.updatedAt) || 0 }; } catch (e) { }
@@ -7491,6 +7649,7 @@
             agSub('disp');
             agIniciarListener();
             agIniciarListenerReservas();
+            agIniciarListenerSolic();
             agRecargarConfig();
             window.addEventListener('beforeunload', ev => { if (agSucia) { ev.preventDefault(); ev.returnValue = ''; } });
         }
