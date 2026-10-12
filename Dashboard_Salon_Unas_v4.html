@@ -1310,6 +1310,11 @@
                     <div id="agReglas"></div>
                 </div>
 
+                <div class="card">
+                    <h3>💌 Mensaje de confirmación por WhatsApp</h3>
+                    <div id="agMensaje"></div>
+                </div>
+
                 <div class="card" style="text-align:center;">
                     <span id="agSucia" style="font-size:12px;color:#f39c12;display:block;margin-bottom:8px;min-height:16px;"></span>
                     <button class="btn" onclick="agGuardarConfig()">💾 Guardar servicios y reglas</button>
@@ -1365,7 +1370,7 @@
                         <option value="efectivo">💵 Efectivo</option>
                         <option value="nequi">📱 Nequi</option>
                     </select>
-                    <div style="font-size:11px;color:#aaa;margin-bottom:10px;">Se registra como un ingreso normal en Finanzas (con su reserva del 18 %) y suma una visita a la clienta.</div>
+                    <div style="font-size:11px;color:#aaa;margin-bottom:10px;">Se registra como un ingreso normal en Finanzas (con su reserva del 18 %) y suma una visita a la clienta. <b>Si ya anotaste este servicio a mano en Ingresos, no lo registres aquí.</b></div>
                     <div id="agAtMsg" style="font-size:12px;min-height:16px;margin-bottom:8px;"></div>
                     <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
                         <button class="btn btn-small" onclick="agCerrarModal('agModalAtendida')">Cancelar</button>
@@ -6626,6 +6631,7 @@
         let agEditId = null;      // espacio que se está editando
         let agSucia = false;      // hay cambios de servicios/reglas sin guardar
         let agSubActual = 'disp';
+        let agPrivada = { direccion: '', updatedAt: 0 };   // nodo privado 'config_privada': nunca se publica
 
         // ---------- Utilidades ----------
         function agPad(n) { return String(n).padStart(2, '0'); }
@@ -6685,7 +6691,7 @@
             }));
             c.adicionales = agToArr(raw.adicionales).filter(a => a && typeof a === 'object').map(a => ({
                 id: a.id || agId('a'), nombre: String(a.nombre || ''), activo: a.activo !== false,
-                precio: agNum(a.precio), duracionMin: agNum(a.duracionMin), nota: String(a.nota || '')
+                precio: agNum(a.precio), duracionMin: agNum(a.duracionMin), nota: String(a.nota || ''), porUnidad: !!a.porUnidad
             }));
             const r = raw.reglas || {}, a = r.anticipo || {};
             c.reglas = {
@@ -6701,7 +6707,7 @@
         function agCatalogo2026() {
             const v = (n, p) => ({ id: agId('v'), nombre: n, precio: p, precioVariable: false, duracionMin: null });
             const s = (n, vs) => ({ id: agId('s'), nombre: n, activo: true, variantes: vs });
-            const a = (n, p) => ({ id: agId('a'), nombre: n, activo: true, precio: p, duracionMin: null, nota: '' });
+            const a = (n, p, pu) => ({ id: agId('a'), nombre: n, activo: true, precio: p, duracionMin: null, nota: pu ? 'por cada aplique' : '', porUnidad: !!pu });
             return {
                 servicios: [
                     s('Esmaltado semipermanente', [v('Set nuevo', 45000), v('Retoque', 40000)]),
@@ -6711,7 +6717,7 @@
                     s('Baño en Poly Gel', [v('Set nuevo', 60000), v('Retoque', 55000)]),
                     s('Rubber Base', [v('Set nuevo', 55000), v('Retoque', 48000)])
                 ],
-                adicionales: [a('Retiro', 12000), a('Apliques (corazones, mariposas, dijes 3D)', 4000)],
+                adicionales: [a('Retiro', 12000), a('Apliques (corazones, mariposas, dijes 3D)', 4000, true)],
                 whatsapp: '3128661331', instagram: 'mari_nails412'
             };
         }
@@ -6760,13 +6766,29 @@
             datos.updatedAt = Date.now();
             agMsg('agMsgConfig', 'Guardando…', '#d4547e');
             database.ref('reservas_config').set(datos).then(() => {
-                agConfig.updatedAt = datos.updatedAt; agSucia = false; agGuardarCache();
-                agRenderSucia(); agPoblarIngresos(); agLimpiarAviso();
-                agMsg('agMsgConfig', '✅ Guardado y sincronizado.');
+                agConfig.updatedAt = datos.updatedAt; agGuardarCache(); agPoblarIngresos();
+                // La dirección va aparte, en un nodo privado (el portal público nunca la lee)
+                return database.ref('config_privada').set({ direccion: agPrivada.direccion || null, updatedAt: datos.updatedAt }).then(() => {
+                    agPrivada.updatedAt = datos.updatedAt;
+                    try { localStorage.setItem('salon_agenda_privada', JSON.stringify(agPrivada)); } catch (e) { }
+                    agSucia = false; agRenderSucia(); agLimpiarAviso(); agMsg('agMsgConfig', '✅ Guardado y sincronizado.');
+                }, err => { agErrorEscritura(err, 'agMsgConfig'); agMsg('agMsgConfig', 'Servicios y reglas guardados, pero la dirección no: faltan las reglas de “config_privada”.', '#e64980'); });
             }).catch(err => agErrorEscritura(err, 'agMsgConfig'));
         }
 
-        function agRecargarConfig() {
+        function agRecargarConfig() { agRecargarConfigServicios(); agRecargarPrivada(); }
+        function agRecargarPrivada() {
+            database.ref('config_privada').once('value').then(snap => {
+                if (agSucia) return;
+                const v = snap.val();
+                if (v) {
+                    agPrivada = { direccion: String(v.direccion || ''), updatedAt: Number(v.updatedAt) || 0 };
+                    try { localStorage.setItem('salon_agenda_privada', JSON.stringify(agPrivada)); } catch (e) { }
+                    if (agSubActual === 'serv') agRenderMensaje();
+                }
+            }).catch(err => agAvisoFirebase(err));
+        }
+        function agRecargarConfigServicios() {
             database.ref('reservas_config').once('value').then(snap => {
                 if (agSucia) return;
                 const v = snap.val();
@@ -6802,7 +6824,7 @@
 
         function agLbl(t) { return '<label style="font-size:11px;color:#888;display:block;margin-bottom:3px;">' + t + '</label>'; }
 
-        function agRenderServ() { agRenderServicios(); agRenderAdicionales(); agRenderReglas(); agRenderServEstado(); agRenderSucia(); }
+        function agRenderServ() { agRenderServicios(); agRenderAdicionales(); agRenderReglas(); agRenderMensaje(); agRenderServEstado(); agRenderSucia(); }
 
         function agRenderServEstado() {
             const el = document.getElementById('agServEstado'); if (!el) return;
@@ -6878,14 +6900,15 @@
                 '<button class="btn btn-small" onclick="agDelAdicional(' + i + ')" aria-label="Quitar adicional">🗑️</button></div>' +
                 '<div>' + agLbl('Precio (COP)') + '<input type="number" style="width:100%;" min="0" step="500" value="' + (a.precio == null ? '' : a.precio) + '" onchange="agAdic(' + i + ',\'precio\',this.value)"></div>' +
                 '<div>' + agLbl('Tiempo extra (minutos)') + '<input type="number" style="width:100%;" min="0" step="5" value="' + (a.duracionMin == null ? '' : a.duracionMin) + '" placeholder="Sin definir" onchange="agAdic(' + i + ',\'duracionMin\',this.value)"></div>' +
-                '<div>' + agLbl('Nota (cómo se cobra)') + '<input type="text" style="width:100%;" value="' + agEsc(a.nota) + '" placeholder="Ej: por cada uña" onchange="agAdic(' + i + ',\'nota\',this.value)"></div></div>').join('');
+                '<div>' + agLbl('Nota (cómo se cobra)') + '<input type="text" style="width:100%;" value="' + agEsc(a.nota) + '" placeholder="Ej: por cada uña" onchange="agAdic(' + i + ',\'nota\',this.value)"></div>' +
+                '<label style="grid-column:1/-1;display:flex;gap:6px;align-items:center;font-size:12px;color:#666;"><input type="checkbox" ' + (a.porUnidad ? 'checked' : '') + ' onchange="agAdic(' + i + ',\'porUnidad\',this.checked)"> Se cobra por cada unidad (por ejemplo, por cada aplique)</label></div>').join('');
         }
         function agAdic(i, campo, valor) {
             const a = agConfig.adicionales[i]; if (!a) return;
-            if (campo === 'activo') a[campo] = !!valor; else if (campo === 'nombre' || campo === 'nota') a[campo] = String(valor); else a[campo] = agNum(valor);
+            if (campo === 'activo' || campo === 'porUnidad') a[campo] = !!valor; else if (campo === 'nombre' || campo === 'nota') a[campo] = String(valor); else a[campo] = agNum(valor);
             agMarcar();
         }
-        function agAddAdicional() { agConfig.adicionales.push({ id: agId('a'), nombre: '', activo: true, precio: null, duracionMin: null, nota: '' }); agMarcar(); agRenderAdicionales(); }
+        function agAddAdicional() { agConfig.adicionales.push({ id: agId('a'), nombre: '', activo: true, precio: null, duracionMin: null, nota: '', porUnidad: false }); agMarcar(); agRenderAdicionales(); }
         function agDelAdicional(i) {
             const a = agConfig.adicionales[i]; if (!a) return;
             if (!confirm('¿Quitar el adicional "' + (a.nombre || 'sin nombre') + '"?')) return;
@@ -6913,6 +6936,22 @@
                     '<div>' + agLbl('Valor') + '<input type="number" style="width:100%;" min="0" value="' + (an.valor == null ? '' : an.valor) + '" onchange="agAnticipo(\'valor\',this.value)"></div>' +
                     '<div style="grid-column:1/-1;">' + agLbl('Instrucciones de pago (opcional)') + '<input type="text" style="width:100%;" value="' + agEsc(an.instrucciones) + '" onchange="agAnticipo(\'instrucciones\',this.value)"></div></div>' : '') + '</div>';
         }
+        function agRenderMensaje() {
+            const el = document.getElementById('agMensaje'); if (!el) return;
+            el.innerHTML = agLbl('Dirección que se envía al confirmar una cita') +
+                '<input type="text" id="agDirInput" style="width:100%;" value="' + agEsc(agPrivada.direccion) + '" placeholder="Calle, número, bloque, casa…" onchange="agPriv(this.value)">' +
+                '<div style="font-size:11px;color:#aaa;margin:4px 0 8px;">🔒 Solo la ves tú: no se publica en el portal. Se agrega al mensaje del botón 💬 WhatsApp.</div>' +
+                '<button class="btn btn-small" onclick="agUsarDireccionCatalogo()" style="background:#d7ccf0;color:#4a3a7a;">📍 Usar la dirección del catálogo</button>' +
+                '<div style="font-size:12px;font-weight:600;color:#d4547e;margin:14px 0 6px;">Así se verá el mensaje (ejemplo):</div>' +
+                '<pre id="agPreviewMsg" style="white-space:pre-wrap;font-family:inherit;font-size:13px;background:#f3fbf5;border:1px solid #cfe9d6;border-radius:12px;padding:12px;margin:0;"></pre>';
+            agRenderPreview();
+        }
+        function agRenderPreview() {
+            const p = document.getElementById('agPreviewMsg'); if (!p) return;
+            p.textContent = agMensajeConfirmacion({ clienteNombre: 'Ana Pérez', fecha: hoyLocalISO(), inicio: '14:00', servicioNombre: 'Poly Gel con extensión', varianteNombre: 'Set nuevo', adicionales: [], precio: 80000 });
+        }
+        function agPriv(v) { agPrivada.direccion = String(v).trim(); agMarcar(); agRenderPreview(); }
+        function agUsarDireccionCatalogo() { agPrivada.direccion = 'Calle 71 Sur No. 94 A 48, Bloque 3, Casa 20'; agMarcar(); agRenderMensaje(); }
         function agRegla(campo, valor, tipo) { agConfig.reglas[campo] = tipo === 'num' ? agNum(valor) : (tipo === 'bool' ? !!valor : String(valor).trim()); agMarcar(); }
         function agAnticipo(campo, valor) {
             const an = agConfig.reglas.anticipo;
@@ -7016,7 +7055,7 @@
                     : est === 'no_asistio' ? '<span class="badge" style="background:#eceff1;color:#546e7a;">No asistió</span>'
                         : '<span class="badge" style="background:#e3f2e8;color:#2e7d32;">Confirmada</span>';
                 info = r ? '<div style="font-size:13px;margin-top:6px;">👤 <b>' + agEsc(r.clienteNombre) + '</b> · ' + agEsc(r.servicioNombre) + (r.varianteNombre ? ' — ' + agEsc(r.varianteNombre) : '') +
-                    (r.precio != null ? ' · ' + agMoneda(r.precio) : '') + '</div>' +
+                    (r.adicionales.length ? ' + ' + r.adicionales.map(agTxtAdic).join(', ') : '') + (r.precio != null ? ' · ' + agMoneda(r.precio) : '') + '</div>' +
                     (r.notas ? '<div style="font-size:12px;color:#888;margin-top:2px;">📝 ' + agEsc(r.notas) + '</div>' : '') +
                     (est === 'atendida' ? '<div style="font-size:12px;color:#2e7d32;margin-top:2px;">💰 Ingreso registrado en Finanzas</div>' : '')
                     : '<div style="font-size:12px;color:#999;margin-top:6px;">Cargando los datos de la cita…</div>';
@@ -7147,7 +7186,7 @@
                     clienteId: r.clienteId == null ? null : Number(r.clienteId),
                     clienteNombre: String(r.clienteNombre || ''), clienteTelefono: String(r.clienteTelefono || ''),
                     servicioNombre: String(r.servicioNombre || ''), varianteNombre: String(r.varianteNombre || ''),
-                    adicionales: agToArr(r.adicionales).filter(a => a && a.nombre).map(a => ({ nombre: String(a.nombre), precio: agNum(a.precio) })),
+                    adicionales: agToArr(r.adicionales).filter(a => a && a.nombre).map(a => ({ nombre: String(a.nombre), precio: agNum(a.precio), cantidad: agNum(a.cantidad) || 1 })),
                     duracionMin: agNum(r.duracionMin), precio: agNum(r.precio), notas: String(r.notas || ''),
                     estado: ['confirmada', 'atendida', 'no_asistio', 'cancelada'].indexOf(r.estado) >= 0 ? r.estado : 'confirmada',
                     origen: String(r.origen || 'manual'), ingresoId: r.ingresoId == null ? null : r.ingresoId, creado: Number(r.creado) || 0
@@ -7219,10 +7258,19 @@
             const s = agCitaServs[+document.getElementById('agCitaServicio').value]; if (!s) return;
             document.getElementById('agCitaVariante').innerHTML = s.variantes.map((v, i) => '<option value="' + i + '">' + agEsc(v.nombre) + (v.precio != null ? ' · ' + (v.precioVariable ? 'desde ' : '') + agMoneda(v.precio) : '') + '</option>').join('');
             const ad = agConfig.adicionales.filter(a => a.activo && a.nombre.trim());
-            document.getElementById('agCitaAdics').innerHTML = ad.length ? '<div style="font-size:12px;font-weight:600;color:#d4547e;margin-bottom:4px;">Adicionales</div>' + ad.map(a =>
-                '<label style="display:flex;gap:8px;align-items:center;font-size:13px;margin:3px 0;"><input type="checkbox" class="agCitaAdic" value="' + a.id + '" onchange="agCitaRecalcular()"> ' + agEsc(a.nombre) + (a.precio != null ? ' · ' + agMoneda(a.precio) : '') + (a.nota ? ' <span style="color:#aaa;">(' + agEsc(a.nota) + ')</span>' : '') + '</label>').join('') : '';
+            document.getElementById('agCitaAdics').innerHTML = ad.length ? '<div style="font-size:12px;font-weight:600;color:#d4547e;margin-bottom:4px;">Adicionales</div>' + ad.map(a => a.porUnidad
+                ? '<label style="display:flex;gap:8px;align-items:center;font-size:13px;margin:4px 0;"><input type="number" class="agCitaQty" data-id="' + a.id + '" min="0" max="20" step="1" value="0" style="width:64px;" onchange="agCitaRecalcular()"> ' + agEsc(a.nombre) + (a.precio != null ? ' · ' + agMoneda(a.precio) + ' c/u' : '') + '</label>'
+                : '<label style="display:flex;gap:8px;align-items:center;font-size:13px;margin:3px 0;"><input type="checkbox" class="agCitaAdic" value="' + a.id + '" onchange="agCitaRecalcular()"> ' + agEsc(a.nombre) + (a.precio != null ? ' · ' + agMoneda(a.precio) : '') + (a.nota ? ' <span style="color:#aaa;">(' + agEsc(a.nota) + ')</span>' : '') + '</label>').join('') : '';
             agCitaRecalcular();
         }
+        // Adicionales elegidos: casillas (1 unidad) y cantidades (por unidad)
+        function agCitaAdicSel() {
+            const out = [];
+            document.querySelectorAll('.agCitaAdic:checked').forEach(c => { const a = agConfig.adicionales.find(x => x.id === c.value); if (a) out.push({ a: a, cant: 1 }); });
+            document.querySelectorAll('.agCitaQty').forEach(q => { const a = agConfig.adicionales.find(x => x.id === q.getAttribute('data-id')), n = Math.min(20, Math.max(0, Math.floor(Number(q.value) || 0))); if (a && n > 0) out.push({ a: a, cant: n }); });
+            return out;
+        }
+        function agTxtAdic(x) { return agEsc(x.nombre) + (x.cantidad > 1 ? ' ×' + x.cantidad : ''); }
         // Calcula duración total, comprobación contra el espacio y precio sugerido
         function agCitaCalculo() {
             if (!agCitaCtx) return null;
@@ -7230,12 +7278,12 @@
             const s = agCitaServs[+document.getElementById('agCitaServicio').value];
             const v = s && s.variantes[+document.getElementById('agCitaVariante').value];
             if (!e || !v) return null;
-            const marcados = [...document.querySelectorAll('.agCitaAdic:checked')].map(c => agConfig.adicionales.find(a => a.id === c.value)).filter(Boolean);
+            const marcados = agCitaAdicSel();
             const espacio = agMin(e.fin) - agMin(e.inicio);
             const sinDur = !(v.duracionMin > 0);
-            const extra = marcados.reduce((t, a) => t + (a.duracionMin || 0), 0);
+            const extra = marcados.reduce((t, x) => t + (x.a.duracionMin || 0) * x.cant, 0);
             const total = sinDur ? null : v.duracionMin + extra;
-            const precio = (v.precio == null && !marcados.some(a => a.precio != null)) ? null : (v.precio || 0) + marcados.reduce((t, a) => t + (a.precio || 0), 0);
+            const precio = (v.precio == null && !marcados.some(x => x.a.precio != null)) ? null : (v.precio || 0) + marcados.reduce((t, x) => t + (x.a.precio || 0) * x.cant, 0);
             return { e: e, s: s, v: v, adics: marcados, espacio: espacio, total: total, sinDur: sinDur, cabe: sinDur ? null : total <= espacio, precio: precio };
         }
         function agCitaRecalcular() {
@@ -7297,7 +7345,7 @@
                     id: id, fecha: ctx.fecha, slotId: ctx.slotId, inicio: e.inicio, fin: e.fin,
                     clienteId: cli.id, clienteNombre: cli.nombre, clienteTelefono: cli.numero || '',
                     servicioNombre: c.s.nombre, varianteNombre: c.v.nombre,
-                    adicionales: c.adics.map(a => ({ nombre: a.nombre, precio: a.precio })),
+                    adicionales: c.adics.map(x => ({ nombre: x.a.nombre, precio: x.a.precio, cantidad: x.cant })),
                     duracionMin: c.total, precio: precio, notas: document.getElementById('agCitaNotas').value.trim(),
                     estado: 'confirmada', origen: 'manual', creado: Date.now(), ingresoId: null
                 };
@@ -7308,11 +7356,22 @@
         }
 
         // ---------- WhatsApp, no asistió, cancelar ----------
+        // Mensaje de confirmación (la dirección sale de config_privada: solo la ve la dueña, nunca el portal)
+        function agMensajeConfirmacion(r) {
+            const nombre = (String(r.clienteNombre).split(' ')[0] || ''), fl = agFechaLarga(r.fecha);
+            const adic = (r.adicionales || []).length ? ' + ' + r.adicionales.map(x => x.nombre + (x.cantidad > 1 ? ' ×' + x.cantidad : '')).join(', ') : '';
+            let t = 'Hola ' + nombre + ' 💅✨\n¡Tu cita en *Mari Nails* está confirmada! 💖\n\n' +
+                '🗓️ ' + fl.charAt(0).toUpperCase() + fl.slice(1) + '\n' +
+                '⏰ ' + agHora12(r.inicio) + '\n' +
+                '💎 ' + r.servicioNombre + (r.varianteNombre ? ' — ' + r.varianteNombre : '') + adic + '\n' +
+                (r.precio != null ? '💵 Valor: ' + agMoneda(r.precio) + '\n' : '');
+            if (agPrivada.direccion) t += '\n📍 *Dirección:* ' + agPrivada.direccion + '\n🌸 Estudio de uñas Mari Nails\n';
+            return t + '\nRespóndeme con un ✅ para confirmar tu asistencia 🌷\nCualquier cambio me avisas con tiempo 🥰\n¡Te espero! 💕';
+        }
         function agWhatsApp(id) {
             const r = agReservas[id]; if (!r) return;
             let tel = agSoloDigitos(r.clienteTelefono); if (tel.length === 10) tel = '57' + tel;
-            const txt = 'Hola ' + (r.clienteNombre.split(' ')[0] || '') + ' 💅 Te confirmo tu cita en Mari Nails: ' + r.servicioNombre + (r.varianteNombre ? ' (' + r.varianteNombre + ')' : '') + ' el ' + agFechaLarga(r.fecha) + ' a las ' + agHora12(r.inicio) + '.';
-            window.open('https://wa.me/' + tel + '?text=' + encodeURIComponent(txt), '_blank', 'noopener');
+            window.open('https://wa.me/' + tel + '?text=' + encodeURIComponent(agMensajeConfirmacion(r)), '_blank', 'noopener');
         }
         function agNoAsistio(id) {
             const r = agReservas[id]; if (!r || r.estado !== 'confirmada' || r.fecha > hoyLocalISO()) return;
@@ -7345,6 +7404,9 @@
             const monto = agNum(document.getElementById('agAtMonto').value), ubic = document.getElementById('agAtUbic').value;
             if (!(monto > 0)) return err('Escribe el monto cobrado.');
             if (!ubic) return err('Elige dónde quedó el dinero (efectivo o Nequi).');
+            const yaAnotado = transacciones.filter(t => t.tipo === 'ingreso' && t.clienteId === r.clienteId && t.fecha === r.fecha && !t.reservaId);
+            if (yaAnotado.length && !transacciones.some(t => t.tipo === 'ingreso' && t.reservaId === id) &&
+                !confirm('Ya anotaste ' + (yaAnotado.length === 1 ? 'un ingreso' : yaAnotado.length + ' ingresos') + ' de ' + r.clienteNombre + ' con fecha ' + r.fecha + ' en Finanzas. Si es este mismo servicio, registrarlo aquí lo contaría dos veces (y sumaría otra visita). ¿Registrar de todos modos?')) return;
             agAtendidaOcupado = true;
             let ingresoId = null;
             const yaTagueado = transacciones.find(t => t.tipo === 'ingreso' && t.reservaId === id);
@@ -7379,6 +7441,7 @@
 
         function inicializarAgenda() {
             try { agConfig = agNormConfig(JSON.parse(localStorage.getItem('salon_agenda_config') || 'null')); } catch (e) { agConfig = agConfigVacia(); }
+            try { const p = JSON.parse(localStorage.getItem('salon_agenda_privada') || 'null'); if (p) agPrivada = { direccion: String(p.direccion || ''), updatedAt: Number(p.updatedAt) || 0 }; } catch (e) { }
             agFecha = hoyLocalISO();
             const d = agParse(agFecha); agMes = { y: d.getFullYear(), m: d.getMonth() };
             agPoblarIngresos();
