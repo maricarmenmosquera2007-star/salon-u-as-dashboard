@@ -383,6 +383,7 @@
             <button class="tab-btn active" onclick="switchTab(event, 'crecimiento')">📈 Crecimiento</button>
             <button class="tab-btn" onclick="switchTab(event, 'finanzas')">💸 Finanzas</button>
             <button class="tab-btn" onclick="switchTab(event, 'clientes')">👥 Clientes</button>
+            <button class="tab-btn" onclick="switchTab(event, 'agenda')">📅 Agenda</button>
         </div>
 
         <!-- DASHBOARD TAB -->
@@ -1221,6 +1222,160 @@
                 <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid #ddd;">
                     <h4 style="color: #d4547e; font-size: 13px; margin-bottom: 10px;">📥 Exportar Clientes</h4>
                     <button onclick="exportarDatos('clientes')" class="btn" style="background: #2196f3;">👥 Exportar Clientes a CSV</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ETAPA 2: AGENDA (disponibilidad por fecha) + SERVICIOS Y REGLAS -->
+        <div id="agenda" class="tab-content">
+            <div id="agAviso"></div>
+
+            <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+                <button id="agSubDispBtn" class="btn" onclick="agSub('disp')">📆 Disponibilidad</button>
+                <button id="agSubServBtn" class="btn" onclick="agSub('serv')">💅 Servicios y reglas</button>
+            </div>
+
+            <!-- ===== DISPONIBILIDAD ===== -->
+            <div id="agSecDisp">
+                <div class="card">
+                    <h3>📋 Citas</h3>
+                    <p style="font-size:12px;color:#999;margin:4px 0 10px;">Las citas confirmadas. Cuando atiendas a una clienta, márcala como “Atendida” y se registra el ingreso en Finanzas.</p>
+                    <div id="agCitas"></div>
+                </div>
+
+                <div class="card">
+                    <h3>📌 Próximos días con espacios</h3>
+                    <p style="font-size:12px;color:#999;margin:4px 0 10px;">Solo se ofrece lo que tú abres, fecha por fecha. Toca un día para verlo.</p>
+                    <div id="agProximos"></div>
+                </div>
+
+                <div class="card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+                        <button class="btn btn-small" onclick="agMesCambiar(-1)" aria-label="Mes anterior">◀</button>
+                        <h3 id="agMesTitulo" style="margin:0;text-align:center;flex:1;min-width:140px;"></h3>
+                        <button class="btn btn-small" onclick="agMesCambiar(1)" aria-label="Mes siguiente">▶</button>
+                        <button class="btn btn-small" onclick="agIrHoy()" style="background:#d7ccf0;color:#4a3a7a;">Hoy</button>
+                    </div>
+                    <div id="agCalendario"></div>
+                    <div style="font-size:11px;color:#999;margin-top:10px;display:flex;gap:14px;flex-wrap:wrap;">
+                        <span><b style="color:#d4547e;">●</b> con espacios abiertos</span>
+                        <span>🚫 día bloqueado</span>
+                        <span style="border:2px solid #d4547e;border-radius:4px;padding:0 4px;">hoy</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 id="agDiaTitulo">Día seleccionado</h3>
+                    <div id="agDiaAcciones" style="margin:10px 0;"></div>
+                    <div id="agEspacios"></div>
+
+                    <div id="agFormWrap" style="margin-top:16px;padding-top:14px;border-top:1px dashed #f0e0e8;">
+                        <div id="agFormTitulo" style="font-size:13px;font-weight:600;color:#d4547e;margin-bottom:8px;">➕ Abrir un espacio (una sola cita)</div>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+                            <div><label for="agIni" style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Hora de inicio</label>
+                                <input type="time" id="agIni" step="300"></div>
+                            <div><label for="agFin" style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Hora de fin</label>
+                                <input type="time" id="agFin" step="300"></div>
+                            <button class="btn" id="agBtnGuardarEsp" onclick="agGuardarEspacio()">Agregar espacio</button>
+                            <button class="btn btn-small" id="agBtnCancelarEsp" onclick="agCancelarEdicion()" style="display:none;">Cancelar</button>
+                        </div>
+                        <div id="agMsgEspacio" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
+                        <div style="font-size:11px;color:#aaa;margin-top:4px;">Ejemplo: 9:00 a. m. a 11:30 a. m. y otro de 2:00 p. m. a 5:00 p. m. Los espacios de la mañana y de la tarde se agrupan solos.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== SERVICIOS Y REGLAS ===== -->
+            <div id="agSecServ" style="display:none;">
+                <div class="card">
+                    <h3>💅 Servicios, precios y duraciones</h3>
+                    <p style="font-size:12px;color:#999;margin:4px 0 10px;">Esta lista alimenta el desplegable de Ingresos y, más adelante, el portal de reservas. Los servicios que desactives dejan de aparecer allí, pero tus ingresos anteriores no cambian. Deja la duración en blanco hasta que decidas.</p>
+                    <div id="agServEstado" style="font-size:13px;margin-bottom:10px;"></div>
+                    <div id="agServicios"></div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+                        <button class="btn btn-small" onclick="agAddServicio()">➕ Agregar servicio</button>
+                        <button class="btn btn-small" id="agBtnCatalogo" onclick="agCargarCatalogo()" style="background:#d7ccf0;color:#4a3a7a;">📥 Cargar catálogo 2026 (precios del PDF)</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>➕ Adicionales</h3>
+                    <p style="font-size:12px;color:#999;margin:4px 0 10px;">Retiro, apliques u otros. Puedes darles un tiempo extra que se sumará al servicio cuando se necesite.</p>
+                    <div id="agAdicionales"></div>
+                    <button class="btn btn-small" style="margin-top:12px;" onclick="agAddAdicional()">➕ Agregar adicional</button>
+                </div>
+
+                <div class="card">
+                    <h3>⚙️ Reglas de reserva</h3>
+                    <div id="agReglas"></div>
+                </div>
+
+                <div class="card">
+                    <h3>💌 Mensaje de confirmación por WhatsApp</h3>
+                    <div id="agMensaje"></div>
+                </div>
+
+                <div class="card" style="text-align:center;">
+                    <span id="agSucia" style="font-size:12px;color:#f39c12;display:block;margin-bottom:8px;min-height:16px;"></span>
+                    <button class="btn" onclick="agGuardarConfig()">💾 Guardar servicios y reglas</button>
+                    <div id="agMsgConfig" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
+                </div>
+            </div>
+
+            <!-- ===== MODAL: CREAR CITA ===== -->
+            <div id="agModalCita" style="display:none;position:fixed;inset:0;z-index:4000;background:rgba(70,40,60,.45);align-items:center;justify-content:center;padding:16px;">
+                <div style="background:#fff;border-radius:14px;max-width:470px;width:100%;max-height:92vh;overflow:auto;padding:20px;border:1px solid #f0e0e8;box-shadow:0 8px 30px rgba(0,0,0,.2);">
+                    <h3 style="margin-bottom:4px;">➕ Crear cita</h3>
+                    <div id="agCitaEspacio" style="font-size:13px;color:#d4547e;font-weight:600;margin-bottom:12px;"></div>
+
+                    <label for="agCitaCliente" style="font-size:12px;font-weight:600;color:#d4547e;">Clienta</label>
+                    <select id="agCitaCliente" style="width:100%;margin:4px 0 10px;" onchange="agCitaClienteCambio()"></select>
+                    <div id="agCitaNuevaBox" style="display:none;padding:10px;border:1px dashed #f4a6c1;border-radius:10px;margin-bottom:10px;">
+                        <input type="text" id="agCitaNombre" placeholder="Nombre de la clienta" style="width:100%;margin-bottom:8px;">
+                        <input type="tel" id="agCitaTel" placeholder="Teléfono / WhatsApp" style="width:100%;margin-bottom:8px;">
+                        <select id="agCitaOrigen" style="width:100%;"></select>
+                    </div>
+
+                    <label for="agCitaServicio" style="font-size:12px;font-weight:600;color:#d4547e;">Servicio</label>
+                    <select id="agCitaServicio" style="width:100%;margin:4px 0 10px;" onchange="agCitaServicioCambio()"></select>
+                    <label for="agCitaVariante" style="font-size:12px;font-weight:600;color:#d4547e;">Variante</label>
+                    <select id="agCitaVariante" style="width:100%;margin:4px 0 10px;" onchange="agCitaRecalcular()"></select>
+                    <div id="agCitaAdics" style="margin-bottom:10px;"></div>
+
+                    <div id="agCitaResumen" style="font-size:13px;padding:10px;border-radius:10px;background:#fffafc;border:1px solid #f0e0e8;margin-bottom:10px;"></div>
+
+                    <label for="agCitaPrecio" style="font-size:12px;font-weight:600;color:#d4547e;">Precio acordado (COP)</label>
+                    <input type="number" id="agCitaPrecio" min="0" step="1000" style="width:100%;margin:4px 0 10px;">
+                    <label for="agCitaNotas" style="font-size:12px;font-weight:600;color:#d4547e;">Notas (opcional)</label>
+                    <input type="text" id="agCitaNotas" placeholder="Ej: diseño de mariposas" style="width:100%;margin:4px 0 12px;">
+
+                    <div id="agCitaMsg" style="font-size:12px;min-height:16px;margin-bottom:8px;"></div>
+                    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
+                        <button class="btn btn-small" onclick="agCerrarModal('agModalCita')">Cancelar</button>
+                        <button class="btn" id="agBtnCrearCita" onclick="agGuardarCita()">Crear cita</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== MODAL: MARCAR COMO ATENDIDA ===== -->
+            <div id="agModalAtendida" style="display:none;position:fixed;inset:0;z-index:4000;background:rgba(70,40,60,.45);align-items:center;justify-content:center;padding:16px;">
+                <div style="background:#fff;border-radius:14px;max-width:420px;width:100%;padding:20px;border:1px solid #f0e0e8;box-shadow:0 8px 30px rgba(0,0,0,.2);">
+                    <h3 style="margin-bottom:4px;">✅ Cita atendida</h3>
+                    <div id="agAtResumen" style="font-size:13px;color:#555;margin-bottom:12px;"></div>
+                    <label for="agAtMonto" style="font-size:12px;font-weight:600;color:#d4547e;">Monto cobrado (COP)</label>
+                    <input type="number" id="agAtMonto" min="0" step="1000" style="width:100%;margin:4px 0 10px;">
+                    <label for="agAtUbic" style="font-size:12px;font-weight:600;color:#d4547e;">Ubicación del dinero</label>
+                    <select id="agAtUbic" style="width:100%;margin:4px 0 8px;">
+                        <option value="">Selecciona…</option>
+                        <option value="efectivo">💵 Efectivo</option>
+                        <option value="nequi">📱 Nequi</option>
+                    </select>
+                    <div style="font-size:11px;color:#aaa;margin-bottom:10px;">Se registra como un ingreso normal en Finanzas (con su reserva del 18 %) y suma una visita a la clienta. <b>Si ya anotaste este servicio a mano en Ingresos, no lo registres aquí.</b></div>
+                    <div id="agAtMsg" style="font-size:12px;min-height:16px;margin-bottom:8px;"></div>
+                    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
+                        <button class="btn btn-small" onclick="agCerrarModal('agModalAtendida')">Cancelar</button>
+                        <button class="btn" id="agBtnAtendida" onclick="agConfirmarAtendida()">Registrar ingreso</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -6463,6 +6618,840 @@
             }
         }
 
+        // ===== ETAPA 2: SERVICIOS Y AGENDA POR FECHA =====
+        // Nodos propios de Firebase: 'reservas_config' (servicios, precios, reglas) y 'agenda' (espacios por fecha).
+        // NO tocan 'salon_data' (clientas, finanzas, metas, plan, embudo).
+        const AG_DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+        const AG_DIAS_CORTO = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+        const AG_MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+        let agConfig = null;      // servicios, adicionales y reglas
+        let agAgenda = {};        // { 'YYYY-MM-DD': { bloqueado, motivo, espacios: { id: {inicio, fin, estado, reservaId} } } }
+        let agFecha = '';         // fecha seleccionada
+        let agMes = { y: 0, m: 0 };
+        let agEditId = null;      // espacio que se está editando
+        let agSucia = false;      // hay cambios de servicios/reglas sin guardar
+        let agSubActual = 'disp';
+        let agPrivada = { direccion: '', updatedAt: 0 };   // nodo privado 'config_privada': nunca se publica
+
+        // ---------- Utilidades ----------
+        function agPad(n) { return String(n).padStart(2, '0'); }
+        function agFechaISO(y, m, d) { return y + '-' + agPad(m + 1) + '-' + agPad(d); }   // m: 0-11
+        // Fecha de HOY según la hora del dispositivo (Bogotá), sin pasar por UTC
+        function hoyLocalISO() { const d = new Date(); return agFechaISO(d.getFullYear(), d.getMonth(), d.getDate()); }
+        function agParse(iso) { const p = iso.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+        function agEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+        function agToArr(x) { return Array.isArray(x) ? x : (x && typeof x === 'object' ? Object.values(x) : []); }
+        function agNum(v) { if (v === '' || v == null) return null; const n = Number(v); return isNaN(n) ? null : n; }
+        function agId(p) { return p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+        function agMin(hhmm) { const p = String(hhmm).split(':'); return (+p[0]) * 60 + (+p[1]); }
+        function agHora12(hhmm) {
+            const p = String(hhmm).split(':'); const h = +p[0]; const h12 = h % 12 === 0 ? 12 : h % 12;
+            return h12 + ':' + p[1] + ' ' + (h < 12 ? 'a. m.' : 'p. m.');
+        }
+        function agDur(min) {
+            const h = Math.floor(min / 60), m = min % 60;
+            return ((h ? h + ' h' : '') + (h && m ? ' ' : '') + (m ? m + ' min' : '')) || '0 min';
+        }
+        function agFechaLarga(iso) { const d = agParse(iso); return AG_DIAS[d.getDay()] + ' ' + d.getDate() + ' de ' + AG_MESES[d.getMonth()] + ' de ' + d.getFullYear(); }
+        function agMoneda(n) { return '$' + Number(n).toLocaleString('es-CO'); }
+        function agMsg(id, texto, color) { const el = document.getElementById(id); if (el) { el.textContent = texto || ''; el.style.color = color || '#27ae60'; } }
+
+        // ---------- Aviso de Firebase ----------
+        function agAvisoFirebase(err) {
+            const el = document.getElementById('agAviso'); if (!el) return;
+            const permiso = err && (err.code === 'PERMISSION_DENIED' || /permission/i.test(err.message || ''));
+            el.innerHTML = '<div class="card" style="border-color:#cfc3ee;background:#f7f3ff;font-size:13px;color:#4a3a7a;">⚠️ ' +
+                (permiso ? '<b>Firebase todavía no permite guardar la agenda ni los servicios.</b> Falta publicar las reglas de la Etapa 2. Tus clientas y finanzas no se ven afectadas.'
+                    : '<b>No se pudo sincronizar la agenda.</b> Revisa tu conexión. Lo que ves puede no estar actualizado.') + '</div>';
+        }
+        function agLimpiarAviso() { const el = document.getElementById('agAviso'); if (el) el.innerHTML = ''; }
+        function agErrorEscritura(err, msgId) {
+            const permiso = err && (err.code === 'PERMISSION_DENIED' || /permission/i.test(err.message || ''));
+            agAvisoFirebase(err);
+            agMsg(msgId, permiso ? '❌ No se guardó: faltan las reglas de Firebase.' : '❌ No se guardó: ' + ((err && err.message) || 'error de conexión'), '#e64980');
+        }
+
+        // ---------- Configuración: modelo ----------
+        function agConfigVacia() {
+            return {
+                version: 1, updatedAt: 0, servicios: [], adicionales: [],
+                reglas: { retencionHoras: null, anticipo: { activo: false, tipo: 'monto', valor: null, instrucciones: '' }, whatsapp: '', instagram: '', mostrarPrecios: true }
+            };
+        }
+        // Firebase elimina arrays vacíos y puede devolver arrays como objetos: se normaliza al leer
+        function agNormConfig(raw) {
+            const c = agConfigVacia();
+            if (!raw || typeof raw !== 'object') return c;
+            c.updatedAt = Number(raw.updatedAt) || 0;
+            c.servicios = agToArr(raw.servicios).filter(s => s && typeof s === 'object').map(s => ({
+                id: s.id || agId('s'), nombre: String(s.nombre || ''), activo: s.activo !== false,
+                variantes: agToArr(s.variantes).filter(v => v && typeof v === 'object').map(v => ({
+                    id: v.id || agId('v'), nombre: String(v.nombre || ''), precio: agNum(v.precio), precioVariable: !!v.precioVariable, duracionMin: agNum(v.duracionMin)
+                }))
+            }));
+            c.adicionales = agToArr(raw.adicionales).filter(a => a && typeof a === 'object').map(a => ({
+                id: a.id || agId('a'), nombre: String(a.nombre || ''), activo: a.activo !== false,
+                precio: agNum(a.precio), duracionMin: agNum(a.duracionMin), nota: String(a.nota || ''), porUnidad: !!a.porUnidad
+            }));
+            const r = raw.reglas || {}, a = r.anticipo || {};
+            c.reglas = {
+                retencionHoras: agNum(r.retencionHoras),
+                anticipo: { activo: !!a.activo, tipo: a.tipo === 'porcentaje' ? 'porcentaje' : 'monto', valor: agNum(a.valor), instrucciones: String(a.instrucciones || '') },
+                whatsapp: String(r.whatsapp || ''), instagram: String(r.instagram || ''), mostrarPrecios: r.mostrarPrecios !== false
+            };
+            return c;
+        }
+        function agGuardarCache() { try { localStorage.setItem('salon_agenda_config', JSON.stringify(agConfig)); } catch (e) { } }
+
+        // Catálogo 2026 de Mari Nails (precios tomados del PDF). Las duraciones quedan en blanco a propósito.
+        function agCatalogo2026() {
+            const v = (n, p) => ({ id: agId('v'), nombre: n, precio: p, precioVariable: false, duracionMin: null });
+            const s = (n, vs) => ({ id: agId('s'), nombre: n, activo: true, variantes: vs });
+            const a = (n, p, pu) => ({ id: agId('a'), nombre: n, activo: true, precio: p, duracionMin: null, nota: pu ? 'por cada aplique' : '', porUnidad: !!pu });
+            return {
+                servicios: [
+                    s('Esmaltado semipermanente', [v('Set nuevo', 45000), v('Retoque', 40000)]),
+                    s('Esmaltado semipermanente hombre', [v('Transparente', 25000), v('Transparente + diseño', 35000)]),
+                    s('Soft Gel con extensión', [v('Set nuevo', 70000), v('Retoque', 60000)]),
+                    s('Poly Gel con extensión', [v('Set nuevo', 80000), v('Retoque', 60000)]),
+                    s('Baño en Poly Gel', [v('Set nuevo', 60000), v('Retoque', 55000)]),
+                    s('Rubber Base', [v('Set nuevo', 55000), v('Retoque', 48000)])
+                ],
+                adicionales: [a('Retiro', 12000), a('Apliques (corazones, mariposas, dijes 3D)', 4000, true)],
+                whatsapp: '3128661331', instagram: 'mari_nails412'
+            };
+        }
+
+        function agValidarConfig(c) {
+            const e = [], nombres = {};
+            c.servicios.forEach((s, i) => {
+                const n = s.nombre.trim();
+                if (!n) { e.push('El servicio #' + (i + 1) + ' no tiene nombre.'); return; }
+                if (nombres[n.toLowerCase()]) e.push('El servicio "' + n + '" está repetido.');
+                nombres[n.toLowerCase()] = true;
+                if (s.activo && s.variantes.length === 0) e.push('"' + n + '" está activo pero no tiene ninguna variante (por ejemplo "Set nuevo").');
+                const vn = {};
+                s.variantes.forEach((v, j) => {
+                    const vnom = v.nombre.trim();
+                    if (!vnom) { e.push('"' + n + '": la variante #' + (j + 1) + ' no tiene nombre.'); return; }
+                    if (vn[vnom.toLowerCase()]) e.push('"' + n + '": la variante "' + vnom + '" está repetida.');
+                    vn[vnom.toLowerCase()] = true;
+                    if (v.precio != null && (v.precio < 0 || !isFinite(v.precio))) e.push('"' + n + ' · ' + vnom + '": precio no válido.');
+                    if (v.duracionMin != null && (!Number.isInteger(v.duracionMin) || v.duracionMin <= 0)) e.push('"' + n + ' · ' + vnom + '": la duración debe ser un número entero de minutos mayor que 0.');
+                });
+            });
+            c.adicionales.forEach((a, i) => {
+                if (!a.nombre.trim()) e.push('El adicional #' + (i + 1) + ' no tiene nombre.');
+                if (a.precio != null && a.precio < 0) e.push('"' + a.nombre + '": precio no válido.');
+                if (a.duracionMin != null && (!Number.isInteger(a.duracionMin) || a.duracionMin < 0)) e.push('"' + a.nombre + '": el tiempo extra debe ser un entero de minutos (0 o más).');
+            });
+            const r = c.reglas;
+            if (r.retencionHoras != null && !(r.retencionHoras > 0)) e.push('Las horas de retención deben ser mayores que 0 (o déjalas en blanco).');
+            if (r.anticipo.activo) {
+                if (!(r.anticipo.valor > 0)) e.push('El anticipo está activado pero no tiene valor.');
+                if (r.anticipo.tipo === 'porcentaje' && r.anticipo.valor > 100) e.push('El anticipo en porcentaje no puede pasar de 100.');
+            }
+            if (r.whatsapp) { const d = r.whatsapp.replace(/\D/g, ''); if (d.length < 10 || d.length > 15) e.push('El WhatsApp debe tener entre 10 y 15 dígitos.'); }
+            return e;
+        }
+
+        // ---------- Configuración: guardar / cargar ----------
+        function agMarcar() { agSucia = true; agRenderSucia(); agMsg('agMsgConfig', ''); agRenderServEstado(); }
+        function agRenderSucia() { const el = document.getElementById('agSucia'); if (el) el.textContent = agSucia ? '● Tienes cambios sin guardar' : ''; }
+
+        function agGuardarConfig() {
+            const errores = agValidarConfig(agConfig);
+            if (errores.length) { alert('No se guardó. Revisa esto:\n\n• ' + errores.join('\n• ')); return; }
+            const datos = JSON.parse(JSON.stringify(agConfig));
+            datos.updatedAt = Date.now();
+            agMsg('agMsgConfig', 'Guardando…', '#d4547e');
+            database.ref('reservas_config').set(datos).then(() => {
+                agConfig.updatedAt = datos.updatedAt; agGuardarCache(); agPoblarIngresos();
+                // La dirección va aparte, en un nodo privado (el portal público nunca la lee)
+                return database.ref('config_privada').set({ direccion: agPrivada.direccion || null, updatedAt: datos.updatedAt }).then(() => {
+                    agPrivada.updatedAt = datos.updatedAt;
+                    try { localStorage.setItem('salon_agenda_privada', JSON.stringify(agPrivada)); } catch (e) { }
+                    agSucia = false; agRenderSucia(); agLimpiarAviso(); agMsg('agMsgConfig', '✅ Guardado y sincronizado.');
+                }, err => { agErrorEscritura(err, 'agMsgConfig'); agMsg('agMsgConfig', 'Servicios y reglas guardados, pero la dirección no: faltan las reglas de “config_privada”.', '#e64980'); });
+            }).catch(err => agErrorEscritura(err, 'agMsgConfig'));
+        }
+
+        function agRecargarConfig() { agRecargarConfigServicios(); agRecargarPrivada(); }
+        function agRecargarPrivada() {
+            database.ref('config_privada').once('value').then(snap => {
+                if (agSucia) return;
+                const v = snap.val();
+                if (v) {
+                    agPrivada = { direccion: String(v.direccion || ''), updatedAt: Number(v.updatedAt) || 0 };
+                    try { localStorage.setItem('salon_agenda_privada', JSON.stringify(agPrivada)); } catch (e) { }
+                    if (agSubActual === 'serv') agRenderMensaje();
+                }
+            }).catch(err => agAvisoFirebase(err));
+        }
+        function agRecargarConfigServicios() {
+            database.ref('reservas_config').once('value').then(snap => {
+                if (agSucia) return;
+                const v = snap.val();
+                if (v) { agConfig = agNormConfig(v); agGuardarCache(); }
+                agPoblarIngresos();
+                if (agSubActual === 'serv') agRenderServ();
+            }).catch(err => agAvisoFirebase(err));
+        }
+
+        // El desplegable de Ingresos usa esta lista (una sola fuente). Si aún no hay servicios activos, se queda la lista original.
+        function agPoblarIngresos() {
+            const sel = document.getElementById('servicio');
+            if (!sel || !agConfig) return;
+            const activos = agConfig.servicios.filter(s => s.activo && s.nombre.trim());
+            if (!activos.length) return;
+            const actual = sel.value;
+            sel.innerHTML = '<option value="">Selecciona un servicio</option>' +
+                activos.map(s => '<option value="' + agEsc(s.nombre) + '">' + agEsc(s.nombre) + '</option>').join('');
+            if (actual && activos.some(s => s.nombre === actual)) sel.value = actual;
+        }
+
+        // ---------- Pantalla: servicios y reglas ----------
+        function agSub(cual) {
+            agSubActual = cual;
+            document.getElementById('agSecDisp').style.display = cual === 'disp' ? 'block' : 'none';
+            document.getElementById('agSecServ').style.display = cual === 'serv' ? 'block' : 'none';
+            const on = document.getElementById(cual === 'disp' ? 'agSubDispBtn' : 'agSubServBtn');
+            const off = document.getElementById(cual === 'disp' ? 'agSubServBtn' : 'agSubDispBtn');
+            on.style.background = ''; on.style.color = '';
+            off.style.background = '#f0e0e8'; off.style.color = '#666';
+            if (cual === 'serv') { agRecargarConfig(); agRenderServ(); } else { agRenderDisp(); }
+        }
+
+        function agLbl(t) { return '<label style="font-size:11px;color:#888;display:block;margin-bottom:3px;">' + t + '</label>'; }
+
+        function agRenderServ() { agRenderServicios(); agRenderAdicionales(); agRenderReglas(); agRenderMensaje(); agRenderServEstado(); agRenderSucia(); }
+
+        function agRenderServEstado() {
+            const el = document.getElementById('agServEstado'); if (!el) return;
+            const cat = document.getElementById('agBtnCatalogo');
+            if (!agConfig.servicios.length) { el.innerHTML = '<span style="color:#999;">Aún no hay servicios. Agrega uno o carga tu catálogo 2026.</span>'; if (cat) cat.style.display = 'inline-block'; return; }
+            if (cat) cat.style.display = 'inline-block';
+            let sin = 0, tot = 0;
+            agConfig.servicios.filter(s => s.activo).forEach(s => s.variantes.forEach(v => { tot++; if (!(v.duracionMin > 0)) sin++; }));
+            el.innerHTML = sin ? '<span style="color:#f39c12;">⏳ Faltan duraciones en ' + sin + ' de ' + tot + ' variantes. Las necesitarás antes de abrir el portal.</span>'
+                : '<span style="color:#27ae60;">✅ Todas las variantes tienen duración.</span>';
+        }
+
+        function agRenderServicios() {
+            const el = document.getElementById('agServicios'); if (!el) return;
+            if (!agConfig.servicios.length) { el.innerHTML = '<div class="empty" style="padding:20px;">Sin servicios todavía.</div>'; return; }
+            el.innerHTML = agConfig.servicios.map((s, i) => {
+                const vars = s.variantes.map((v, j) =>
+                    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:8px;align-items:end;margin-top:8px;padding-top:8px;border-top:1px dashed #f0e0e8;">' +
+                    '<div>' + agLbl('Variante') + '<input type="text" style="width:100%;" value="' + agEsc(v.nombre) + '" placeholder="Set nuevo" onchange="agVar(' + i + ',' + j + ',\'nombre\',this.value)"></div>' +
+                    '<div>' + agLbl('Precio (COP)') + '<input type="number" style="width:100%;" min="0" step="1000" value="' + (v.precio == null ? '' : v.precio) + '" onchange="agVar(' + i + ',' + j + ',\'precio\',this.value)"></div>' +
+                    '<div>' + agLbl('Duración (minutos)') + '<input type="number" style="width:100%;" min="5" step="5" value="' + (v.duracionMin == null ? '' : v.duracionMin) + '" placeholder="Sin definir" onchange="agVar(' + i + ',' + j + ',\'duracionMin\',this.value)"></div>' +
+                    '<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;">' +
+                    '<label style="font-size:11px;color:#666;display:flex;gap:4px;align-items:center;"><input type="checkbox" ' + (v.precioVariable ? 'checked' : '') + ' onchange="agVar(' + i + ',' + j + ',\'precioVariable\',this.checked)"> Precio variable (desde)</label>' +
+                    '<button class="btn btn-small" onclick="agDelVar(' + i + ',' + j + ')" aria-label="Quitar variante">🗑️</button></div></div>').join('');
+                return '<div style="border:1px solid #f0e0e8;border-radius:10px;padding:12px;margin-bottom:12px;background:#fffafc;">' +
+                    '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
+                    '<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#666;"><input type="checkbox" ' + (s.activo ? 'checked' : '') + ' onchange="agSrv(' + i + ',\'activo\',this.checked)"> Activo</label>' +
+                    '<input type="text" style="flex:1;min-width:180px;font-weight:600;" value="' + agEsc(s.nombre) + '" placeholder="Nombre del servicio" onchange="agSrv(' + i + ',\'nombre\',this.value)">' +
+                    '<button class="btn btn-small" onclick="agDelServicio(' + i + ')" aria-label="Quitar servicio">🗑️</button></div>' + vars +
+                    '<button class="btn btn-small" style="margin-top:10px;" onclick="agAddVar(' + i + ')">➕ Agregar variante</button></div>';
+            }).join('');
+        }
+        function agSrv(i, campo, valor) { const s = agConfig.servicios[i]; if (!s) return; s[campo] = campo === 'activo' ? !!valor : String(valor); agMarcar(); }
+        function agVar(i, j, campo, valor) {
+            const v = agConfig.servicios[i] && agConfig.servicios[i].variantes[j]; if (!v) return;
+            if (campo === 'nombre') v[campo] = String(valor); else if (campo === 'precioVariable') v[campo] = !!valor; else v[campo] = agNum(valor);
+            agMarcar();
+        }
+        function agAddServicio() { agConfig.servicios.push({ id: agId('s'), nombre: '', activo: true, variantes: [{ id: agId('v'), nombre: 'Set nuevo', precio: null, precioVariable: false, duracionMin: null }] }); agMarcar(); agRenderServicios(); }
+        function agAddVar(i) { agConfig.servicios[i].variantes.push({ id: agId('v'), nombre: '', precio: null, precioVariable: false, duracionMin: null }); agMarcar(); agRenderServicios(); }
+        function agDelVar(i, j) {
+            const s = agConfig.servicios[i]; if (!s) return;
+            if (!confirm('¿Quitar la variante "' + (s.variantes[j].nombre || 'sin nombre') + '"?')) return;
+            s.variantes.splice(j, 1); agMarcar(); agRenderServicios();
+        }
+        function agDelServicio(i) {
+            const s = agConfig.servicios[i]; if (!s) return;
+            if (!confirm('¿Quitar "' + (s.nombre || 'sin nombre') + '" de la lista? No borra tus ingresos ya registrados. Si solo quieres ocultarlo, desmarca "Activo".')) return;
+            agConfig.servicios.splice(i, 1); agMarcar(); agRenderServicios();
+        }
+        function agCargarCatalogo() {
+            const cat = agCatalogo2026();
+            const hay = agConfig.servicios.length > 0;
+            if (hay && !confirm('Ya tienes servicios. Se agregarán solo los que falten (por nombre) y no se cambiará nada de lo que ya escribiste. ¿Continuar?')) return;
+            const nombres = {}; agConfig.servicios.forEach(s => nombres[s.nombre.trim().toLowerCase()] = true);
+            cat.servicios.forEach(s => { if (!nombres[s.nombre.toLowerCase()]) agConfig.servicios.push(s); });
+            const an = {}; agConfig.adicionales.forEach(a => an[a.nombre.trim().toLowerCase()] = true);
+            cat.adicionales.forEach(a => { if (!an[a.nombre.toLowerCase()]) agConfig.adicionales.push(a); });
+            if (!agConfig.reglas.whatsapp) agConfig.reglas.whatsapp = cat.whatsapp;
+            if (!agConfig.reglas.instagram) agConfig.reglas.instagram = cat.instagram;
+            agMarcar(); agRenderServ();
+            agMsg('agMsgConfig', 'Catálogo cargado. Revisa los precios y pulsa “Guardar servicios y reglas”.', '#d4547e');
+        }
+
+        function agRenderAdicionales() {
+            const el = document.getElementById('agAdicionales'); if (!el) return;
+            if (!agConfig.adicionales.length) { el.innerHTML = '<div style="font-size:12px;color:#aaa;">Sin adicionales.</div>'; return; }
+            el.innerHTML = agConfig.adicionales.map((a, i) =>
+                '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:8px;align-items:end;margin-bottom:10px;padding:10px;border:1px solid #f0e0e8;border-radius:10px;background:#fffafc;">' +
+                '<div style="grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
+                '<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#666;"><input type="checkbox" ' + (a.activo ? 'checked' : '') + ' onchange="agAdic(' + i + ',\'activo\',this.checked)"> Activo</label>' +
+                '<input type="text" style="flex:1;min-width:160px;font-weight:600;" value="' + agEsc(a.nombre) + '" placeholder="Nombre" onchange="agAdic(' + i + ',\'nombre\',this.value)">' +
+                '<button class="btn btn-small" onclick="agDelAdicional(' + i + ')" aria-label="Quitar adicional">🗑️</button></div>' +
+                '<div>' + agLbl('Precio (COP)') + '<input type="number" style="width:100%;" min="0" step="500" value="' + (a.precio == null ? '' : a.precio) + '" onchange="agAdic(' + i + ',\'precio\',this.value)"></div>' +
+                '<div>' + agLbl('Tiempo extra (minutos)') + '<input type="number" style="width:100%;" min="0" step="5" value="' + (a.duracionMin == null ? '' : a.duracionMin) + '" placeholder="Sin definir" onchange="agAdic(' + i + ',\'duracionMin\',this.value)"></div>' +
+                '<div>' + agLbl('Nota (cómo se cobra)') + '<input type="text" style="width:100%;" value="' + agEsc(a.nota) + '" placeholder="Ej: por cada uña" onchange="agAdic(' + i + ',\'nota\',this.value)"></div>' +
+                '<label style="grid-column:1/-1;display:flex;gap:6px;align-items:center;font-size:12px;color:#666;"><input type="checkbox" ' + (a.porUnidad ? 'checked' : '') + ' onchange="agAdic(' + i + ',\'porUnidad\',this.checked)"> Se cobra por cada unidad (por ejemplo, por cada aplique)</label></div>').join('');
+        }
+        function agAdic(i, campo, valor) {
+            const a = agConfig.adicionales[i]; if (!a) return;
+            if (campo === 'activo' || campo === 'porUnidad') a[campo] = !!valor; else if (campo === 'nombre' || campo === 'nota') a[campo] = String(valor); else a[campo] = agNum(valor);
+            agMarcar();
+        }
+        function agAddAdicional() { agConfig.adicionales.push({ id: agId('a'), nombre: '', activo: true, precio: null, duracionMin: null, nota: '', porUnidad: false }); agMarcar(); agRenderAdicionales(); }
+        function agDelAdicional(i) {
+            const a = agConfig.adicionales[i]; if (!a) return;
+            if (!confirm('¿Quitar el adicional "' + (a.nombre || 'sin nombre') + '"?')) return;
+            agConfig.adicionales.splice(i, 1); agMarcar(); agRenderAdicionales();
+        }
+
+        function agRenderReglas() {
+            const el = document.getElementById('agReglas'); if (!el) return;
+            const r = agConfig.reglas, an = r.anticipo;
+            const input = (campo, titulo, ayuda, tipo, extra) =>
+                '<div>' + agLbl(titulo) + '<input type="' + tipo + '" style="width:100%;" ' + (extra || '') + ' value="' + agEsc(r[campo] == null ? '' : r[campo]) + '" onchange="agRegla(\'' + campo + '\',this.value,\'' + (tipo === 'number' ? 'num' : 'text') + '\')">' +
+                (ayuda ? '<div style="font-size:11px;color:#aaa;margin-top:2px;">' + ayuda + '</div>' : '') + '</div>';
+            el.innerHTML =
+                '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;">' +
+                input('retencionHoras', 'Horas que una solicitud pendiente retiene el espacio', 'En blanco = sin vencimiento automático (tú decides cuándo liberar). Lo definimos juntas antes del portal.', 'number', 'min="1" step="1" placeholder="Sin definir"') +
+                input('whatsapp', 'Tu WhatsApp', 'Para los mensajes de confirmación.', 'tel', 'placeholder="3001234567"') +
+                input('instagram', 'Instagram (sin @)', '', 'text', '') + '</div>' +
+                '<label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:14px 0 6px;"><input type="checkbox" ' + (r.mostrarPrecios ? 'checked' : '') + ' onchange="agRegla(\'mostrarPrecios\',this.checked,\'bool\')"> Mostrar los precios en el portal de clientas</label>' +
+                '<div style="font-size:12px;color:#999;margin-bottom:12px;">📍 La dirección no se publica: la envías tú por WhatsApp cuando confirmes la cita.</div>' +
+                '<div style="padding:12px;border:1px solid #f0e0e8;border-radius:10px;background:#fffafc;">' +
+                '<label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;"><input type="checkbox" ' + (an.activo ? 'checked' : '') + ' onchange="agAnticipo(\'activo\',this.checked)"> Pedir anticipo para agendar <span style="font-weight:400;color:#999;">(desactivado por ahora)</span></label>' +
+                '<div style="font-size:11px;color:#aaa;margin:4px 0 0 24px;">Es independiente del fondo del 18 % de tu dashboard. Aún no se usa en el portal; queda guardado para el futuro.</div>' +
+                (an.activo ? '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:10px;">' +
+                    '<div>' + agLbl('Tipo') + '<select style="width:100%;" onchange="agAnticipo(\'tipo\',this.value)"><option value="monto" ' + (an.tipo === 'monto' ? 'selected' : '') + '>Monto fijo (COP)</option><option value="porcentaje" ' + (an.tipo === 'porcentaje' ? 'selected' : '') + '>Porcentaje del servicio</option></select></div>' +
+                    '<div>' + agLbl('Valor') + '<input type="number" style="width:100%;" min="0" value="' + (an.valor == null ? '' : an.valor) + '" onchange="agAnticipo(\'valor\',this.value)"></div>' +
+                    '<div style="grid-column:1/-1;">' + agLbl('Instrucciones de pago (opcional)') + '<input type="text" style="width:100%;" value="' + agEsc(an.instrucciones) + '" onchange="agAnticipo(\'instrucciones\',this.value)"></div></div>' : '') + '</div>';
+        }
+        function agRenderMensaje() {
+            const el = document.getElementById('agMensaje'); if (!el) return;
+            el.innerHTML = agLbl('Dirección que se envía al confirmar una cita') +
+                '<input type="text" id="agDirInput" style="width:100%;" value="' + agEsc(agPrivada.direccion) + '" placeholder="Calle, número, bloque, casa…" onchange="agPriv(this.value)">' +
+                '<div style="font-size:11px;color:#aaa;margin:4px 0 8px;">🔒 Solo la ves tú: no se publica en el portal. Se agrega al mensaje del botón 💬 WhatsApp.</div>' +
+                '<button class="btn btn-small" onclick="agUsarDireccionCatalogo()" style="background:#d7ccf0;color:#4a3a7a;">📍 Usar la dirección del catálogo</button>' +
+                '<div style="font-size:12px;font-weight:600;color:#d4547e;margin:14px 0 6px;">Así se verá el mensaje (ejemplo):</div>' +
+                '<pre id="agPreviewMsg" style="white-space:pre-wrap;font-family:inherit;font-size:13px;background:#f3fbf5;border:1px solid #cfe9d6;border-radius:12px;padding:12px;margin:0;"></pre>';
+            agRenderPreview();
+        }
+        function agRenderPreview() {
+            const p = document.getElementById('agPreviewMsg'); if (!p) return;
+            p.textContent = agMensajeConfirmacion({ clienteNombre: 'Ana Pérez', fecha: hoyLocalISO(), inicio: '14:00', servicioNombre: 'Poly Gel con extensión', varianteNombre: 'Set nuevo', adicionales: [], precio: 80000 });
+        }
+        function agPriv(v) { agPrivada.direccion = String(v).trim(); agMarcar(); agRenderPreview(); }
+        function agUsarDireccionCatalogo() { agPrivada.direccion = 'Calle 71 Sur No. 94 A 48, Bloque 3, Casa 20'; agMarcar(); agRenderMensaje(); }
+        function agRegla(campo, valor, tipo) { agConfig.reglas[campo] = tipo === 'num' ? agNum(valor) : (tipo === 'bool' ? !!valor : String(valor).trim()); agMarcar(); }
+        function agAnticipo(campo, valor) {
+            const an = agConfig.reglas.anticipo;
+            if (campo === 'activo') { an.activo = !!valor; agMarcar(); agRenderReglas(); return; }
+            an[campo] = campo === 'valor' ? agNum(valor) : String(valor); agMarcar();
+        }
+
+        // ---------- Agenda: normalizar y escuchar ----------
+        function agNormAgenda(raw) {
+            const out = {}; if (!raw || typeof raw !== 'object') return out;
+            Object.keys(raw).forEach(f => {
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(f)) return;
+                const d = raw[f] || {}, src = d.espacios || {}, esp = {};
+                Object.keys(src).forEach(id => {
+                    const e = src[id];
+                    if (e && /^\d{2}:\d{2}$/.test(e.inicio) && /^\d{2}:\d{2}$/.test(e.fin))
+                        esp[id] = { inicio: e.inicio, fin: e.fin, estado: e.estado === 'bloqueado' ? 'bloqueado' : 'abierto', reservaId: e.reservaId || null };
+                });
+                out[f] = { bloqueado: !!d.bloqueado, motivo: String(d.motivo || ''), espacios: esp };
+            });
+            return out;
+        }
+
+        function agIniciarListener() {
+            try { agAgenda = agNormAgenda(JSON.parse(localStorage.getItem('salon_agenda_cache') || 'null')); } catch (e) { agAgenda = {}; }
+            database.ref('agenda').on('value', snap => {
+                agAgenda = agNormAgenda(snap.val());
+                try { localStorage.setItem('salon_agenda_cache', JSON.stringify(snap.val() || {})); } catch (e) { }
+                agLimpiarAviso();
+                agRenderDisp();
+            }, err => { agAvisoFirebase(err); agRenderDisp(); });
+        }
+
+        // ---------- Agenda: pantalla ----------
+        function agEspaciosDe(f) {
+            const d = agAgenda[f]; if (!d) return [];
+            return Object.keys(d.espacios).map(id => Object.assign({ id: id }, d.espacios[id])).sort((a, b) => agMin(a.inicio) - agMin(b.inicio));
+        }
+        function agInfoDia(f) {
+            const d = agAgenda[f]; const esp = agEspaciosDe(f);
+            return { bloqueado: !!(d && d.bloqueado), total: esp.length, abiertos: esp.filter(e => e.estado === 'abierto' && !e.reservaId).length };
+        }
+
+        function agRenderDisp() { agRenderCitas(); agRenderProximos(); agRenderCalendario(); agRenderDia(); }
+
+        function agRenderProximos() {
+            const el = document.getElementById('agProximos'); if (!el) return;
+            const hoy = hoyLocalISO();
+            const fechas = Object.keys(agAgenda).filter(f => f >= hoy && (agInfoDia(f).total > 0 || agAgenda[f].bloqueado)).sort().slice(0, 12);
+            if (!fechas.length) { el.innerHTML = '<div style="font-size:13px;color:#999;">Todavía no has abierto espacios. Elige un día en el calendario y agrega tus horarios.</div>'; return; }
+            el.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap;">' + fechas.map(f => {
+                const i = agInfoDia(f), d = agParse(f);
+                const txt = AG_DIAS_CORTO[d.getDay()] + ' ' + d.getDate() + ' ' + AG_MESES[d.getMonth()].slice(0, 3);
+                const det = i.bloqueado ? '🚫 bloqueado' : (i.abiertos + (i.abiertos === 1 ? ' espacio' : ' espacios'));
+                return '<button onclick="agSeleccionar(\'' + f + '\')" style="border:1px solid ' + (i.bloqueado ? '#cfc3ee' : '#f4a6c1') + ';background:' + (i.bloqueado ? '#ede7f6' : '#fff0f6') + ';border-radius:20px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:inherit;color:#555;">' +
+                    '<b>' + txt + '</b> · ' + det + '</button>';
+            }).join('') + '</div>';
+        }
+
+        function agMesCambiar(delta) {
+            let m = agMes.m + delta, y = agMes.y;
+            if (m < 0) { m = 11; y--; } else if (m > 11) { m = 0; y++; }
+            agMes = { y: y, m: m }; agRenderCalendario();
+        }
+        function agIrHoy() { agSeleccionar(hoyLocalISO()); }
+        function agSeleccionar(f) {
+            agFecha = f; agCancelarEdicion(true);
+            const d = agParse(f); agMes = { y: d.getFullYear(), m: d.getMonth() };
+            agRenderDisp();
+        }
+
+        function agRenderCalendario() {
+            const el = document.getElementById('agCalendario'); if (!el) return;
+            const y = agMes.y, m = agMes.m, hoy = hoyLocalISO();
+            document.getElementById('agMesTitulo').textContent = AG_MESES[m].charAt(0).toUpperCase() + AG_MESES[m].slice(1) + ' ' + y;
+            const offset = (new Date(y, m, 1).getDay() + 6) % 7, dias = new Date(y, m + 1, 0).getDate();
+            let h = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">';
+            ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].forEach(n => h += '<div style="text-align:center;font-size:11px;color:#999;font-weight:600;padding-bottom:2px;">' + n + '</div>');
+            for (let i = 0; i < offset; i++) h += '<div></div>';
+            for (let d = 1; d <= dias; d++) {
+                const f = agFechaISO(y, m, d), i = agInfoDia(f), sel = f === agFecha;
+                let bg = '#fff', bd = '#f0e0e8', col = '#555';
+                if (i.bloqueado) { bg = '#ede7f6'; bd = '#cfc3ee'; } else if (i.abiertos > 0) { bg = '#fff0f6'; bd = '#f4a6c1'; }
+                if (sel) { bg = 'linear-gradient(135deg,#e64980,#d4547e)'; bd = '#d4547e'; col = '#fff'; }
+                const marca = i.bloqueado ? '🚫' : (i.abiertos > 0 ? '<span style="font-size:10px;' + (sel ? '' : 'color:#d4547e;') + '">● ' + i.abiertos + '</span>' : (i.total > 0 ? '<span style="font-size:10px;">○</span>' : '&nbsp;'));
+                h += '<button onclick="agSeleccionar(\'' + f + '\')" aria-label="' + agFechaLarga(f) + '" style="min-height:52px;border:1px solid ' + bd + ';background:' + bg + ';color:' + col + ';border-radius:8px;padding:4px 2px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;' +
+                    (f === hoy ? 'box-shadow:0 0 0 2px #d4547e;' : '') + (f < hoy ? 'opacity:.55;' : '') + '"><span style="font-size:14px;font-weight:600;">' + d + '</span>' + marca + '</button>';
+            }
+            el.innerHTML = h + '</div>';
+        }
+
+        function agFilaEspacio(e) {
+            const durac = agDur(agMin(e.fin) - agMin(e.inicio));
+            const hoy = hoyLocalISO(), dia = agAgenda[agFecha], diaBloq = !!(dia && dia.bloqueado);
+            const reservado = !!e.reservaId, bloq = e.estado === 'bloqueado';
+            const r = reservado ? agReservas[e.reservaId] : null;
+            const est = r ? r.estado : 'confirmada';
+            let etiqueta, acciones = '', info = '';
+            if (reservado) {
+                etiqueta = est === 'atendida' ? '<span class="badge" style="background:#e8f5e9;color:#2e7d32;">Atendida</span>'
+                    : est === 'no_asistio' ? '<span class="badge" style="background:#eceff1;color:#546e7a;">No asistió</span>'
+                        : '<span class="badge" style="background:#e3f2e8;color:#2e7d32;">Confirmada</span>';
+                info = r ? '<div style="font-size:13px;margin-top:6px;">👤 <b>' + agEsc(r.clienteNombre) + '</b> · ' + agEsc(r.servicioNombre) + (r.varianteNombre ? ' — ' + agEsc(r.varianteNombre) : '') +
+                    (r.adicionales.length ? ' + ' + r.adicionales.map(agTxtAdic).join(', ') : '') + (r.precio != null ? ' · ' + agMoneda(r.precio) : '') + '</div>' +
+                    (r.notas ? '<div style="font-size:12px;color:#888;margin-top:2px;">📝 ' + agEsc(r.notas) + '</div>' : '') +
+                    (est === 'atendida' ? '<div style="font-size:12px;color:#2e7d32;margin-top:2px;">💰 Ingreso registrado en Finanzas</div>' : '')
+                    : '<div style="font-size:12px;color:#999;margin-top:6px;">Cargando los datos de la cita…</div>';
+                if (r && est === 'confirmada') {
+                    const puede = r.fecha <= hoy, ttl = puede ? '' : ' disabled title="Disponible desde el día de la cita" style="opacity:.5;cursor:not-allowed;"';
+                    acciones = (r.clienteTelefono ? '<button class="btn btn-small" onclick="agWhatsApp(\'' + r.id + '\')" style="background:#d9f2e0;color:#1f6b3a;">💬 WhatsApp</button>' : '') +
+                        '<button class="btn btn-small"' + (puede ? '' : ttl) + ' onclick="agAbrirAtendida(\'' + r.id + '\')">✅ Atendida</button>' +
+                        '<button class="btn btn-small"' + (puede ? '' : ttl) + ' onclick="agNoAsistio(\'' + r.id + '\')" style="background:#d7ccf0;color:#4a3a7a;">🚫 No asistió</button>' +
+                        '<button class="btn btn-small" onclick="agCancelarCita(\'' + r.id + '\')">✖ Cancelar cita</button>';
+                }
+            } else {
+                etiqueta = bloq ? '<span class="badge" style="background:#ede7f6;color:#4a3a7a;">Bloqueado</span>' : '<span class="badge" style="background:#fff0f6;color:#d4547e;">Abierto</span>';
+                acciones = (!bloq && !diaBloq && agFecha >= hoy ? '<button class="btn btn-small" onclick="agAbrirCita(\'' + e.id + '\')" style="background:linear-gradient(135deg,#e64980,#d4547e);color:#fff;">➕ Crear cita</button>' : '') +
+                    '<button class="btn btn-small" onclick="agEditarEspacio(\'' + e.id + '\')" aria-label="Editar espacio">✏️</button>' +
+                    '<button class="btn btn-small" onclick="agToggleEspacio(\'' + e.id + '\')" aria-label="' + (bloq ? 'Abrir' : 'Bloquear') + ' espacio" style="background:#d7ccf0;color:#4a3a7a;">' + (bloq ? '✅ Abrir' : '🚫 Bloquear') + '</button>' +
+                    '<button class="btn btn-small" onclick="agEliminarEspacio(\'' + e.id + '\')" aria-label="Eliminar espacio">🗑️</button>';
+            }
+            return '<div style="padding:10px 12px;margin-bottom:8px;border:1px solid ' + (bloq ? '#cfc3ee' : '#f0e0e8') + ';border-radius:10px;background:' + (bloq ? '#f7f3ff' : '#fffafc') + ';">' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">' +
+                '<div><b style="font-size:14px;">' + agHora12(e.inicio) + ' – ' + agHora12(e.fin) + '</b> <span style="font-size:12px;color:#999;">· ' + durac + '</span> ' + etiqueta + '</div>' +
+                '<div style="display:flex;gap:6px;flex-wrap:wrap;">' + acciones + '</div></div>' + info + '</div>';
+        }
+
+        function agRenderDia() {
+            const hoy = hoyLocalISO(), f = agFecha;
+            const t = document.getElementById('agDiaTitulo'); if (!t || !f) return;
+            t.textContent = agFechaLarga(f).charAt(0).toUpperCase() + agFechaLarga(f).slice(1) + (f === hoy ? ' · hoy' : '');
+            const d = agAgenda[f], info = agInfoDia(f), pasada = f < hoy;
+            document.getElementById('agDiaAcciones').innerHTML = (d && d.bloqueado)
+                ? '<div style="padding:10px 12px;border-radius:10px;background:#ede7f6;color:#4a3a7a;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">' +
+                '<span>🚫 <b>Día bloqueado</b>' + (d.motivo ? ' · ' + agEsc(d.motivo) : '') + ' — no se ofrecerá a las clientas.</span>' +
+                '<button class="btn btn-small" onclick="agDesbloquearDia()">✅ Quitar bloqueo</button></div>'
+                : (pasada ? '' : '<button class="btn btn-small" onclick="agBloquearDia()" style="background:#d7ccf0;color:#4a3a7a;">🚫 Bloquear día completo</button>');
+            const esp = agEspaciosDe(f);
+            const man = esp.filter(e => agMin(e.inicio) < 720), tar = esp.filter(e => agMin(e.inicio) >= 720);
+            const grupo = (tit, lista) => '<div style="font-size:13px;font-weight:600;color:#d4547e;margin:12px 0 6px;">' + tit + '</div>' +
+                (lista.length ? lista.map(agFilaEspacio).join('') : '<div style="font-size:12px;color:#bbb;margin-bottom:6px;">Sin espacios.</div>');
+            document.getElementById('agEspacios').innerHTML = esp.length === 0
+                ? '<div style="font-size:13px;color:#999;margin-top:6px;">' + (pasada ? 'No hubo espacios en esta fecha.' : 'Este día no tiene espacios: no se ofrece nada a las clientas.') + '</div>'
+                : grupo('☀️ Mañana', man) + grupo('🌙 Tarde y noche', tar);
+            const wrap = document.getElementById('agFormWrap');
+            wrap.style.display = pasada ? 'none' : 'block';
+            const edit = agEditId !== null;
+            document.getElementById('agFormTitulo').textContent = edit ? '✏️ Editando espacio' : '➕ Abrir un espacio (una sola cita)';
+            document.getElementById('agBtnGuardarEsp').textContent = edit ? 'Guardar cambios' : 'Agregar espacio';
+            document.getElementById('agBtnCancelarEsp').style.display = edit ? 'inline-block' : 'none';
+        }
+
+        // ---------- Agenda: acciones ----------
+        function agRefDia(f) { return database.ref('agenda/' + f); }
+        function agGuardarEspacio() {
+            const f = agFecha, ini = document.getElementById('agIni').value, fin = document.getElementById('agFin').value;
+            const err = t => agMsg('agMsgEspacio', t, '#e64980');
+            if (!f) return;
+            if (f < hoyLocalISO()) return err('Esta fecha ya pasó.');
+            if (!ini || !fin) return err('Escribe la hora de inicio y la de fin.');
+            if (agMin(fin) <= agMin(ini)) return err('La hora de fin debe ser posterior a la de inicio.');
+            const otros = agEspaciosDe(f).filter(e => e.id !== agEditId);
+            const choque = otros.find(e => agMin(ini) < agMin(e.fin) && agMin(e.inicio) < agMin(fin));
+            if (choque) return err('Se cruza con el espacio de ' + agHora12(choque.inicio) + ' a ' + agHora12(choque.fin) + '.');
+            agMsg('agMsgEspacio', 'Guardando…', '#d4547e');
+            if (agEditId !== null) {
+                const actual = agAgenda[f] && agAgenda[f].espacios[agEditId];
+                if (!actual) { agCancelarEdicion(); return err('Ese espacio ya no existe (¿lo eliminaste en otro dispositivo?).'); }
+                if (actual.reservaId) { agCancelarEdicion(); return err('Ese espacio ya está reservado y no se puede editar.'); }
+                const id = agEditId;
+                agRefDia(f).child('espacios/' + id).update({ inicio: ini, fin: fin })
+                    .then(() => { agCancelarEdicion(true); agMsg('agMsgEspacio', '✅ Espacio actualizado.'); })
+                    .catch(e => agErrorEscritura(e, 'agMsgEspacio'));
+            } else {
+                const id = agRefDia(f).child('espacios').push().key;
+                agRefDia(f).child('espacios/' + id).set({ inicio: ini, fin: fin, estado: 'abierto', creado: Date.now() })
+                    .then(() => { document.getElementById('agIni').value = ''; document.getElementById('agFin').value = ''; agMsg('agMsgEspacio', '✅ Espacio agregado.'); })
+                    .catch(e => agErrorEscritura(e, 'agMsgEspacio'));
+            }
+        }
+        function agEditarEspacio(id) {
+            const e = agAgenda[agFecha] && agAgenda[agFecha].espacios[id]; if (!e || e.reservaId) return;
+            agEditId = id;
+            document.getElementById('agIni').value = e.inicio; document.getElementById('agFin').value = e.fin;
+            agMsg('agMsgEspacio', ''); agRenderDia();
+            document.getElementById('agFormWrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        function agCancelarEdicion(silencioso) {
+            agEditId = null;
+            const i = document.getElementById('agIni'), fi = document.getElementById('agFin');
+            if (i) i.value = ''; if (fi) fi.value = '';
+            if (silencioso !== true) agMsg('agMsgEspacio', '');
+            if (agFecha) agRenderDia();
+        }
+        function agToggleEspacio(id) {
+            const e = agAgenda[agFecha] && agAgenda[agFecha].espacios[id]; if (!e || e.reservaId) return;
+            agRefDia(agFecha).child('espacios/' + id + '/estado').set(e.estado === 'bloqueado' ? 'abierto' : 'bloqueado').catch(er => agErrorEscritura(er, 'agMsgEspacio'));
+        }
+        function agEliminarEspacio(id) {
+            const e = agAgenda[agFecha] && agAgenda[agFecha].espacios[id]; if (!e || e.reservaId) return;
+            if (!confirm('¿Eliminar el espacio de ' + agHora12(e.inicio) + ' a ' + agHora12(e.fin) + '?')) return;
+            if (agEditId === id) agCancelarEdicion(true);
+            agRefDia(agFecha).child('espacios/' + id).remove().catch(er => agErrorEscritura(er, 'agMsgEspacio'));
+        }
+        function agBloquearDia() {
+            const conCitas = agEspaciosDe(agFecha).filter(e => e.reservaId && agReservas[e.reservaId] && agReservas[e.reservaId].estado === 'confirmada').length;
+            if (conCitas && !confirm('Ese día tiene ' + conCitas + (conCitas === 1 ? ' cita confirmada' : ' citas confirmadas') + '. Seguirán vigentes aunque bloquees el día para nuevas solicitudes. ¿Continuar?')) return;
+            const motivo = prompt('Bloquear todo el día. Motivo (opcional, solo lo ves tú):', '');
+            if (motivo === null) return;
+            agRefDia(agFecha).update({ bloqueado: true, motivo: motivo.trim() || null }).catch(er => agErrorEscritura(er, 'agMsgEspacio'));
+        }
+        function agDesbloquearDia() {
+            agRefDia(agFecha).update({ bloqueado: null, motivo: null }).catch(er => agErrorEscritura(er, 'agMsgEspacio'));
+        }
+
+        // ===== ETAPA 3: CITAS MANUALES Y "ATENDIDA" =====
+        // Reutiliza addCliente() y addIngreso() del dashboard: no se duplica la lógica de clientas, ingresos, reserva del 18 % ni fidelización.
+        // Las citas viven en el nodo propio 'reservas'; cada espacio ocupado guarda el id de su cita en 'agenda/.../reservaId'.
+        let agReservas = {};
+        let agCitaCtx = null;
+        let agCitaServs = [];
+        let agAtendidaId = null;
+        let agAtendidaOcupado = false;
+
+        function agNormReservas(raw) {
+            const out = {}; if (!raw || typeof raw !== 'object') return out;
+            Object.keys(raw).forEach(id => {
+                const r = raw[id];
+                if (!r || typeof r !== 'object' || !/^\d{4}-\d{2}-\d{2}$/.test(r.fecha || '')) return;
+                out[id] = {
+                    id: id, fecha: r.fecha, slotId: String(r.slotId || ''), inicio: String(r.inicio || ''), fin: String(r.fin || ''),
+                    clienteId: r.clienteId == null ? null : Number(r.clienteId),
+                    clienteNombre: String(r.clienteNombre || ''), clienteTelefono: String(r.clienteTelefono || ''),
+                    servicioNombre: String(r.servicioNombre || ''), varianteNombre: String(r.varianteNombre || ''),
+                    adicionales: agToArr(r.adicionales).filter(a => a && a.nombre).map(a => ({ nombre: String(a.nombre), precio: agNum(a.precio), cantidad: agNum(a.cantidad) || 1 })),
+                    duracionMin: agNum(r.duracionMin), precio: agNum(r.precio), notas: String(r.notas || ''),
+                    estado: ['confirmada', 'atendida', 'no_asistio', 'cancelada'].indexOf(r.estado) >= 0 ? r.estado : 'confirmada',
+                    origen: String(r.origen || 'manual'), ingresoId: r.ingresoId == null ? null : r.ingresoId, creado: Number(r.creado) || 0
+                };
+            });
+            return out;
+        }
+        function agIniciarListenerReservas() {
+            try { agReservas = agNormReservas(JSON.parse(localStorage.getItem('salon_reservas_cache') || 'null')); } catch (e) { agReservas = {}; }
+            database.ref('reservas').on('value', snap => {
+                agReservas = agNormReservas(snap.val());
+                try { localStorage.setItem('salon_reservas_cache', JSON.stringify(snap.val() || {})); } catch (e) { }
+                agRenderDisp();
+            }, err => agAvisoFirebase(err));
+        }
+
+        function agAhoraHHMM() { const d = new Date(); return agPad(d.getHours()) + ':' + agPad(d.getMinutes()); }
+        function agYaTermino(r) { const hoy = hoyLocalISO(); return r.fecha < hoy || (r.fecha === hoy && r.fin <= agAhoraHHMM()); }
+        function agCerrarModal(id) { const m = document.getElementById(id); if (m) m.style.display = 'none'; if (id === 'agModalCita') agCitaCtx = null; if (id === 'agModalAtendida') agAtendidaId = null; }
+        function agSoloDigitos(s) { return String(s || '').replace(/\D/g, ''); }
+
+        // ---------- Lista de citas ----------
+        function agRenderCitas() {
+            const el = document.getElementById('agCitas'); if (!el) return;
+            const conf = Object.keys(agReservas).map(k => agReservas[k]).filter(r => r.estado === 'confirmada')
+                .sort((a, b) => (a.fecha + a.inicio).localeCompare(b.fecha + b.inicio));
+            const cerrar = conf.filter(agYaTermino), proximas = conf.filter(r => !agYaTermino(r)).slice(0, 12);
+            if (!conf.length) { el.innerHTML = '<div style="font-size:13px;color:#999;">Aún no hay citas. Abre un espacio y usa “Crear cita” cuando una clienta te escriba.</div>'; return; }
+            const fila = (r, porCerrar) => {
+                const d = agParse(r.fecha);
+                return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;margin-bottom:6px;border:1px solid ' + (porCerrar ? '#f4c6a6' : '#f0e0e8') + ';border-radius:10px;background:' + (porCerrar ? '#fff8f0' : '#fffafc') + ';font-size:13px;">' +
+                    '<div><b>' + AG_DIAS_CORTO[d.getDay()] + ' ' + d.getDate() + ' ' + AG_MESES[d.getMonth()].slice(0, 3) + '</b> · ' + agHora12(r.inicio) + '<br>👤 ' + agEsc(r.clienteNombre) + ' · ' + agEsc(r.servicioNombre) + (r.varianteNombre ? ' — ' + agEsc(r.varianteNombre) : '') + '</div>' +
+                    '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+                    (porCerrar ? '<button class="btn btn-small" onclick="agAbrirAtendida(\'' + r.id + '\')">✅ Atendida</button><button class="btn btn-small" onclick="agNoAsistio(\'' + r.id + '\')" style="background:#d7ccf0;color:#4a3a7a;">🚫 No asistió</button>' : '') +
+                    (!porCerrar && r.clienteTelefono ? '<button class="btn btn-small" onclick="agWhatsApp(\'' + r.id + '\')" style="background:#d9f2e0;color:#1f6b3a;">💬</button>' : '') +
+                    '<button class="btn btn-small" onclick="agSeleccionar(\'' + r.fecha + '\')">Ver día</button></div></div>';
+            };
+            el.innerHTML =
+                (cerrar.length ? '<div style="font-size:13px;font-weight:600;color:#e17055;margin:4px 0 6px;">⏰ Por cerrar (ya pasaron)</div>' + cerrar.map(r => fila(r, true)).join('') : '') +
+                '<div style="font-size:13px;font-weight:600;color:#d4547e;margin:10px 0 6px;">📅 Próximas</div>' +
+                (proximas.length ? proximas.map(r => fila(r, false)).join('') : '<div style="font-size:12px;color:#bbb;">No hay citas próximas.</div>');
+        }
+
+        // ---------- Crear cita ----------
+        function agAbrirCita(slotId) {
+            const f = agFecha, dia = agAgenda[f], e = dia && dia.espacios[slotId];
+            if (!e || e.reservaId || e.estado !== 'abierto') return;
+            if (dia.bloqueado) { alert('Este día está bloqueado. Quita el bloqueo para crear la cita.'); return; }
+            if (f < hoyLocalISO()) return;
+            const act = agConfig.servicios.filter(s => s.activo && s.nombre.trim() && s.variantes.length);
+            if (!act.length) { alert('Primero configura tus servicios en “Servicios y reglas”.'); return; }
+            agCitaServs = act; agCitaCtx = { fecha: f, slotId: slotId };
+            const lista = clientes.slice().sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es'));
+            document.getElementById('agCitaCliente').innerHTML = '<option value="">Selecciona clienta…</option><option value="__nueva__">➕ Nueva clienta</option>' +
+                lista.map(c => '<option value="' + c.id + '">' + agEsc(c.nombre) + (c.numero ? ' · ' + agEsc(c.numero) : '') + '</option>').join('');
+            const org = document.getElementById('origenClienteInput');
+            document.getElementById('agCitaOrigen').innerHTML = org ? org.innerHTML : '<option value="">Sin especificar</option>';
+            document.getElementById('agCitaOrigen').value = '';
+            ['agCitaNombre', 'agCitaTel', 'agCitaNotas', 'agCitaPrecio'].forEach(i => document.getElementById(i).value = '');
+            document.getElementById('agCitaNuevaBox').style.display = 'none';
+            document.getElementById('agCitaServicio').innerHTML = act.map((s, i) => '<option value="' + i + '">' + agEsc(s.nombre) + '</option>').join('');
+            document.getElementById('agCitaEspacio').textContent = agFechaLarga(f) + ' · ' + agHora12(e.inicio) + ' a ' + agHora12(e.fin) + ' (' + agDur(agMin(e.fin) - agMin(e.inicio)) + ')';
+            agMsg('agCitaMsg', '');
+            agCitaServicioCambio();
+            document.getElementById('agModalCita').style.display = 'flex';
+        }
+        function agCitaClienteCambio() { document.getElementById('agCitaNuevaBox').style.display = document.getElementById('agCitaCliente').value === '__nueva__' ? 'block' : 'none'; }
+        function agCitaServicioCambio() {
+            const s = agCitaServs[+document.getElementById('agCitaServicio').value]; if (!s) return;
+            document.getElementById('agCitaVariante').innerHTML = s.variantes.map((v, i) => '<option value="' + i + '">' + agEsc(v.nombre) + (v.precio != null ? ' · ' + (v.precioVariable ? 'desde ' : '') + agMoneda(v.precio) : '') + '</option>').join('');
+            const ad = agConfig.adicionales.filter(a => a.activo && a.nombre.trim());
+            document.getElementById('agCitaAdics').innerHTML = ad.length ? '<div style="font-size:12px;font-weight:600;color:#d4547e;margin-bottom:4px;">Adicionales</div>' + ad.map(a => a.porUnidad
+                ? '<label style="display:flex;gap:8px;align-items:center;font-size:13px;margin:4px 0;"><input type="number" class="agCitaQty" data-id="' + a.id + '" min="0" max="20" step="1" value="0" style="width:64px;" onchange="agCitaRecalcular()"> ' + agEsc(a.nombre) + (a.precio != null ? ' · ' + agMoneda(a.precio) + ' c/u' : '') + '</label>'
+                : '<label style="display:flex;gap:8px;align-items:center;font-size:13px;margin:3px 0;"><input type="checkbox" class="agCitaAdic" value="' + a.id + '" onchange="agCitaRecalcular()"> ' + agEsc(a.nombre) + (a.precio != null ? ' · ' + agMoneda(a.precio) : '') + (a.nota ? ' <span style="color:#aaa;">(' + agEsc(a.nota) + ')</span>' : '') + '</label>').join('') : '';
+            agCitaRecalcular();
+        }
+        // Adicionales elegidos: casillas (1 unidad) y cantidades (por unidad)
+        function agCitaAdicSel() {
+            const out = [];
+            document.querySelectorAll('.agCitaAdic:checked').forEach(c => { const a = agConfig.adicionales.find(x => x.id === c.value); if (a) out.push({ a: a, cant: 1 }); });
+            document.querySelectorAll('.agCitaQty').forEach(q => { const a = agConfig.adicionales.find(x => x.id === q.getAttribute('data-id')), n = Math.min(20, Math.max(0, Math.floor(Number(q.value) || 0))); if (a && n > 0) out.push({ a: a, cant: n }); });
+            return out;
+        }
+        function agTxtAdic(x) { return agEsc(x.nombre) + (x.cantidad > 1 ? ' ×' + x.cantidad : ''); }
+        // Calcula duración total, comprobación contra el espacio y precio sugerido
+        function agCitaCalculo() {
+            if (!agCitaCtx) return null;
+            const e = agAgenda[agCitaCtx.fecha].espacios[agCitaCtx.slotId];
+            const s = agCitaServs[+document.getElementById('agCitaServicio').value];
+            const v = s && s.variantes[+document.getElementById('agCitaVariante').value];
+            if (!e || !v) return null;
+            const marcados = agCitaAdicSel();
+            const espacio = agMin(e.fin) - agMin(e.inicio);
+            const sinDur = !(v.duracionMin > 0);
+            const extra = marcados.reduce((t, x) => t + (x.a.duracionMin || 0) * x.cant, 0);
+            const total = sinDur ? null : v.duracionMin + extra;
+            const precio = (v.precio == null && !marcados.some(x => x.a.precio != null)) ? null : (v.precio || 0) + marcados.reduce((t, x) => t + (x.a.precio || 0) * x.cant, 0);
+            return { e: e, s: s, v: v, adics: marcados, espacio: espacio, total: total, sinDur: sinDur, cabe: sinDur ? null : total <= espacio, precio: precio };
+        }
+        function agCitaRecalcular() {
+            const c = agCitaCalculo(), el = document.getElementById('agCitaResumen'); if (!c) return;
+            let t;
+            if (c.sinDur) t = '<span style="color:#f39c12;">⏱️ Este servicio no tiene duración configurada, así que no puedo comprobar que cabe en el espacio (' + agDur(c.espacio) + ').</span>';
+            else t = (c.cabe ? '<span style="color:#27ae60;">✅ ' : '<span style="color:#e64980;">⛔ ') + 'Duración ' + agDur(c.total) + ' · espacio ' + agDur(c.espacio) + (c.cabe ? ': cabe.' : ': no cabe. Elige otro espacio o ajusta la duración.') + '</span>';
+            el.innerHTML = t + (c.v.precioVariable ? '<br><span style="color:#999;">El precio de esta variante es “desde”: ajústalo abajo.</span>' : '');
+            document.getElementById('agCitaPrecio').value = c.precio == null ? '' : c.precio;
+        }
+
+        // Crea la clienta reutilizando addCliente() (misma estructura y campos de fidelización/cumpleaños)
+        function agCrearClienta(n) {
+            const ids = ['nombreCliente', 'telefonoCliente', 'emailCliente', 'fechaCumpleañosCliente', 'origenClienteInput'];
+            const els = ids.map(i => document.getElementById(i));
+            if (els.some(x => !x) || typeof addCliente !== 'function') return null;
+            const prev = els.map(x => x.value), antes = clientes.length;
+            els[0].value = n.nombre; els[1].value = n.tel; els[2].value = ''; els[3].value = ''; els[4].value = n.origen || '';
+            try { addCliente(); } catch (e) { console.error('❌ addCliente:', e); }
+            els.forEach((x, i) => x.value = prev[i]);
+            return clientes.length === antes + 1 ? clientes[clientes.length - 1] : null;
+        }
+
+        function agGuardarCita() {
+            const ctx = agCitaCtx; if (!ctx) return;
+            const err = t => agMsg('agCitaMsg', t, '#e64980');
+            const dia = agAgenda[ctx.fecha], e = dia && dia.espacios[ctx.slotId];
+            if (!e || e.reservaId || e.estado !== 'abierto' || dia.bloqueado) return err('Este espacio ya no está disponible.');
+            const sel = document.getElementById('agCitaCliente').value;
+            let cliente = null, nueva = null;
+            if (!sel) return err('Elige la clienta.');
+            if (sel === '__nueva__') {
+                const nombre = document.getElementById('agCitaNombre').value.trim(), tel = document.getElementById('agCitaTel').value.trim();
+                if (!nombre) return err('Escribe el nombre de la clienta.');
+                if (agSoloDigitos(tel).length < 7) return err('Escribe un teléfono válido para poder contactarla.');
+                const igual = clientes.find(c => agSoloDigitos(c.numero).length >= 7 && agSoloDigitos(c.numero).slice(-10) === agSoloDigitos(tel).slice(-10));
+                if (igual) return err('Ya existe “' + igual.nombre + '” con ese teléfono. Selecciónala en la lista.');
+                nueva = { nombre: nombre, tel: tel, origen: document.getElementById('agCitaOrigen').value };
+            } else {
+                cliente = clientes.find(c => String(c.id) === sel);
+                if (!cliente) return err('No encontré a esa clienta.');
+            }
+            const c = agCitaCalculo(); if (!c) return err('Elige el servicio y la variante.');
+            if (c.cabe === false) return err('El servicio dura ' + agDur(c.total) + ' y el espacio es de ' + agDur(c.espacio) + '. No cabe.');
+            const precio = agNum(document.getElementById('agCitaPrecio').value);
+            if (precio != null && precio < 0) return err('El precio no puede ser negativo.');
+            if (c.sinDur && !confirm('Este servicio no tiene duración configurada, no puedo comprobar que cabe en el espacio. ¿Crear la cita de todos modos?')) return;
+
+            const id = agId('r'), refRes = database.ref('agenda/' + ctx.fecha + '/espacios/' + ctx.slotId + '/reservaId');
+            agMsg('agCitaMsg', 'Reservando…', '#d4547e');
+            document.getElementById('agBtnCrearCita').disabled = true;
+            const fin = () => { document.getElementById('agBtnCrearCita').disabled = false; };
+            // Reserva atómica: solo se ocupa el espacio si nadie más lo tomó
+            refRes.transaction(cur => cur ? undefined : id).then(res => {
+                if (!res || !res.committed) { err('Ese espacio acaba de ser tomado. Elige otro.'); fin(); return; }
+                let cli = cliente; if (nueva) cli = agCrearClienta(nueva);
+                if (!cli) { refRes.set(null); err('No se pudo crear la clienta. El espacio no se reservó.'); fin(); return; }
+                const reserva = {
+                    id: id, fecha: ctx.fecha, slotId: ctx.slotId, inicio: e.inicio, fin: e.fin,
+                    clienteId: cli.id, clienteNombre: cli.nombre, clienteTelefono: cli.numero || '',
+                    servicioNombre: c.s.nombre, varianteNombre: c.v.nombre,
+                    adicionales: c.adics.map(x => ({ nombre: x.a.nombre, precio: x.a.precio, cantidad: x.cant })),
+                    duracionMin: c.total, precio: precio, notas: document.getElementById('agCitaNotas').value.trim(),
+                    estado: 'confirmada', origen: 'manual', creado: Date.now(), ingresoId: null
+                };
+                return database.ref('reservas/' + id).set(JSON.parse(JSON.stringify(reserva))).then(() => {
+                    fin(); agCerrarModal('agModalCita'); agMsg('agMsgEspacio', '✅ Cita creada.');
+                }, er => { refRes.set(null); agErrorEscritura(er, 'agCitaMsg'); fin(); });
+            }).catch(er => { agErrorEscritura(er, 'agCitaMsg'); fin(); });
+        }
+
+        // ---------- WhatsApp, no asistió, cancelar ----------
+        // Mensaje de confirmación (la dirección sale de config_privada: solo la ve la dueña, nunca el portal)
+        function agMensajeConfirmacion(r) {
+            const nombre = (String(r.clienteNombre).split(' ')[0] || ''), fl = agFechaLarga(r.fecha);
+            const adic = (r.adicionales || []).length ? ' + ' + r.adicionales.map(x => x.nombre + (x.cantidad > 1 ? ' ×' + x.cantidad : '')).join(', ') : '';
+            let t = 'Hola ' + nombre + ' 💅✨\n¡Tu cita en *Mari Nails* está confirmada! 💖\n\n' +
+                '🗓️ ' + fl.charAt(0).toUpperCase() + fl.slice(1) + '\n' +
+                '⏰ ' + agHora12(r.inicio) + '\n' +
+                '💎 ' + r.servicioNombre + (r.varianteNombre ? ' — ' + r.varianteNombre : '') + adic + '\n' +
+                (r.precio != null ? '💵 Valor: ' + agMoneda(r.precio) + '\n' : '');
+            if (agPrivada.direccion) t += '\n📍 *Dirección:* ' + agPrivada.direccion + '\n🌸 Estudio de uñas Mari Nails\n';
+            return t + '\nRespóndeme con un ✅ para confirmar tu asistencia 🌷\nCualquier cambio me avisas con tiempo 🥰\n¡Te espero! 💕';
+        }
+        function agWhatsApp(id) {
+            const r = agReservas[id]; if (!r) return;
+            let tel = agSoloDigitos(r.clienteTelefono); if (tel.length === 10) tel = '57' + tel;
+            window.open('https://wa.me/' + tel + '?text=' + encodeURIComponent(agMensajeConfirmacion(r)), '_blank', 'noopener');
+        }
+        function agNoAsistio(id) {
+            const r = agReservas[id]; if (!r || r.estado !== 'confirmada' || r.fecha > hoyLocalISO()) return;
+            if (!confirm('¿Marcar que ' + r.clienteNombre + ' no asistió? No se registra ningún ingreso.')) return;
+            database.ref('reservas/' + id).update({ estado: 'no_asistio', cerradaEn: Date.now() }).catch(er => agErrorEscritura(er, 'agMsgEspacio'));
+        }
+        function agCancelarCita(id) {
+            const r = agReservas[id]; if (!r || r.estado !== 'confirmada') return;
+            if (!confirm('¿Cancelar la cita de ' + r.clienteNombre + '? El espacio quedará libre otra vez.')) return;
+            const upd = {};
+            upd['reservas/' + id + '/estado'] = 'cancelada'; upd['reservas/' + id + '/canceladaEn'] = Date.now();
+            upd['agenda/' + r.fecha + '/espacios/' + r.slotId + '/reservaId'] = null;
+            database.ref().update(upd).catch(er => agErrorEscritura(er, 'agMsgEspacio'));
+        }
+
+        // ---------- Atendida: registra el ingreso con addIngreso() ----------
+        function agAbrirAtendida(id) {
+            const r = agReservas[id]; if (!r || r.estado !== 'confirmada') return;
+            if (r.fecha > hoyLocalISO()) { alert('Podrás marcarla como atendida desde el día de la cita.'); return; }
+            agAtendidaId = id;
+            document.getElementById('agAtResumen').innerHTML = '👤 <b>' + agEsc(r.clienteNombre) + '</b><br>' + agEsc(r.servicioNombre) + (r.varianteNombre ? ' — ' + agEsc(r.varianteNombre) : '') + '<br>' + agFechaLarga(r.fecha) + ' · ' + agHora12(r.inicio);
+            document.getElementById('agAtMonto').value = r.precio == null ? '' : r.precio;
+            document.getElementById('agAtUbic').value = '';
+            agMsg('agAtMsg', '');
+            document.getElementById('agModalAtendida').style.display = 'flex';
+        }
+        function agConfirmarAtendida() {
+            const id = agAtendidaId, r = id && agReservas[id]; if (!r || agAtendidaOcupado) return;
+            const err = t => agMsg('agAtMsg', t, '#e64980');
+            const monto = agNum(document.getElementById('agAtMonto').value), ubic = document.getElementById('agAtUbic').value;
+            if (!(monto > 0)) return err('Escribe el monto cobrado.');
+            if (!ubic) return err('Elige dónde quedó el dinero (efectivo o Nequi).');
+            const yaAnotado = transacciones.filter(t => t.tipo === 'ingreso' && t.clienteId === r.clienteId && t.fecha === r.fecha && !t.reservaId);
+            if (yaAnotado.length && !transacciones.some(t => t.tipo === 'ingreso' && t.reservaId === id) &&
+                !confirm('Ya anotaste ' + (yaAnotado.length === 1 ? 'un ingreso' : yaAnotado.length + ' ingresos') + ' de ' + r.clienteNombre + ' con fecha ' + r.fecha + ' en Finanzas. Si es este mismo servicio, registrarlo aquí lo contaría dos veces (y sumaría otra visita). ¿Registrar de todos modos?')) return;
+            agAtendidaOcupado = true;
+            let ingresoId = null;
+            const yaTagueado = transacciones.find(t => t.tipo === 'ingreso' && t.reservaId === id);
+            if (yaTagueado) {
+                ingresoId = yaTagueado.id;      // el ingreso ya existe: solo se marca la cita, nunca se registra dos veces
+            } else {
+                const cli = clientes.find(c => c.id === r.clienteId);
+                if (!cli) { agAtendidaOcupado = false; return err('La clienta de esta cita ya no existe en Clientes.'); }
+                const g = i => document.getElementById(i);
+                const campos = ['clienteSelect', 'montoIngreso', 'servicio', 'fechaIngreso', 'ubicacionDinero'];
+                const prev = campos.map(i => g(i).value);
+                const selSrv = g('servicio');
+                if (![...selSrv.options].some(o => o.value === r.servicioNombre)) { const o = document.createElement('option'); o.value = r.servicioNombre; o.textContent = r.servicioNombre; selSrv.appendChild(o); }
+                g('clienteSelect').value = String(r.clienteId); g('montoIngreso').value = monto; selSrv.value = r.servicioNombre; g('fechaIngreso').value = r.fecha; g('ubicacionDinero').value = ubic;
+                const antes = transacciones.length;
+                if (g('clienteSelect').value !== String(r.clienteId)) { campos.forEach((i, k) => g(i).value = prev[k]); agAtendidaOcupado = false; return err('No pude seleccionar a la clienta en Ingresos.'); }
+                addIngreso();                   // misma lógica de siempre: ingreso + reserva 18 % + visitas + fidelización
+                const nuevas = transacciones.length - antes;
+                campos.forEach((i, k) => g(i).value = prev[k]);   // devuelve el formulario de Ingresos como estaba
+                if (nuevas !== 2) { agAtendidaOcupado = false; return err('No se registró el ingreso. No se cambió nada.'); }
+                transacciones[antes].reservaId = id; transacciones[antes + 1].reservaId = id;   // sello anti-duplicado
+                ingresoId = transacciones[antes].id;
+                saveData();
+            }
+            database.ref('reservas/' + id).update({ estado: 'atendida', ingresoId: ingresoId, montoCobrado: monto, ubicacion: ubic, atendidaEn: Date.now() }).then(() => {
+                agAtendidaOcupado = false; agCerrarModal('agModalAtendida'); agMsg('agMsgEspacio', '✅ Cita atendida e ingreso registrado en Finanzas.');
+            }).catch(er => {
+                agAtendidaOcupado = false;
+                agMsg('agAtMsg', 'El ingreso YA quedó registrado en Finanzas, pero no se pudo marcar la cita (' + (er && (er.message || er.code)) + '). No lo registres otra vez: pulsa “Registrar ingreso” de nuevo y solo marcará la cita.', '#e64980');
+            });
+        }
+
+        function inicializarAgenda() {
+            try { agConfig = agNormConfig(JSON.parse(localStorage.getItem('salon_agenda_config') || 'null')); } catch (e) { agConfig = agConfigVacia(); }
+            try { const p = JSON.parse(localStorage.getItem('salon_agenda_privada') || 'null'); if (p) agPrivada = { direccion: String(p.direccion || ''), updatedAt: Number(p.updatedAt) || 0 }; } catch (e) { }
+            agFecha = hoyLocalISO();
+            const d = agParse(agFecha); agMes = { y: d.getFullYear(), m: d.getMonth() };
+            agPoblarIngresos();
+            agSub('disp');
+            agIniciarListener();
+            agIniciarListenerReservas();
+            agRecargarConfig();
+            window.addEventListener('beforeunload', ev => { if (agSucia) { ev.preventDefault(); ev.returnValue = ''; } });
+        }
+
         // ===== ETAPA 0D: INICIO DE SESIÓN (Firebase Authentication) =====
         // UID de la cuenta propietaria (Firebase → Authentication → Usuarios). No es una contraseña.
         const UID_PROPIETARIA = 'E8n779SuNvS3wjbC44mBuoPr2XX2';
@@ -6498,6 +7487,9 @@
                     cerrarModalActividad();
                 }
             });
+
+            // Agenda (aislada: si falla, el resto del dashboard sigue funcionando)
+            try { inicializarAgenda(); } catch (e) { console.error('❌ Agenda:', e); }
         }
 
         function _loginMostrar(estado, mensaje) {
