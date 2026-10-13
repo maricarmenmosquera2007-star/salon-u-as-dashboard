@@ -6773,7 +6773,7 @@
             datos.updatedAt = Date.now();
             agMsg('agMsgConfig', 'Guardando…', '#d4547e');
             database.ref('reservas_config').set(datos).then(() => {
-                agConfig.updatedAt = datos.updatedAt; agGuardarCache(); agPoblarIngresos();
+                agConfig.updatedAt = datos.updatedAt; agGuardarCache(); agPoblarIngresos(); agPubProgramar();
                 // La dirección va aparte, en un nodo privado (el portal público nunca la lee)
                 return database.ref('config_privada').set({ direccion: agPrivada.direccion || null, updatedAt: datos.updatedAt }).then(() => {
                     agPrivada.updatedAt = datos.updatedAt;
@@ -6938,6 +6938,7 @@
                 '<label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#d4547e;"><input type="checkbox" ' + (r.portalActivo ? 'checked' : '') + ' onchange="agRegla(\'portalActivo\',this.checked,\'bool\')"> 🌸 Portal de clientas activo</label>' +
                 '<div style="font-size:12px;color:#888;margin:4px 0 8px;">Si lo activas (y guardas), las clientas ven solo los espacios libres que tú abriste y pueden pedir cita. Si lo desactivas, el portal queda vacío.</div>' +
                 '<div style="font-size:12px;color:#555;">🔗 Enlace del portal: <b id="agPortalUrl" style="word-break:break-all;"></b> <button class="btn btn-small" onclick="agCopiarPortal()" style="margin-left:4px;">Copiar</button></div>' +
+                '<div style="margin-top:8px;"><button class="btn btn-small" onclick="agPubForzar()" style="background:#d7ccf0;color:#4a3a7a;">🔄 Actualizar el portal ahora</button></div>' +
                 '<div id="agPubEstado" style="font-size:12px;margin-top:8px;color:#888;"></div></div>' +
                 '<label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:14px 0 6px;"><input type="checkbox" ' + (r.mostrarPrecios ? 'checked' : '') + ' onchange="agRegla(\'mostrarPrecios\',this.checked,\'bool\')"> Mostrar los precios en el portal de clientas</label>' +
                 '<div style="font-size:12px;color:#999;margin-bottom:12px;">📍 La dirección no se publica: la envías tú por WhatsApp cuando confirmes la cita.</div>' +
@@ -7090,7 +7091,7 @@
                     : '<div style="font-size:12px;color:#999;margin-top:6px;">Cargando los datos de la cita…</div>';
                 if (r && est === 'confirmada') {
                     const puede = r.fecha <= hoy, ttl = puede ? '' : ' disabled title="Disponible desde el día de la cita" style="opacity:.5;cursor:not-allowed;"';
-                    acciones = (r.clienteTelefono ? '<button class="btn btn-small" onclick="agWhatsApp(\'' + r.id + '\')" style="background:#d9f2e0;color:#1f6b3a;">💬 WhatsApp</button>' : '') +
+                    acciones = (r.clienteTelefono ? '<button class="btn btn-small" onclick="agWhatsApp(\'' + r.id + '\')" style="background:#d9f2e0;color:#1f6b3a;">💬 WhatsApp</button><button class="btn btn-small" onclick="agCopiarMensaje(\'' + r.id + '\')" style="background:#d9f2e0;color:#1f6b3a;">📋 Copiar mensaje</button>' : '') +
                         '<button class="btn btn-small"' + (puede ? '' : ttl) + ' onclick="agAbrirAtendida(\'' + r.id + '\')">✅ Atendida</button>' +
                         '<button class="btn btn-small"' + (puede ? '' : ttl) + ' onclick="agNoAsistio(\'' + r.id + '\')" style="background:#d7ccf0;color:#4a3a7a;">🚫 No asistió</button>' +
                         '<button class="btn btn-small" onclick="agCancelarCita(\'' + r.id + '\')">✖ Cancelar cita</button>';
@@ -7252,7 +7253,7 @@
                     '<div><b>' + AG_DIAS_CORTO[d.getDay()] + ' ' + d.getDate() + ' ' + AG_MESES[d.getMonth()].slice(0, 3) + '</b> · ' + agHora12(r.inicio) + '<br>👤 ' + agEsc(r.clienteNombre) + ' · ' + agEsc(r.servicioNombre) + (r.varianteNombre ? ' — ' + agEsc(r.varianteNombre) : '') + '</div>' +
                     '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
                     (porCerrar ? '<button class="btn btn-small" onclick="agAbrirAtendida(\'' + r.id + '\')">✅ Atendida</button><button class="btn btn-small" onclick="agNoAsistio(\'' + r.id + '\')" style="background:#d7ccf0;color:#4a3a7a;">🚫 No asistió</button>' : '') +
-                    (!porCerrar && r.clienteTelefono ? '<button class="btn btn-small" onclick="agWhatsApp(\'' + r.id + '\')" style="background:#d9f2e0;color:#1f6b3a;">💬</button>' : '') +
+                    (!porCerrar && r.clienteTelefono ? '<button class="btn btn-small" onclick="agWhatsApp(\'' + r.id + '\')" style="background:#d9f2e0;color:#1f6b3a;">💬</button><button class="btn btn-small" onclick="agCopiarMensaje(\'' + r.id + '\')" style="background:#d9f2e0;color:#1f6b3a;" aria-label="Copiar mensaje">📋</button>' : '') +
                     '<button class="btn btn-small" onclick="agSeleccionar(\'' + r.fecha + '\')">Ver día</button></div></div>';
             };
             el.innerHTML =
@@ -7405,7 +7406,15 @@
         function agWhatsApp(id) {
             const r = agReservas[id]; if (!r) return;
             let tel = agSoloDigitos(r.clienteTelefono); if (tel.length === 10) tel = '57' + tel;
-            window.open('https://wa.me/' + tel + '?text=' + encodeURIComponent(agMensajeConfirmacion(r)), '_blank', 'noopener');
+            window.open('https://api.whatsapp.com/send/?phone=' + tel + '&text=' + encodeURIComponent(agMensajeConfirmacion(r)) + '&type=phone_number&app_absent=0', '_blank', 'noopener');
+        }
+        // Copia el mensaje con sus emojis: sirve si el WhatsApp de tu navegador muestra “�” en lugar de los emojis
+        function agCopiarMensaje(id) {
+            const r = agReservas[id]; if (!r) return;
+            const t = agMensajeConfirmacion(r);
+            const ok = () => agMsg('agMsgEspacio', '📋 Mensaje copiado. Pégalo en el chat de WhatsApp.', '#27ae60');
+            try { navigator.clipboard.writeText(t).then(ok, () => prompt('Copia el mensaje (Ctrl+C):', t)); } catch (e) { prompt('Copia el mensaje (Ctrl+C):', t); }
+            const m = document.getElementById('agMsgSolic'); if (m && m.textContent.indexOf('Cita confirmada') >= 0) m.insertAdjacentHTML('beforeend', ' <span style="color:#27ae60;">📋 Copiado.</span>');
         }
         function agNoAsistio(id) {
             const r = agReservas[id]; if (!r || r.estado !== 'confirmada' || r.fecha > hoyLocalISO()) return;
@@ -7528,13 +7537,19 @@
                 espacios: esp
             };
         }
+        function agPubForzar() {
+            if (agSucia) { agPubMsg('Primero pulsa “Guardar” para que los cambios de servicios y precios se publiquen.', '#e64980'); return; }
+            if (!agConfig.reglas.portalActivo) { agPubMsg('El portal está desactivado: marca “Portal de clientas activo” y guarda.', '#e64980'); return; }
+            agPubUlt = null; agPubMsg('Actualizando…', '#d4547e'); agPublicar();
+        }
         function agPubProgramar() {
             if (agPubTimer) clearTimeout(agPubTimer);
             agPubTimer = setTimeout(agPublicar, 1500);
         }
         function agPublicar() {
             agPubTimer = null;
-            if (!agConfig || !agListoAg || !agListoRes || !agListoCfg || agPubOcupado) return;
+            if (!agConfig || !agListoAg || !agListoRes || !agListoCfg) return;
+            if (agPubOcupado) { agPubProgramar(); return; }
             if (!agConfig.reglas.portalActivo) {
                 if (agPubUlt !== 'off') { agPubOcupado = true; database.ref('publico').remove().then(() => { agPubUlt = 'off'; agPubOcupado = false; agPubMsg('⏸️ Portal desactivado: las clientas no ven nada.'); }, er => { agPubOcupado = false; agPubError(er); }); }
                 else agPubMsg('⏸️ Portal desactivado: las clientas no ven nada.');
@@ -7634,7 +7649,7 @@
                     return database.ref('solicitudes/' + id).remove().catch(() => { });
                 }).then(() => {
                     const m = document.getElementById('agMsgSolic');
-                    if (m) { m.style.color = '#27ae60'; m.innerHTML = '✅ Cita confirmada. <button class="btn btn-small" onclick="agWhatsApp(\'' + rid + '\')" style="background:#d9f2e0;color:#1f6b3a;">💬 Avisarle por WhatsApp</button>'; }
+                    if (m) { m.style.color = '#27ae60'; m.innerHTML = '✅ Cita confirmada. <button class="btn btn-small" onclick="agWhatsApp(\'' + rid + '\')" style="background:#d9f2e0;color:#1f6b3a;">💬 Avisarle por WhatsApp</button> <button class="btn btn-small" onclick="agCopiarMensaje(\'' + rid + '\')" style="background:#d9f2e0;color:#1f6b3a;">📋 Copiar mensaje</button>'; }
                 }, er => { refRes.set(null); agErrorEscritura(er, 'agMsgSolic'); });
             }).catch(er => agErrorEscritura(er, 'agMsgSolic'));
         }
