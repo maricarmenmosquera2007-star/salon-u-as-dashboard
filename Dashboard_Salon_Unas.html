@@ -1239,28 +1239,6 @@
             <!-- ===== DISPONIBILIDAD ===== -->
             <div id="agSecDisp">
                 <div id="agSolicitudes"><div id="agSolicLista"></div><div id="agMsgSolic" style="font-size:13px;margin:0 0 10px;"></div></div>
-                <div class="card" style="border-color:#f4a6c1;">
-                    <h3>⚡ Abrir cupos rápido</h3>
-                    <p style="font-size:12px;color:#999;margin:4px 0 10px;">Elige los días, las horas de inicio y toca “Abrir”. Cada cupo es una sola cita y dura lo que elijas (aproximado: puedes terminar antes o un poco después).</p>
-                    <div style="font-size:12px;font-weight:600;color:#d4547e;margin:6px 0;">1. Días</div>
-                    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
-                        <button class="btn btn-small" onclick="agQSemana(0)" style="background:#d7ccf0;color:#4a3a7a;">Esta semana</button>
-                        <button class="btn btn-small" onclick="agQSemana(1)" style="background:#d7ccf0;color:#4a3a7a;">Próxima semana</button>
-                        <button class="btn btn-small" onclick="agQLimpiar()" style="background:#eee;color:#666;">Limpiar</button>
-                    </div>
-                    <div id="agQDias"></div>
-                    <div style="font-size:12px;font-weight:600;color:#d4547e;margin:12px 0 6px;">2. Hora de inicio (puedes elegir varias)</div>
-                    <div id="agQHoras"></div>
-                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;">
-                        <label for="agQOtra" style="font-size:12px;color:#888;">Otra hora:</label>
-                        <select id="agQOtra" onchange="agQOtraHora(this.value)" style="padding:6px;"></select>
-                    </div>
-                    <div style="font-size:12px;font-weight:600;color:#d4547e;margin:12px 0 6px;">3. Duración de cada cupo</div>
-                    <select id="agQDur" onchange="agQRender()" style="padding:8px;"></select>
-                    <div id="agQResumen" style="font-size:13px;margin:12px 0 8px;"></div>
-                    <button class="btn" id="agQBtn" onclick="agQAbrir()">Abrir cupos</button>
-                    <div id="agMsgQ" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
-                </div>
                 <div class="card">
                     <h3>📋 Citas</h3>
                     <p style="font-size:12px;color:#999;margin:4px 0 10px;">Las citas confirmadas. Cuando atiendas a una clienta, márcala como “Atendida” y se registra el ingreso en Finanzas.</p>
@@ -1291,6 +1269,30 @@
                         <span style="border:2px solid #d4547e;border-radius:4px;padding:0 4px;">hoy</span>
                     </div>
                     </div>
+                </div>
+
+                <div class="card" id="agQCard" style="border-color:#f4a6c1;">
+                    <h3>⚡ Abrir cupos rápido</h3>
+                    <p style="font-size:12px;color:#999;margin:4px 0 10px;">Elige los días en el calendario, las horas de inicio y toca “Abrir”. Cada cupo es una sola cita y dura lo que elijas (aproximado: puedes terminar antes o un poco después).</p>
+                    <div style="font-size:12px;font-weight:600;color:#d4547e;margin:6px 0;">1. Días</div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+                        <button class="btn btn-small" id="agQBtnCal" onclick="agQElegirDias()" style="background:linear-gradient(135deg,#e64980,#d4547e);color:#fff;">📅 Elegir días en el calendario</button>
+                        <button class="btn btn-small" onclick="agQSemana(0)" style="background:#d7ccf0;color:#4a3a7a;">Esta semana</button>
+                        <button class="btn btn-small" onclick="agQSemana(1)" style="background:#d7ccf0;color:#4a3a7a;">Próxima semana</button>
+                        <button class="btn btn-small" onclick="agQLimpiar()" style="background:#eee;color:#666;">Limpiar</button>
+                    </div>
+                    <div id="agQDias"></div>
+                    <div style="font-size:12px;font-weight:600;color:#d4547e;margin:12px 0 6px;">2. Hora de inicio (puedes elegir varias)</div>
+                    <div id="agQHoras"></div>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;">
+                        <label for="agQOtra" style="font-size:12px;color:#888;">Otra hora:</label>
+                        <select id="agQOtra" onchange="agQOtraHora(this.value)" style="padding:6px;"></select>
+                    </div>
+                    <div style="font-size:12px;font-weight:600;color:#d4547e;margin:12px 0 6px;">3. Duración de cada cupo</div>
+                    <select id="agQDur" onchange="agQRender()" style="padding:8px;"></select>
+                    <div id="agQResumen" style="font-size:13px;margin:12px 0 8px;"></div>
+                    <button class="btn" id="agQBtn" onclick="agQAbrir()">Abrir cupos</button>
+                    <div id="agMsgQ" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
                 </div>
 
                 <div class="card">
@@ -7082,10 +7084,11 @@
                 const f = agFechaISO(y, m, d), i = agInfoDia(f), sel = f === agFecha;
                 let bg = '#fff', bd = '#f0e0e8', col = '#555';
                 if (i.bloqueado) { bg = '#ede7f6'; bd = '#cfc3ee'; } else if (i.abiertos > 0) { bg = '#fff0f6'; bd = '#f4a6c1'; }
-                if (sel) { bg = 'linear-gradient(135deg,#e64980,#d4547e)'; bd = '#d4547e'; col = '#fff'; }
+                if (sel && !agQMulti) { bg = 'linear-gradient(135deg,#e64980,#d4547e)'; bd = '#d4547e'; col = '#fff'; }
+                const queda = agQDias.has(f); if (queda) { bg = 'linear-gradient(135deg,#e64980,#d4547e)'; bd = '#d4547e'; col = '#fff'; }
                 const marca = i.bloqueado ? '🚫' : (i.abiertos > 0 ? '<span style="font-size:10px;' + (sel ? '' : 'color:#d4547e;') + '">● ' + i.abiertos + '</span>' : (i.total > 0 ? '<span style="font-size:10px;">○</span>' : '&nbsp;'));
-                h += '<button onclick="agSeleccionar(\'' + f + '\');agCalToggle(false)" aria-label="' + agFechaLarga(f) + '" style="min-height:38px;border:1px solid ' + bd + ';background:' + bg + ';color:' + col + ';border-radius:8px;padding:2px 1px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;' +
-                    (f === hoy ? 'box-shadow:0 0 0 2px #d4547e;' : '') + (f < hoy ? 'opacity:.55;' : '') + '"><span style="font-size:13px;font-weight:600;line-height:1.1;">' + d + '</span>' + marca + '</button>';
+                h += '<button onclick="agCalClick(\'' + f + '\')" aria-label="' + agFechaLarga(f) + '" style="min-height:38px;border:1px solid ' + bd + ';background:' + bg + ';color:' + col + ';border-radius:8px;padding:2px 1px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;' +
+                    (f === hoy ? 'box-shadow:0 0 0 2px #d4547e;' : '') + (f < hoy ? 'opacity:.55;' : '') + '"><span style="font-size:13px;font-weight:600;line-height:1.1;">' + d + '</span>' + (queda ? '<span style="font-size:11px;">✓</span>' : marca) + '</button>';
             }
             el.innerHTML = h + '</div>';
             const b = document.getElementById('agCalBtn');
@@ -7535,7 +7538,7 @@
 
 
         // ---------- Abrir cupos rápido (días × horas de inicio, duración aproximada) ----------
-        let agQDias = new Set(), agQHoras = new Set(), agQOcupado = false;
+        let agQDias = new Set(), agQHoras = new Set(), agQOcupado = false, agQMulti = false;
         function agQHoraTxt(min) { return agHora12(agPad(Math.floor(min / 60)) + ':' + agPad(min % 60)); }
         function agQDuracion() { const s = document.getElementById('agQDur'); return s && s.value ? +s.value : ((agConfig && agConfig.reglas.duracionCupoMin) || 150); }
         function agQIniciar() {
@@ -7547,14 +7550,14 @@
             agQRender();
         }
         function agQRender() {
-            const hoy = agParse(hoyLocalISO()), dias = document.getElementById('agQDias'); if (!dias) return;
-            let h = '<div style="display:flex;gap:6px;flex-wrap:wrap;">';
-            for (let i = 0; i < 28; i++) {
-                const d = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + i), f = agFechaISO(d.getFullYear(), d.getMonth(), d.getDate()), sel = agQDias.has(f), info = agInfoDia(f);
-                h += '<button type="button" onclick="agQDia(\'' + f + '\')" aria-pressed="' + sel + '" style="min-width:58px;padding:6px 8px;border-radius:10px;cursor:pointer;font-family:inherit;border:1.5px solid ' + (sel ? '#d4547e' : '#f0e0e8') + ';background:' + (sel ? 'linear-gradient(135deg,#e64980,#d4547e)' : '#fff') + ';color:' + (sel ? '#fff' : '#555') + ';font-size:12px;line-height:1.25;">' +
-                    '<b>' + AG_DIAS_CORTO[d.getDay()] + '</b><br>' + d.getDate() + ' ' + AG_MESES[d.getMonth()].slice(0, 3) + (info.abiertos ? '<br><span style="font-size:10px;opacity:.85;">● ' + info.abiertos + '</span>' : '') + '</button>';
-            }
-            dias.innerHTML = h + '</div>';
+            const dias = document.getElementById('agQDias'); if (!dias) return;
+            const sel = [...agQDias].sort();
+            dias.innerHTML = agQMulti
+                ? '<div style="padding:10px 12px;border-radius:10px;background:#fff0f6;border:1px dashed #d4547e;font-size:13px;">👆 Toca en el calendario los días que quieres abrir. <button class="btn btn-small" onclick="agQListo()" style="margin-left:6px;">Listo ✓</button></div>'
+                : '';
+            dias.innerHTML += sel.length
+                ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:' + (agQMulti ? 8 : 0) + 'px;">' + sel.map(f => { const d = agParse(f); return '<span style="display:inline-flex;align-items:center;gap:6px;padding:6px 6px 6px 12px;border-radius:999px;background:linear-gradient(135deg,#e64980,#d4547e);color:#fff;font-size:13px;">' + AG_DIAS_CORTO[d.getDay()] + ' ' + d.getDate() + ' ' + AG_MESES[d.getMonth()].slice(0, 3) + '<button type="button" onclick="agQDia(\'' + f + '\')" aria-label="Quitar este día" style="border:0;background:rgba(255,255,255,.25);color:#fff;border-radius:50%;width:22px;height:22px;cursor:pointer;line-height:1;">×</button></span>'; }).join('') + '</div>'
+                : (agQMulti ? '' : '<div style="font-size:13px;color:#aaa;">Aún no has elegido días.</div>');
             const horas = [];
             for (let m = 6 * 60; m <= 19 * 60; m += 60) horas.push(m);
             [...agQHoras].forEach(m => { if (horas.indexOf(m) < 0) horas.push(m); });
@@ -7566,8 +7569,12 @@
             const n = agQDias.size * agQHoras.size, dur = agQDuracion();
             document.getElementById('agQResumen').innerHTML = n ? '➡️ Se abrirán hasta <b>' + n + ' cupo' + (n === 1 ? '' : 's') + '</b> (' + agQDias.size + ' día' + (agQDias.size === 1 ? '' : 's') + ' × ' + agQHoras.size + ' hora' + (agQHoras.size === 1 ? '' : 's') + '), cada uno de ' + agDur(dur) + ' aprox.' : '<span style="color:#aaa;">Elige al menos un día y una hora.</span>';
             const b = document.getElementById('agQBtn'); if (b) b.disabled = !n || agQOcupado;
+            try { agRenderCalendario(); } catch (e) { }
         }
-        function agQDia(f) { if (agQDias.has(f)) agQDias.delete(f); else agQDias.add(f); agMsg('agMsgQ', ''); agQRender(); }
+        function agQDia(f) { if (f < hoyLocalISO()) return; if (agQDias.has(f)) agQDias.delete(f); else agQDias.add(f); agMsg('agMsgQ', ''); agQRender(); }
+        function agQElegirDias() { agQMulti = true; agCalToggle(true); agQRender(); const c = document.getElementById('agCalBtn'); if (c) c.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+        function agQListo() { agQMulti = false; agCalToggle(false); agQRender(); const q = document.getElementById('agQCard'); if (q) q.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+        function agCalClick(f) { if (agQMulti) agQDia(f); else { agSeleccionar(f); agCalToggle(false); } }
         function agQHora(m) { if (agQHoras.has(m)) agQHoras.delete(m); else agQHoras.add(m); agMsg('agMsgQ', ''); agQRender(); }
         function agQOtraHora(v) { if (v) agQHoras.add(+v); const s = document.getElementById('agQOtra'); if (s) s.value = ''; agQRender(); }
         function agQLimpiar() { agQDias.clear(); agQHoras.clear(); agMsg('agMsgQ', ''); agQRender(); }
@@ -7599,7 +7606,7 @@
             if (!nuevos) return agMsg('agMsgQ', 'No se abrió nada' + (notas ? ' (' + notas + ')' : '') + '.', '#e64980');
             agQOcupado = true; agMsg('agMsgQ', 'Abriendo…', '#d4547e'); agQRender();
             database.ref('agenda').update(upd).then(() => {
-                agQOcupado = false; agQDias.clear(); agQHoras.clear(); agQRender();
+                agQOcupado = false; agQDias.clear(); agQHoras.clear(); agQMulti = false; agQRender();
                 agMsg('agMsgQ', '✅ Se abrieron ' + nuevos + ' cupo' + (nuevos === 1 ? '' : 's') + '.' + (notas ? ' (' + notas + ')' : ''));
             }).catch(er => { agQOcupado = false; agQRender(); agErrorEscritura(er, 'agMsgQ'); });
         }
