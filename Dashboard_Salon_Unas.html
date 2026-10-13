@@ -1239,6 +1239,28 @@
             <!-- ===== DISPONIBILIDAD ===== -->
             <div id="agSecDisp">
                 <div id="agSolicitudes"><div id="agSolicLista"></div><div id="agMsgSolic" style="font-size:13px;margin:0 0 10px;"></div></div>
+                <div class="card" style="border-color:#f4a6c1;">
+                    <h3>⚡ Abrir cupos rápido</h3>
+                    <p style="font-size:12px;color:#999;margin:4px 0 10px;">Elige los días, las horas de inicio y toca “Abrir”. Cada cupo es una sola cita y dura lo que elijas (aproximado: puedes terminar antes o un poco después).</p>
+                    <div style="font-size:12px;font-weight:600;color:#d4547e;margin:6px 0;">1. Días</div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
+                        <button class="btn btn-small" onclick="agQSemana(0)" style="background:#d7ccf0;color:#4a3a7a;">Esta semana</button>
+                        <button class="btn btn-small" onclick="agQSemana(1)" style="background:#d7ccf0;color:#4a3a7a;">Próxima semana</button>
+                        <button class="btn btn-small" onclick="agQLimpiar()" style="background:#eee;color:#666;">Limpiar</button>
+                    </div>
+                    <div id="agQDias"></div>
+                    <div style="font-size:12px;font-weight:600;color:#d4547e;margin:12px 0 6px;">2. Hora de inicio (puedes elegir varias)</div>
+                    <div id="agQHoras"></div>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;">
+                        <label for="agQOtra" style="font-size:12px;color:#888;">Otra hora:</label>
+                        <select id="agQOtra" onchange="agQOtraHora(this.value)" style="padding:6px;"></select>
+                    </div>
+                    <div style="font-size:12px;font-weight:600;color:#d4547e;margin:12px 0 6px;">3. Duración de cada cupo</div>
+                    <select id="agQDur" onchange="agQRender()" style="padding:8px;"></select>
+                    <div id="agQResumen" style="font-size:13px;margin:12px 0 8px;"></div>
+                    <button class="btn" id="agQBtn" onclick="agQAbrir()">Abrir cupos</button>
+                    <div id="agMsgQ" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
+                </div>
                 <div class="card">
                     <h3>📋 Citas</h3>
                     <p style="font-size:12px;color:#999;margin:4px 0 10px;">Las citas confirmadas. Cuando atiendas a una clienta, márcala como “Atendida” y se registra el ingreso en Finanzas.</p>
@@ -1276,7 +1298,8 @@
                     <div id="agDiaAcciones" style="margin:10px 0;"></div>
                     <div id="agEspacios"></div>
 
-                    <div id="agFormWrap" style="margin-top:16px;padding-top:14px;border-top:1px dashed #f0e0e8;">
+                    <details id="agFormDet" style="margin-top:16px;padding-top:10px;border-top:1px dashed #f0e0e8;"><summary style="font-size:13px;color:#999;cursor:pointer;">🔧 Avanzado: un espacio con hora de inicio y fin exactas</summary>
+                    <div id="agFormWrap" style="margin-top:10px;">
                         <div id="agFormTitulo" style="font-size:13px;font-weight:600;color:#d4547e;margin-bottom:8px;">➕ Abrir un espacio (una sola cita)</div>
                         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
                             <div><label for="agIni" style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Hora de inicio</label>
@@ -1288,7 +1311,7 @@
                         </div>
                         <div id="agMsgEspacio" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
                         <div style="font-size:11px;color:#aaa;margin-top:4px;">Ejemplo: 9:00 a. m. a 11:30 a. m. y otro de 2:00 p. m. a 5:00 p. m. Los espacios de la mañana y de la tarde se agrupan solos.</div>
-                    </div>
+                    </div></details>
                 </div>
             </div>
 
@@ -6682,7 +6705,7 @@
         function agConfigVacia() {
             return {
                 version: 1, updatedAt: 0, servicios: [], adicionales: [],
-                reglas: { retencionHoras: null, anticipo: { activo: false, tipo: 'monto', valor: null, instrucciones: '' }, whatsapp: '', instagram: '', mostrarPrecios: true, portalActivo: false }
+                reglas: { retencionHoras: null, anticipo: { activo: false, tipo: 'monto', valor: null, instrucciones: '' }, whatsapp: '', instagram: '', mostrarPrecios: true, portalActivo: false, duracionCupoMin: 150 }
             };
         }
         // Firebase elimina arrays vacíos y puede devolver arrays como objetos: se normaliza al leer
@@ -6704,7 +6727,8 @@
             c.reglas = {
                 retencionHoras: agNum(r.retencionHoras),
                 anticipo: { activo: !!a.activo, tipo: a.tipo === 'porcentaje' ? 'porcentaje' : 'monto', valor: agNum(a.valor), instrucciones: String(a.instrucciones || '') },
-                whatsapp: String(r.whatsapp || ''), instagram: String(r.instagram || ''), mostrarPrecios: r.mostrarPrecios !== false, portalActivo: !!r.portalActivo
+                whatsapp: String(r.whatsapp || ''), instagram: String(r.instagram || ''), mostrarPrecios: r.mostrarPrecios !== false, portalActivo: !!r.portalActivo,
+                duracionCupoMin: (Number.isInteger(Number(r.duracionCupoMin)) && Number(r.duracionCupoMin) >= 30 && Number(r.duracionCupoMin) <= 600) ? Number(r.duracionCupoMin) : 150
             };
             return c;
         }
@@ -6800,7 +6824,7 @@
                 if (agSucia) return;
                 const v = snap.val();
                 if (v) { agConfig = agNormConfig(v); agGuardarCache(); }
-                agListoCfg = true; agPubProgramar();
+                agListoCfg = true; agPubProgramar(); try { const dq = document.getElementById('agQDur'); if (dq && !agQDias.size && !agQHoras.size) dq.value = String(agConfig.reglas.duracionCupoMin || 150); agQRender(); } catch (e) { }
                 agPoblarIngresos();
                 if (agSubActual === 'serv') agRenderServ();
             }).catch(err => agAvisoFirebase(err));
@@ -6932,6 +6956,9 @@
             el.innerHTML =
                 '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;">' +
                 input('retencionHoras', 'Horas que una solicitud pendiente aparta el espacio', 'En blanco = 24 horas. Pasado ese tiempo sin que la confirmes, el espacio se libera solo para otra clienta.', 'number', 'min="1" step="1" placeholder="24"') +
+                '<div>' + agLbl('Duración estándar de cada cupo') + '<select style="width:100%;" onchange="agRegla(\'duracionCupoMin\',this.value,\'num\')">' +
+                [120, 150, 180, 210, 240].map(m => '<option value="' + m + '" ' + (r.duracionCupoMin === m ? 'selected' : '') + '>' + agDur(m) + '</option>').join('') + '</select>' +
+                '<div style="font-size:11px;color:#aaa;margin-top:2px;">Es el tiempo que se aparta por defecto en “Abrir cupos rápido”. Es aproximado: cualquier servicio puede ir en cualquier cupo.</div></div>' +
                 input('whatsapp', 'Tu WhatsApp', 'Para los mensajes de confirmación.', 'tel', 'placeholder="3001234567"') +
                 input('instagram', 'Instagram (sin @)', '', 'text', '') + '</div>' +
                 '<div style="margin:14px 0;padding:12px;border:1px solid #f4a6c1;border-radius:10px;background:#fff5f9;">' +
@@ -7015,7 +7042,7 @@
             return { bloqueado: !!(d && d.bloqueado), total: esp.length, abiertos: esp.filter(e => e.estado === 'abierto' && !e.reservaId).length };
         }
 
-        function agRenderDisp() { agRenderCitas(); agRenderProximos(); agRenderCalendario(); agRenderDia(); agPubProgramar(); }
+        function agRenderDisp() { agRenderCitas(); agRenderProximos(); agRenderCalendario(); agRenderDia(); try { agQRender(); } catch (e) { } agPubProgramar(); }
 
         function agRenderProximos() {
             const el = document.getElementById('agProximos'); if (!el) return;
@@ -7169,6 +7196,7 @@
             agEditId = id;
             document.getElementById('agIni').value = e.inicio; document.getElementById('agFin').value = e.fin;
             agMsg('agMsgEspacio', ''); agRenderDia();
+            const det = document.getElementById('agFormDet'); if (det) det.open = true;
             document.getElementById('agFormWrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
         function agCancelarEdicion(silencioso) {
@@ -7321,8 +7349,8 @@
         function agCitaRecalcular() {
             const c = agCitaCalculo(), el = document.getElementById('agCitaResumen'); if (!c) return;
             let t;
-            if (c.sinDur) t = '<span style="color:#f39c12;">⏱️ Este servicio no tiene duración configurada, así que no puedo comprobar que cabe en el espacio (' + agDur(c.espacio) + ').</span>';
-            else t = (c.cabe ? '<span style="color:#27ae60;">✅ ' : '<span style="color:#e64980;">⛔ ') + 'Duración ' + agDur(c.total) + ' · espacio ' + agDur(c.espacio) + (c.cabe ? ': cabe.' : ': no cabe. Elige otro espacio o ajusta la duración.') + '</span>';
+            if (c.sinDur) t = '<span style="color:#888;">⏱️ Cupo de ' + agDur(c.espacio) + ' (aproximado).</span>';
+            else t = (c.cabe ? '<span style="color:#27ae60;">✅ ' : '<span style="color:#b45309;">⚠️ ') + 'El servicio dura ' + agDur(c.total) + ' y el cupo es de ' + agDur(c.espacio) + (c.cabe ? ': cabe.' : ': puede pasarse un poco del cupo. Tú decides.') + '</span>';
             el.innerHTML = t + (c.v.precioVariable ? '<br><span style="color:#999;">El precio de esta variante es “desde”: ajústalo abajo.</span>' : '');
             document.getElementById('agCitaPrecio').value = c.precio == null ? '' : c.precio;
         }
@@ -7359,10 +7387,8 @@
                 if (!cliente) return err('No encontré a esa clienta.');
             }
             const c = agCitaCalculo(); if (!c) return err('Elige el servicio y la variante.');
-            if (c.cabe === false) return err('El servicio dura ' + agDur(c.total) + ' y el espacio es de ' + agDur(c.espacio) + '. No cabe.');
             const precio = agNum(document.getElementById('agCitaPrecio').value);
             if (precio != null && precio < 0) return err('El precio no puede ser negativo.');
-            if (c.sinDur && !confirm('Este servicio no tiene duración configurada, no puedo comprobar que cabe en el espacio. ¿Crear la cita de todos modos?')) return;
 
             const id = agId('r'), refRes = database.ref('agenda/' + ctx.fecha + '/espacios/' + ctx.slotId + '/reservaId');
             const sp = agSolic[ctx.slotId];
@@ -7507,6 +7533,77 @@
             });
         }
 
+
+        // ---------- Abrir cupos rápido (días × horas de inicio, duración aproximada) ----------
+        let agQDias = new Set(), agQHoras = new Set(), agQOcupado = false;
+        function agQHoraTxt(min) { return agHora12(agPad(Math.floor(min / 60)) + ':' + agPad(min % 60)); }
+        function agQDuracion() { const s = document.getElementById('agQDur'); return s && s.value ? +s.value : ((agConfig && agConfig.reglas.duracionCupoMin) || 150); }
+        function agQIniciar() {
+            const d = document.getElementById('agQDur'); if (!d) return;
+            if (!d.options.length) d.innerHTML = [90, 120, 150, 180, 210, 240].map(m => '<option value="' + m + '">' + agDur(m) + '</option>').join('');
+            d.value = String((agConfig && agConfig.reglas.duracionCupoMin) || 150);
+            const o = document.getElementById('agQOtra');
+            if (o && !o.options.length) { let h = '<option value="">Elegir…</option>'; for (let m = 6 * 60; m <= 20 * 60; m += 30) h += '<option value="' + m + '">' + agQHoraTxt(m) + '</option>'; o.innerHTML = h; }
+            agQRender();
+        }
+        function agQRender() {
+            const hoy = agParse(hoyLocalISO()), dias = document.getElementById('agQDias'); if (!dias) return;
+            let h = '<div style="display:flex;gap:6px;flex-wrap:wrap;">';
+            for (let i = 0; i < 28; i++) {
+                const d = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + i), f = agFechaISO(d.getFullYear(), d.getMonth(), d.getDate()), sel = agQDias.has(f), info = agInfoDia(f);
+                h += '<button type="button" onclick="agQDia(\'' + f + '\')" aria-pressed="' + sel + '" style="min-width:58px;padding:6px 8px;border-radius:10px;cursor:pointer;font-family:inherit;border:1.5px solid ' + (sel ? '#d4547e' : '#f0e0e8') + ';background:' + (sel ? 'linear-gradient(135deg,#e64980,#d4547e)' : '#fff') + ';color:' + (sel ? '#fff' : '#555') + ';font-size:12px;line-height:1.25;">' +
+                    '<b>' + AG_DIAS_CORTO[d.getDay()] + '</b><br>' + d.getDate() + ' ' + AG_MESES[d.getMonth()].slice(0, 3) + (info.abiertos ? '<br><span style="font-size:10px;opacity:.85;">● ' + info.abiertos + '</span>' : '') + '</button>';
+            }
+            dias.innerHTML = h + '</div>';
+            const horas = [];
+            for (let m = 6 * 60; m <= 19 * 60; m += 60) horas.push(m);
+            [...agQHoras].forEach(m => { if (horas.indexOf(m) < 0) horas.push(m); });
+            horas.sort((a, b) => a - b);
+            document.getElementById('agQHoras').innerHTML = '<div style="display:flex;gap:6px;flex-wrap:wrap;">' + horas.map(m => {
+                const sel = agQHoras.has(m);
+                return '<button type="button" onclick="agQHora(' + m + ')" aria-pressed="' + sel + '" style="padding:7px 10px;border-radius:999px;cursor:pointer;font-family:inherit;font-size:13px;border:1.5px solid ' + (sel ? '#d4547e' : '#f0e0e8') + ';background:' + (sel ? 'linear-gradient(135deg,#e64980,#d4547e)' : '#fff') + ';color:' + (sel ? '#fff' : '#555') + ';">' + agQHoraTxt(m) + '</button>';
+            }).join('') + '</div>';
+            const n = agQDias.size * agQHoras.size, dur = agQDuracion();
+            document.getElementById('agQResumen').innerHTML = n ? '➡️ Se abrirán hasta <b>' + n + ' cupo' + (n === 1 ? '' : 's') + '</b> (' + agQDias.size + ' día' + (agQDias.size === 1 ? '' : 's') + ' × ' + agQHoras.size + ' hora' + (agQHoras.size === 1 ? '' : 's') + '), cada uno de ' + agDur(dur) + ' aprox.' : '<span style="color:#aaa;">Elige al menos un día y una hora.</span>';
+            const b = document.getElementById('agQBtn'); if (b) b.disabled = !n || agQOcupado;
+        }
+        function agQDia(f) { if (agQDias.has(f)) agQDias.delete(f); else agQDias.add(f); agMsg('agMsgQ', ''); agQRender(); }
+        function agQHora(m) { if (agQHoras.has(m)) agQHoras.delete(m); else agQHoras.add(m); agMsg('agMsgQ', ''); agQRender(); }
+        function agQOtraHora(v) { if (v) agQHoras.add(+v); const s = document.getElementById('agQOtra'); if (s) s.value = ''; agQRender(); }
+        function agQLimpiar() { agQDias.clear(); agQHoras.clear(); agMsg('agMsgQ', ''); agQRender(); }
+        function agQSemana(sig) {
+            const hoy = agParse(hoyLocalISO()), lun = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - ((hoy.getDay() + 6) % 7) + 7 * sig);
+            for (let i = 0; i < 6; i++) { const d = new Date(lun.getFullYear(), lun.getMonth(), lun.getDate() + i), f = agFechaISO(d.getFullYear(), d.getMonth(), d.getDate()); if (f >= hoyLocalISO()) agQDias.add(f); }
+            agQRender();
+        }
+        function agQAbrir() {
+            if (agQOcupado) return;
+            const dur = agQDuracion(), hoy = hoyLocalISO(), horas = [...agQHoras].sort((a, b) => a - b), dias = [...agQDias].sort(), upd = {};
+            let nuevos = 0, repetidos = 0, cruzados = 0, bloqueados = 0, pasados = 0;
+            dias.forEach(f => {
+                if (f < hoy) { pasados++; return; }
+                const dia = agAgenda[f];
+                if (dia && dia.bloqueado) { bloqueados++; return; }
+                const existentes = agEspaciosDe(f).map(e => ({ i: agMin(e.inicio), f: agMin(e.fin) })), propios = [];
+                horas.forEach(m => {
+                    const fin = m + dur;
+                    if (fin > 24 * 60 - 1) { cruzados++; return; }
+                    if (existentes.some(e => e.i === m)) { repetidos++; return; }
+                    if (existentes.concat(propios).some(e => m < e.f && e.i < fin)) { cruzados++; return; }
+                    const id = agRefDia(f).child('espacios').push().key;
+                    upd[f + '/espacios/' + id] = { inicio: agPad(Math.floor(m / 60)) + ':' + agPad(m % 60), fin: agPad(Math.floor(fin / 60)) + ':' + agPad(fin % 60), estado: 'abierto', creado: Date.now() };
+                    propios.push({ i: m, f: fin }); nuevos++;
+                });
+            });
+            const notas = [repetidos ? repetidos + ' ya existían' : '', cruzados ? cruzados + ' se cruzaban con otro cupo del mismo día' : '', bloqueados ? bloqueados + ' día(s) bloqueado(s)' : ''].filter(Boolean).join(' · ');
+            if (!nuevos) return agMsg('agMsgQ', 'No se abrió nada' + (notas ? ' (' + notas + ')' : '') + '.', '#e64980');
+            agQOcupado = true; agMsg('agMsgQ', 'Abriendo…', '#d4547e'); agQRender();
+            database.ref('agenda').update(upd).then(() => {
+                agQOcupado = false; agQDias.clear(); agQHoras.clear(); agQRender();
+                agMsg('agMsgQ', '✅ Se abrieron ' + nuevos + ' cupo' + (nuevos === 1 ? '' : 's') + '.' + (notas ? ' (' + notas + ')' : ''));
+            }).catch(er => { agQOcupado = false; agQRender(); agErrorEscritura(er, 'agMsgQ'); });
+        }
+
         // ================= ETAPA 4: PORTAL DE CLIENTAS =================
         // El portal NUNCA lee tus datos privados. Esta pantalla publica una copia mínima en el nodo 'publico'
         // (solo espacios libres, servicios y precios) y recibe las solicitudes en el nodo 'solicitudes'.
@@ -7626,7 +7723,6 @@
             if (e.reservaId) return err('Ese espacio ya tiene una cita. Rechaza la solicitud y avísale a la clienta.');
             if (e.inicio !== s.inicio || e.fin !== s.fin) return err('El horario del espacio cambió después de la solicitud. Rechaza la solicitud y ofrécele otro.');
             const dur = agMin(e.fin) - agMin(e.inicio);
-            if (s.duracionMin && s.duracionMin > dur && !confirm('El servicio dura ' + agDur(s.duracionMin) + ' y el espacio es de ' + agDur(dur) + '. No cabe. ¿Confirmar de todos modos?')) return;
             if (!confirm('¿Confirmar la cita de ' + s.nombre + ' el ' + agFechaLarga(s.fecha) + ' a las ' + agHora12(s.inicio) + '?')) return;
             const rid = agId('r'), refRes = database.ref('agenda/' + s.fecha + '/espacios/' + id + '/reservaId');
             agMsg('agMsgSolic', 'Confirmando…', '#d4547e');
@@ -7661,7 +7757,7 @@
             agFecha = hoyLocalISO();
             const d = agParse(agFecha); agMes = { y: d.getFullYear(), m: d.getMonth() };
             agPoblarIngresos();
-            agSub('disp');
+            agSub('disp'); agQIniciar();
             agIniciarListener();
             agIniciarListenerReservas();
             agIniciarListenerSolic();

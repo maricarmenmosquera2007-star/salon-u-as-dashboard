@@ -74,7 +74,7 @@ footer{text-align:center;font-size:12px;color:var(--gris);margin-top:24px}
     <div class="card oculto" id="paso2">
       <h2><span class="num">2</span>Elige el día y la hora</h2>
       <div id="fechas" class="chips"></div>
-      <div id="horasBox" class="oculto"><label>Horarios libres</label><div id="horas" class="chips"></div></div>
+      <div id="horasBox" class="oculto"><label>Horarios libres <span style="font-weight:400;color:#8a6b78">(el tiempo es aproximado: puede ser un poco menos o más según tu servicio)</span></label><div id="horas" class="chips"></div></div>
       <div id="sinEspacios" class="vacio oculto"></div>
     </div>
 
@@ -147,8 +147,6 @@ footer{text-align:center;font-size:12px;color:var(--gris);margin-top:24px}
         var p = e.inicio.split(':'), d = parseISO(f); d.setHours(+p[0], +p[1], 0, 0);
         if (d <= ahoraD) return;
         if (!libre(id)) return;
-        var largo = mins(e.fin) - mins(e.inicio);
-        if (c && !c.sinDur && c.total > largo) return;
         (out[f] = out[f] || []).push({ id: id, inicio: e.inicio, fin: e.fin });
       });
       if (out[f]) out[f].sort(function (a, b) { return mins(a.inicio) - mins(b.inicio); });
@@ -183,7 +181,7 @@ footer{text-align:center;font-size:12px;color:var(--gris);margin-top:24px}
     var c = calculo(), r = $('resumenServicio');
     if (c) {
       r.classList.remove('oculto');
-      r.innerHTML = '⏱️ ' + (c.sinDur ? 'La duración te la confirma Mari' : 'Duración aproximada: <b>' + dur(c.total) + '</b>') + (c.precio != null ? '<br>💵 Valor estimado: <b>' + moneda(c.precio) + '</b>' : '');
+      r.innerHTML = (c.precio != null ? '💵 Valor estimado: <b>' + moneda(c.precio) + '</b>' : '✨ Mari te confirma el valor por WhatsApp.');
       $('paso2').classList.remove('oculto');
     } else { r.classList.add('oculto'); $('paso2').classList.add('oculto'); $('paso3').classList.add('oculto'); }
     pintarFechas();
@@ -195,14 +193,14 @@ footer{text-align:center;font-size:12px;color:var(--gris);margin-top:24px}
     if (!fechas.length) {
       $('fechas').innerHTML = ''; $('horasBox').classList.add('oculto'); $('paso3').classList.add('oculto');
       var s = $('sinEspacios'); s.classList.remove('oculto');
-      s.innerHTML = 'Por ahora no hay espacios libres' + (calculo() && !calculo().sinDur ? ' que alcancen para este servicio' : '') + '. Escríbele a Mari por <a href="' + wa('Hola Mari 💅 quiero agendar una cita, ¿tienes espacios disponibles?') + '" target="_blank" rel="noopener">WhatsApp</a> y te ayuda.';
+      s.innerHTML = 'Por ahora no hay espacios libres. Escríbele a Mari por <a href="' + wa('Hola Mari 💅 quiero agendar una cita, ¿tienes espacios disponibles?') + '" target="_blank" rel="noopener">WhatsApp</a> y te ayuda.';
       return;
     }
     $('sinEspacios').classList.add('oculto');
     $('fechas').innerHTML = fechas.map(function (f) { return '<button type="button" class="chip' + (st.fecha === f ? ' sel' : '') + '" data-f="' + f + '">' + esc(fechaCorta(f)) + '<small>' + mapa[f].length + ' espacio' + (mapa[f].length === 1 ? '' : 's') + '</small></button>'; }).join('');
     if (st.fecha) {
       $('horasBox').classList.remove('oculto');
-      $('horas').innerHTML = mapa[st.fecha].map(function (e) { return '<button type="button" class="chip' + (st.slot === e.id ? ' sel' : '') + '" data-h="' + e.id + '">' + hora12(e.inicio) + '<small>hasta ' + hora12(e.fin) + '</small></button>'; }).join('');
+      $('horas').innerHTML = mapa[st.fecha].map(function (e) { return '<button type="button" class="chip' + (st.slot === e.id ? ' sel' : '') + '" data-h="' + e.id + '">' + hora12(e.inicio) + '<small>termina hacia las ' + hora12(e.fin) + '</small></button>'; }).join('');
     } else $('horasBox').classList.add('oculto');
     if (st.slot) { $('paso3').classList.remove('oculto'); pintarConfirma(); } else $('paso3').classList.add('oculto');
   }
